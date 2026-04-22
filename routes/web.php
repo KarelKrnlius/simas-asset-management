@@ -3,13 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 use App\Http\Controllers\DashboardController;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
 
 // =====================
 // HOME → LOGIN
@@ -28,13 +24,16 @@ Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
 
-// proses login
+
+// 🔥 PROSES LOGIN (FIX BCRYPT ERROR)
 Route::post('/login', function (Request $request) {
 
-    if (Auth::attempt([
-        'email' => $request->email,
-        'password' => $request->password
-    ])) {
+    $user = User::where('email', $request->email)->first();
+
+    // cek user & password manual
+    if ($user && Hash::check($request->password, $user->password)) {
+
+        Auth::login($user); // login manual
         return redirect()->route('dashboard');
     }
 
@@ -46,7 +45,7 @@ Route::post('/login', function (Request $request) {
 
 
 // =====================
-// LOGOUT (🔥 FIX ERROR KAMU)
+// LOGOUT
 // =====================
 Route::post('/logout', function () {
     Auth::logout();
@@ -59,19 +58,13 @@ Route::post('/logout', function () {
 // =====================
 Route::middleware(['auth'])->group(function () {
 
-    // DASHBOARD UTAMA
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // MENU DASHBOARD (punya temen kamu)
     Route::get('/layanan', [DashboardController::class, 'layanan'])->name('layanan');
     Route::get('/aset', [DashboardController::class, 'aset'])->name('aset');
     Route::get('/peminjaman', [DashboardController::class, 'peminjaman'])->name('peminjaman');
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
 
-
-    // =====================
-    // ASSET
-    // =====================
     Route::get('/assets', function () {
         return view('assets.index');
     })->name('assets');
@@ -80,10 +73,6 @@ Route::middleware(['auth'])->group(function () {
         return view('assets.create');
     })->name('assets.create');
 
-
-    // =====================
-    // USER
-    // =====================
     Route::get('/users', function () {
         return view('users.index');
     })->name('users');
