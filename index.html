@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIMAS Asset - Preview Mode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+    </style>
+</head>
+<body>
+
+    <div class="p-4 lg:p-10 container mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+            <div>
+                <h1 id="panel-title" class="text-3xl font-black uppercase tracking-tight text-gray-900">
+                    ADMIN PANEL
+                </h1>
+                <p class="text-sm text-gray-400 font-bold uppercase tracking-widest">
+                    Selamat datang kembali, <span id="user-name-display" class="text-red-600 underline cursor-pointer">Neevaxius Kenzie!</span>
+                </p>
+            </div>
+            
+            <div class="flex items-center gap-4 bg-white p-2 pr-6 rounded-2xl shadow-sm border border-gray-100">
+                <div id="avatar" class="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white font-black text-xs uppercase shadow-lg shadow-gray-200">
+                    N
+                </div>
+                <div>
+                    <p id="user-name-profile" class="text-[10px] font-black leading-none">Neevaxius Kenzie</p>
+                    <p id="user-role-label" class="text-[8px] text-gray-400 font-black uppercase tracking-tighter mt-1">
+                        Super Administrator
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-content" class="space-y-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border-b-8 border-red-600 hover:-translate-y-2 transition-all">
+                    <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-red-600 mb-6 text-xl shadow-inner"><i class="fas fa-box"></i></div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Assets</p>
+                    <p class="text-3xl font-black italic text-gray-900">120 <span class="text-xs text-gray-300 not-italic">Items</span></p>
+                </div>
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border-b-8 border-green-500 hover:-translate-y-2 transition-all">
+                    <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-500 mb-6 text-xl shadow-inner"><i class="fas fa-check-circle"></i></div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Available</p>
+                    <p class="text-3xl font-black italic text-gray-900">70 <span class="text-xs text-gray-300 not-italic">Items</span></p>
+                </div>
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border-b-8 border-yellow-500 hover:-translate-y-2 transition-all">
+                    <div class="w-12 h-12 bg-yellow-50 rounded-2xl flex items-center justify-center text-yellow-500 mb-6 text-xl shadow-inner"><i class="fas fa-wrench"></i></div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Maintenance</p>
+                    <p class="text-3xl font-black italic text-gray-900">17 <span class="text-xs text-gray-300 not-italic">Items</span></p>
+                </div>
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border-b-8 border-black hover:-translate-y-2 transition-all">
+                    <div class="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-600 mb-6 text-xl shadow-inner"><i class="fas fa-times-circle"></i></div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Broken</p>
+                    <p class="text-3xl font-black italic text-gray-900">7 <span class="text-xs text-gray-300 not-italic">Items</span></p>
+                </div>
+            </div>
+
+            <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-50">
+                <div class="flex justify-between items-center mb-10">
+                    <h3 class="text-xl font-black uppercase italic border-l-8 border-red-600 pl-6">Recent Inventory Monitoring</h3>
+                    <button class="bg-black text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 transition-all">View Full Report</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] border-b border-gray-50">
+                                <th class="pb-6">Asset Name</th>
+                                <th class="pb-6 text-center">Status</th>
+                                <th class="pb-6 text-right">Last Update</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            <tr class="group hover:bg-gray-50/50 transition-colors">
+                                <td class="py-6 text-sm font-black text-gray-700 tracking-tight capitalize">MacBook Pro M2</td>
+                                <td class="py-6 text-center">
+                                    <span class="bg-green-100 text-green-600 text-[9px] font-black px-5 py-2 rounded-xl uppercase border border-green-200">Tersedia</span>
+                                </td>
+                                <td class="py-6 text-right text-[10px] font-bold text-gray-400">2 minutes ago</td>
+                            </tr>
+                            <tr class="group hover:bg-gray-50/50 transition-colors">
+                                <td class="py-6 text-sm font-black text-gray-700 tracking-tight capitalize">Printer Epson L3210</td>
+                                <td class="py-6 text-center">
+                                    <span class="bg-yellow-100 text-yellow-600 text-[9px] font-black px-5 py-2 rounded-xl uppercase border border-yellow-200">Maintenance</span>
+                                </td>
+                                <td class="py-6 text-right text-[10px] font-bold text-gray-400">1 hour ago</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="staff-content" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="bg-white p-8 rounded-[3rem] shadow-sm border border-gray-100 flex flex-col justify-between group hover:shadow-2xl hover:shadow-gray-200 transition-all duration-500">
+                <div class="relative overflow-hidden rounded-[2rem] bg-gray-50 aspect-video flex items-center justify-center mb-6">
+                    <i class="fas fa-laptop text-5xl text-gray-200 group-hover:scale-110 group-hover:text-red-100 transition-transform duration-500"></i>
+                    <div class="absolute top-4 right-4 bg-white/80 backdrop-blur px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white">
+                        AST-2026-001
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <h4 class="text-xl font-black text-gray-800 tracking-tight mb-2">Dell Latitude 5420</h4>
+                    <p class="text-xs text-gray-400 font-medium mb-4">Laptop operasional untuk tim IT Support...</p>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-green-600">Tersedia</span>
+                    </div>
+                </div>
+                <button class="w-full bg-black text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-600 hover:shadow-xl hover:shadow-red-200 transition-all active:scale-95">
+                    <i class="fas fa-plus mr-2"></i> Ajukan Peminjaman
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed bottom-6 right-6 flex flex-col gap-2">
+        <button onclick="toggleRole(1)" class="bg-red-600 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase shadow-lg">Simulasi Admin</button>
+        <button onclick="toggleRole(2)" class="bg-black text-white px-4 py-2 rounded-full text-[10px] font-black uppercase shadow-lg">Simulasi Staff</button>
+    </div>
+
+    <script>
+        function toggleRole(roleId) {
+            const adminContent = document.getElementById('admin-content');
+            const staffContent = document.getElementById('staff-content');
+            const panelTitle = document.getElementById('panel-title');
+            const roleLabel = document.getElementById('user-role-label');
+
+            if(roleId === 1) {
+                adminContent.classList.remove('hidden');
+                staffContent.classList.add('hidden');
+                panelTitle.innerText = "ADMIN PANEL";
+                roleLabel.innerText = "Super Administrator";
+            } else {
+                adminContent.classList.add('hidden');
+                staffContent.classList.remove('hidden');
+                panelTitle.innerText = "STAFF DASHBOARD";
+                roleLabel.innerText = "Staff Internal";
+            }
+        }
+    </script>
+</body>
+</html>
