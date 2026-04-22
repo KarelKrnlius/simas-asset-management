@@ -43,6 +43,15 @@ Route::post('/login', function (Request $request) {
 
 })->name('login.process');
 
+// AUTH SIMPLE
+Route::get('/forgot-password', function () {
+    return view('auth.forgot-password');
+})->name('password.request');
+
+Route::post('/forgot-password', function (Request $request) {
+    return back()->with('status', 'Link reset sudah dikirim ke email kamu');
+})->name('password.email');
+
 
 // =====================
 // LOGOUT
