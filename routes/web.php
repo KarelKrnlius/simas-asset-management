@@ -3,7 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 
+use App\Models\User;
 use App\Http\Controllers\PeminjamanController;
 use App\Http\Controllers\DashboardController;
 
@@ -27,52 +30,85 @@ Route::get('/login', function () {
 })->name('login');
 
 Route::post('/login', function (Request $request) {
-    
-    // Debug: cek input
-    \Log::info('Login attempt for email: ' . $request->email);
-    
-    // Cek user exists
-    $user = \App\Models\User::where('email', $request->email)->first();
+
+    $user = User::where('email', $request->email)->first();
+
     if (!$user) {
-        \Log::info('User not found: ' . $request->email);
         return back()->withErrors(['email' => 'Email tidak ditemukan']);
     }
-    
-    \Log::info('User found: ' . $user->email . ', Active: ' . $user->is_active . ', Role: ' . $user->role_id);
-    
-    // Cek password manual
-    if (\Hash::check($request->password, $user->password)) {
-        \Log::info('Password match for: ' . $request->email);
-        Auth::login($user);
-        return redirect()->route('dashboard');
-    } else {
-        \Log::info('Password mismatch for: ' . $request->email);
+
+    if (!Hash::check($request->password, $user->password)) {
+        return back()->withErrors(['email' => 'Email atau password salah']);
     }
-    
-    return back()->withErrors(['email' => 'Email atau password salah']);
+
+    Auth::login($user);
+
+    return redirect()->route('dashboard');
 
 })->name('login.process');
 
 
+// =====================
 // FORGOT PASSWORD
+// =====================
+
+// FORM
 Route::get('/forgot-password', function () {
     return view('auth.forgot-password');
 })->name('password.request');
 
-Route::post('/forgot-password', function () {
-    return back()->with('status', 'Link reset sudah dikirim ke email kamu');
+
+// KIRIM EMAIL
+Route::post('/forgot-password', function (Request $request) {
+
+    $request->validate([
+        'email' => 'required|email'
+    ]);
+
+    $status = Password::sendResetLink(
+        $request->only('email')
+    );
+
+    return $status === Password::RESET_LINK_SENT
+        ? back()->with('status', 'Link reset sudah dikirim!')
+        : back()->withErrors(['email' => 'Email tidak ditemukan']);
+
 })->name('password.email');
 
-use Illuminate\Support\Facades\Mail;
 
-Route::get('/test-email', function () {
-    Mail::raw('Ini test email dari Laravel', function ($message) {
-        $message->to('admin@gmail.com')
-                ->subject('Test Mailpit');
-    });
+// =====================
+// RESET PASSWORD
+// =====================
 
-    return 'Email dikirim!';
-});
+// FORM RESET
+Route::get('/reset-password/{token}', function ($token) {
+    return view('auth.reset-password', ['token' => $token]);
+})->name('password.reset');
+
+
+// SIMPAN PASSWORD BARU
+Route::post('/reset-password', function (Request $request) {
+
+    $request->validate([
+        'token' => 'required',
+        'email' => 'required|email',
+        'password' => 'required|min:6|confirmed',
+    ]);
+
+    $status = Password::reset(
+        $request->only('email', 'password', 'password_confirmation', 'token'),
+        function ($user, $password) {
+            $user->forceFill([
+                'password' => Hash::make($password)
+            ])->save();
+        }
+    );
+
+    return $status === Password::PASSWORD_RESET
+        ? redirect('/login')->with('status', 'Password berhasil diubah!')
+        : back()->withErrors(['email' => 'Gagal reset password']);
+
+})->name('password.update');
 
 
 // LOGOUT
@@ -83,11 +119,10 @@ Route::post('/logout', function () {
 
 
 // =====================
-// AUTH AREA (WAJIB LOGIN)
+// AUTH AREA
 // =====================
 Route::middleware(['auth'])->group(function () {
 
-    // DASHBOARD
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/layanan', [DashboardController::class, 'layanan'])->name('layanan');
@@ -95,13 +130,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/peminjaman', [PeminjamanController::class, 'index'])->name('peminjaman');
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
 
-
-    // PEMINJAMAN ACTION
     Route::post('/peminjaman', [PeminjamanController::class, 'store'])->name('peminjaman.store');
     Route::delete('/peminjaman/{peminjaman}', [PeminjamanController::class, 'destroy'])->name('peminjaman.destroy');
 
-
-    // ASSETS
     Route::get('/assets', function () {
         return view('assets.index');
     })->name('assets');
@@ -110,8 +141,6 @@ Route::middleware(['auth'])->group(function () {
         return view('assets.create');
     })->name('assets.create');
 
-
-    // USERS
     Route::get('/users', function () {
         return view('users.index');
     })->name('users');
