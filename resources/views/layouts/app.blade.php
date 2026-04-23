@@ -25,7 +25,7 @@
 
             <nav class="flex-1 px-4 space-y-2">
                 <p class="text-[10px] font-black text-gray-400 uppercase px-4 mb-2 tracking-widest">Main Menu</p>
-                <a href="/dashboard" class="flex items-center gap-3 p-4 bg-red-50 text-red-600 rounded-2xl font-black text-xs uppercase tracking-wider transition-all">
+                <a href="/dashboard" class="flex items-center gap-3 p-4 {{ Request::routeIs('dashboard') ? 'bg-red-50 text-red-600' : 'text-gray-500 hover:bg-gray-50' }} rounded-2xl font-black text-xs uppercase tracking-wider transition-all">
                     <i class="fas fa-th-large"></i> Dashboard
                 </a>
 
@@ -40,15 +40,18 @@
                 @endif
 
                 <p class="text-[10px] font-black text-gray-400 uppercase px-4 mt-6 mb-2 tracking-widest">Transaction</p>
-                <a href="/peminjaman" class="flex items-center gap-3 p-4 text-gray-500 hover:bg-gray-50 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all">
+                <a href="/peminjaman" class="flex items-center gap-3 p-4 {{ Request::routeIs('peminjaman') ? 'bg-red-50 text-red-600' : 'text-gray-500 hover:bg-gray-50' }} rounded-2xl font-bold text-xs uppercase tracking-wider transition-all">
                     <i class="fas fa-hand-holding"></i> Peminjaman
                 </a>
-                <a href="/riwayat" class="flex items-center gap-3 p-4 text-gray-500 hover:bg-gray-50 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all">
+                <a href="/riwayat" class="flex items-center gap-3 p-4 {{ Request::routeIs('riwayat') ? 'bg-red-50 text-red-600' : 'text-gray-500 hover:bg-gray-50' }} rounded-2xl font-bold text-xs uppercase tracking-wider transition-all">
                     <i class="fas fa-history"></i> Riwayat Asset
                 </a>
             </nav>
 
             <div class="p-4 border-t border-gray-50">
+                <a href="{{ route('profile') }}" class="flex items-center gap-3 p-4 {{ Request::routeIs('profile') ? 'bg-red-50 text-red-600' : 'text-gray-500 hover:bg-gray-50' }} rounded-2xl font-bold text-xs uppercase tracking-wider transition-all mb-2">
+                    <i class="fas fa-user-circle"></i> Profile
+                </a>
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
                     <button type="submit" class="w-full flex items-center gap-3 p-4 text-red-400 hover:bg-red-50 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all">

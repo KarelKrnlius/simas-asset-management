@@ -7,6 +7,12 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Http\Controllers\DashboardController;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
 // =====================
 // HOME → LOGIN
 // =====================
@@ -27,16 +33,6 @@ Route::get('/login', function () {
 
 // 🔥 PROSES LOGIN (FIX BCRYPT ERROR)
 Route::post('/login', function (Request $request) {
-<<<<<<< HEAD
-
-    $user = User::where('email', $request->email)->first();
-
-    // cek user & password manual
-    if ($user && Hash::check($request->password, $user->password)) {
-
-        Auth::login($user); // login manual
-        return redirect()->route('dashboard');
-=======
     
     // Debug: cek input
     \Log::info('Login attempt for email: ' . $request->email);
@@ -46,7 +42,6 @@ Route::post('/login', function (Request $request) {
     if (!$user) {
         \Log::info('User not found: ' . $request->email);
         return back()->withErrors(['email' => 'Email tidak ditemukan']);
->>>>>>> origin/feature/dashboard-utama
     }
     
     \Log::info('User found: ' . $user->email . ', Active: ' . $user->is_active . ', Role: ' . $user->role_id);
@@ -95,6 +90,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/peminjaman', [DashboardController::class, 'peminjaman'])->name('peminjaman');
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
 
+
+    // =====================
+    // ASSET
+    // =====================
     Route::get('/assets', function () {
         return view('assets.index');
     })->name('assets');
