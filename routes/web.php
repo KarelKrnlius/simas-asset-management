@@ -30,17 +30,29 @@ Route::get('/login', function () {
 
 // proses login
 Route::post('/login', function (Request $request) {
-
-    if (Auth::attempt([
-        'email' => $request->email,
-        'password' => $request->password
-    ])) {
-        return redirect()->route('dashboard');
+    
+    // Debug: cek input
+    \Log::info('Login attempt for email: ' . $request->email);
+    
+    // Cek user exists
+    $user = \App\Models\User::where('email', $request->email)->first();
+    if (!$user) {
+        \Log::info('User not found: ' . $request->email);
+        return back()->withErrors(['email' => 'Email tidak ditemukan']);
     }
-
-    return back()->withErrors([
-        'email' => 'Email atau password salah'
-    ]);
+    
+    \Log::info('User found: ' . $user->email . ', Active: ' . $user->is_active . ', Role: ' . $user->role_id);
+    
+    // Cek password manual
+    if (\Hash::check($request->password, $user->password)) {
+        \Log::info('Password match for: ' . $request->email);
+        Auth::login($user);
+        return redirect()->route('dashboard');
+    } else {
+        \Log::info('Password mismatch for: ' . $request->email);
+    }
+    
+    return back()->withErrors(['email' => 'Email atau password salah']);
 
 })->name('login.process');
 
