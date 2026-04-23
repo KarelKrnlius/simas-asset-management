@@ -13,11 +13,43 @@ return new class extends Migration
     {
         Schema::create('loans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users');
+
+            // 🔗 Relasi user peminjam
+            $table->foreignId('user_id')
+                  ->constrained('users')
+                  ->cascadeOnDelete();
+
+            // 📅 Data peminjaman
             $table->date('borrow_date');
             $table->date('return_date')->nullable();
+
+            // 📌 Status 
             $table->string('status', 20);
+
+            // 👤 Audit trail 
+            $table->foreignId('created_by')
+                  ->nullable()
+                  ->references('id')
+                  ->on('users')
+                  ->nullOnDelete();
+
+            $table->foreignId('updated_by')
+                  ->nullable()
+                  ->references('id')
+                  ->on('users')
+                  ->nullOnDelete();
+
+            $table->foreignId('deleted_by')
+                  ->nullable()
+                  ->references('id')
+                  ->on('users')
+                  ->nullOnDelete();
+
+            // ⏱️ Timestamp
             $table->timestamps();
+
+            // 🗑️ Soft delete 
+            $table->softDeletes(); 
         });
     }
 
