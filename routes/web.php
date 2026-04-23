@@ -2,23 +2,99 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use App\Http\Controllers\PeminjamanController;
+use Illuminate\Support\Facades\Auth;
 
+use App\Http\Controllers\PeminjamanController;
+use App\Http\Controllers\DashboardController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
+// HOME → LOGIN
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/login');
 });
 
-// AUTH SIMPLE
+
+// =====================
+// LOGIN
+// =====================
+Route::get('/login', function () {
+    return view('auth.login');
+})->name('login');
+
+Route::post('/login', function (Request $request) {
+
+    if (Auth::attempt([
+        'email' => $request->email,
+        'password' => $request->password
+    ])) {
+        return redirect()->route('dashboard');
+    }
+
+    return back()->withErrors([
+        'email' => 'Email atau password salah'
+    ]);
+
+})->name('login.process');
+
+
+// FORGOT PASSWORD
 Route::get('/forgot-password', function () {
     return view('auth.forgot-password');
 })->name('password.request');
 
-Route::post('/forgot-password', function (Request $request) {
+Route::post('/forgot-password', function () {
     return back()->with('status', 'Link reset sudah dikirim ke email kamu');
 })->name('password.email');
 
-// PEMINJAMAN
-Route::get('/peminjaman', [PeminjamanController::class, 'index'])
-    ->middleware('auth');
-Route::post('/peminjaman', [PeminjamanController::class, 'store'])->name('peminjaman.store');
-Route::delete('/peminjaman/{peminjaman}', [PeminjamanController::class, 'destroy'])->name('peminjaman.destroy');
+
+// LOGOUT
+Route::post('/logout', function () {
+    Auth::logout();
+    return redirect('/login');
+})->name('logout');
+
+
+// =====================
+// AUTH AREA (WAJIB LOGIN)
+// =====================
+Route::middleware(['auth'])->group(function () {
+
+    // DASHBOARD
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/layanan', [DashboardController::class, 'layanan'])->name('layanan');
+    Route::get('/aset', [DashboardController::class, 'aset'])->name('aset');
+    Route::get('/peminjaman', [PeminjamanController::class, 'index'])->name('peminjaman');
+    Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
+
+
+    // PEMINJAMAN ACTION
+    Route::post('/peminjaman', [PeminjamanController::class, 'store'])->name('peminjaman.store');
+    Route::delete('/peminjaman/{peminjaman}', [PeminjamanController::class, 'destroy'])->name('peminjaman.destroy');
+
+
+    // ASSETS
+    Route::get('/assets', function () {
+        return view('assets.index');
+    })->name('assets');
+
+    Route::get('/assets/create', function () {
+        return view('assets.create');
+    })->name('assets.create');
+
+
+    // USERS
+    Route::get('/users', function () {
+        return view('users.index');
+    })->name('users');
+
+    Route::get('/users/create', function () {
+        return view('users.create');
+    })->name('users.create');
+
+});

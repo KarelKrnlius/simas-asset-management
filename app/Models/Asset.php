@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Asset extends Model
 {
+<<<<<<< HEAD
     protected $table = 'assets';
 
     protected $fillable = [
@@ -18,3 +19,7 @@ class Asset extends Model
         return $this->belongsToMany(Peminjaman::class, 'asset_peminjaman');
     }
 }
+=======
+    //
+}
+>>>>>>> origin/feature/dashboard-utama
