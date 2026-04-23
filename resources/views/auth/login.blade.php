@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login BRIN</title>
+<title>Login SIMAS</title>
 
 <style>  
 * {
@@ -205,9 +205,18 @@ body {
 
   <!-- LEFT -->
   <div class="left">
-    <img src="{{ asset('images/logo/logi.png') }}">
-    <h2>BRIN</h2>
-    <p>Badan Riset Inovasi Nasional</p>
+    {{-- Try multiple approaches --}}
+@if(file_exists(public_path('images/logo/logo.png')))
+    <img src="{{ asset('images/logo/logo.png') }}" alt="SIMAS Logo" style="max-width: 120px; height: auto;">
+@else
+    {{-- Fallback: Inline SVG Logo --}}
+    <svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="20" fill="#DC2626"/>
+        <path d="M25 50H37.5L50 37.5L62.5 50H77.5L50 72.5L25 50Z" fill="white"/>
+    </svg>
+@endif
+    <h2>SIMAS</h2>
+    <p>Sistem Manajemen Aset</p>
   </div>
 
   <!-- RIGHT -->
