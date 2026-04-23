@@ -4,12 +4,19 @@
 
 @section('content')
 
-<div style="min-height:80vh; display:flex; justify-content:center; align-items:center;">
+<div style="min-height:100vh; display:flex; justify-content:center; align-items:center;">
 
 <div style="width:500px; background:white; padding:30px; border-radius:15px; box-shadow:0 10px 40px rgba(0,0,0,0.1);">
 
-    <h2 style="color:#c1121f;">Peminjaman Asset</h2>
-    <p style="color:#777; margin-bottom:20px;">Isi data dengan benar</p>
+    {{-- JUDUL --}}
+    <h2 style="text-align:center; font-weight:bold; color:#c1121f;">
+        PEMINJAMAN ASSET
+    </h2>
+
+    {{-- SUBJUDUL --}}
+    <p style="text-align:center; color:#777; margin-bottom:25px;">
+        Isi data dengan teliti dan benar
+    </p>
 
     <form action="{{ route('peminjaman') }}" method="POST">
         @csrf
@@ -81,8 +88,6 @@ function addAsset() {
                 `;
 
     assets.forEach(a => {
-        let statusColor = a.status === 'available' ? 'green' : 'red';
-
         select += `<option value="${a.id}">
                     ${a.name} (${a.status})
                    </option>`;
