@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 class Loan extends Model
 {
@@ -24,32 +25,39 @@ class Loan extends Model
     {
         parent::boot();
 
-        // Auto-fill created_by saat create
         static::creating(function ($loan) {
-            if (auth()->check()) {
-                $loan->created_by = auth()->id();
+            if (Auth::check()) {
+                $loan->created_by = Auth::id();
             }
         });
 
-        // Auto-fill updated_by saat update
         static::updating(function ($loan) {
-            if (auth()->check()) {
-                $loan->updated_by = auth()->id();
+            if (Auth::check()) {
+                $loan->updated_by = Auth::id();
             }
         });
 
-        // Auto-fill deleted_by saat soft delete
         static::deleting(function ($loan) {
-            if (auth()->check()) {
-                $loan->deleted_by = auth()->id();
+            if (Auth::check()) {
+                $loan->deleted_by = Auth::id();
                 $loan->save();
             }
         });
     }
 
+    // =====================
+    // RELATIONS
+    // =====================
+
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // 🔥 INI YANG KAMU BELUM ADA
+    public function assets()
+    {
+        return $this->belongsToMany(Asset::class);
     }
 
     public function createdBy()

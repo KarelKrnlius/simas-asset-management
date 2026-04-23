@@ -11,7 +11,7 @@
     <h2 style="color:#c1121f;">Peminjaman Asset</h2>
     <p style="color:#777; margin-bottom:20px;">Isi data dengan benar</p>
 
-    <form action="{{ route('peminjaman.store') }}" method="POST">
+    <form action="{{ route('peminjaman') }}" method="POST">
         @csrf
 
         {{-- NAMA PEMINJAM --}}

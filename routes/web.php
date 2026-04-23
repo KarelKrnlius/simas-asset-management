@@ -119,6 +119,13 @@ Route::post('/logout', function () {
 })->name('logout');
 
 
+   // =====================
+    // PROFILE
+    // =====================
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    
 // =====================
 // AUTH AREA
 // =====================

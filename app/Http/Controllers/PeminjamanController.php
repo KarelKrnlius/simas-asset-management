@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Peminjaman;
+use App\Models\Loan;
 use App\Models\Asset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,7 +11,8 @@ class PeminjamanController extends Controller
 {
     public function index()
     {
-        $peminjaman = Peminjaman::with(['assets', 'user'])->latest()->get();
+        // pakai Loan, tapi tetap kirim ke variable $peminjaman biar view aman
+        $peminjaman = Loan::with(['assets', 'user'])->latest()->get();
         $assets = Asset::all();
 
         return view('asset.peminjaman', compact('peminjaman', 'assets'));
@@ -39,8 +40,8 @@ class PeminjamanController extends Controller
             }
         }
 
-        // create peminjaman (1 record saja)
-        $peminjaman = Peminjaman::create([
+        // create loan
+        $loan = Loan::create([
             'user_id' => Auth::id(),
             'borrow_date' => $request->borrow_date,
             'return_date' => $request->return_date,
@@ -48,7 +49,7 @@ class PeminjamanController extends Controller
         ]);
 
         // attach assets
-        $peminjaman->assets()->attach($request->asset_id);
+        $loan->assets()->attach($request->asset_id);
 
         // update status asset
         Asset::whereIn('id', $request->asset_id)->update([
@@ -58,17 +59,19 @@ class PeminjamanController extends Controller
         return back()->with('success', 'Peminjaman berhasil!');
     }
 
-    public function destroy(Peminjaman $peminjaman)
+    public function destroy(Loan $loan)
     {
-        // balikin asset
-        $assetIds = $peminjaman->assets()->pluck('assets.id');
+        // ambil asset id
+        $assetIds = $loan->assets()->pluck('assets.id');
 
+        // balikin status asset
         Asset::whereIn('id', $assetIds)->update([
             'status' => 'tersedia'
         ]);
 
-        $peminjaman->assets()->detach();
-        $peminjaman->delete();
+        // detach & delete
+        $loan->assets()->detach();
+        $loan->delete();
 
         return back()->with('success', 'Data berhasil dihapus');
     }
