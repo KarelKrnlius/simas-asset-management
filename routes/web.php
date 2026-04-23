@@ -18,6 +18,7 @@ Route::post('/forgot-password', function (Request $request) {
 })->name('password.email');
 
 // PEMINJAMAN
-Route::get('/peminjaman', [PeminjamanController::class, 'index'])->name('peminjaman.index');
+Route::get('/peminjaman', [PeminjamanController::class, 'index'])
+    ->middleware('auth');
 Route::post('/peminjaman', [PeminjamanController::class, 'store'])->name('peminjaman.store');
 Route::delete('/peminjaman/{peminjaman}', [PeminjamanController::class, 'destroy'])->name('peminjaman.destroy');
