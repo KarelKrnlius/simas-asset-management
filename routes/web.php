@@ -1,7 +1,123 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProfileController;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
+// =====================
+// HOME → LOGIN
+// =====================
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/login');
+});
+
+
+// =====================
+// LOGIN
+// =====================
+
+// halaman login
+Route::get('/login', function () {
+    return view('auth.login');
+})->name('login');
+
+// proses login
+Route::post('/login', function (Request $request) {
+    
+    // Debug: cek input
+    \Log::info('Login attempt for email: ' . $request->email);
+    
+    // Cek user exists
+    $user = \App\Models\User::where('email', $request->email)->first();
+    if (!$user) {
+        \Log::info('User not found: ' . $request->email);
+        return back()->withErrors(['email' => 'Email tidak ditemukan']);
+    }
+    
+    \Log::info('User found: ' . $user->email . ', Active: ' . $user->is_active . ', Role: ' . $user->role_id);
+    
+    // Cek password manual
+    if (\Hash::check($request->password, $user->password)) {
+        \Log::info('Password match for: ' . $request->email);
+        Auth::login($user);
+        return redirect()->route('dashboard');
+    } else {
+        \Log::info('Password mismatch for: ' . $request->email);
+    }
+    
+    return back()->withErrors(['email' => 'Email atau password salah']);
+
+})->name('login.process');
+
+// AUTH SIMPLE
+Route::get('/forgot-password', function () {
+    return view('auth.forgot-password');
+})->name('password.request');
+
+Route::post('/forgot-password', function (Request $request) {
+    return back()->with('status', 'Link reset sudah dikirim ke email kamu');
+})->name('password.email');
+
+
+// =====================
+// LOGOUT (🔥 FIX ERROR KAMU)
+// =====================
+Route::post('/logout', function () {
+    Auth::logout();
+    return redirect('/login');
+})->name('logout');
+
+
+// =====================
+// DASHBOARD (WAJIB LOGIN)
+// =====================
+Route::middleware(['auth'])->group(function () {
+
+    // DASHBOARD UTAMA
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // MENU DASHBOARD (punya temen kamu)
+    Route::get('/layanan', [DashboardController::class, 'layanan'])->name('layanan');
+    Route::get('/aset', [DashboardController::class, 'aset'])->name('aset');
+    Route::get('/peminjaman', [DashboardController::class, 'peminjaman'])->name('peminjaman');
+    Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
+
+    // =====================
+    // PROFILE
+    // =====================
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+
+    // =====================
+    // ASSET
+    // =====================
+    Route::get('/assets', function () {
+        return view('assets.index');
+    })->name('assets');
+
+    Route::get('/assets/create', function () {
+        return view('assets.create');
+    })->name('assets.create');
+
+
+    // =====================
+    // USER
+    // =====================
+    Route::get('/users', function () {
+        return view('users.index');
+    })->name('users');
+
+    Route::get('/users/create', function () {
+        return view('users.create');
+    })->name('users.create');
+
 });
