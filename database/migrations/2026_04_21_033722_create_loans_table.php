@@ -23,10 +23,10 @@ return new class extends Migration
             $table->date('borrow_date');
             $table->date('return_date')->nullable();
 
-            // 📌 Status (sesuai ERD)
+            // 📌 Status 
             $table->string('status', 20);
 
-            // 👤 Audit trail (sesuai ERD)
+            // 👤 Audit trail
             $table->foreignId('created_by')
                   ->nullable()
                   ->references('id')
@@ -48,8 +48,8 @@ return new class extends Migration
             // ⏱️ Timestamp
             $table->timestamps();
 
-            // 🗑️ Soft delete (tambahan penting dari sistem)
-            $table->softDeletes(); // ➜ menghasilkan deleted_at
+            // 🗑️ Soft delete 
+            $table->softDeletes();
         });
     }
 
