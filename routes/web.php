@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Password;
 use App\Models\User;
 use App\Http\Controllers\PeminjamanController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -130,8 +131,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/peminjaman', [PeminjamanController::class, 'index'])->name('peminjaman');
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
 
-    Route::post('/peminjaman', [PeminjamanController::class, 'store'])->name('peminjaman.store');
-    Route::delete('/peminjaman/{peminjaman}', [PeminjamanController::class, 'destroy'])->name('peminjaman.destroy');
 
     Route::get('/assets', function () {
         return view('assets.index');
