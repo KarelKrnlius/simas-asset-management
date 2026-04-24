@@ -2,22 +2,68 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Asset;
 use Illuminate\Http\Request;
+use App\Models\Asset;
 
 class DashboardController extends Controller
 {
+    // =====================
+    // DASHBOARD HOME
+    // =====================
     public function index()
     {
-        // Mengambil data statistik dari database
-        $data = [
-            'total'       => Asset::count(),
-            'tersedia'    => Asset::where('status', 'Tersedia')->count(),
-            'maintenance' => Asset::where('status', 'Maintenance')->count(),
-            'rusak'       => Asset::where('status', 'Rusak')->count(),
-            'assets'      => Asset::latest()->take(5)->get() // Ambil 5 aset terbaru
-        ];
+        // tetap get karena dashboard hanya statistik
+        $assets = Asset::latest()->get();
 
-        return view('dashboard', $data);
+        $total = $assets->count();
+        $tersedia = $assets->where('status', 'tersedia')->count();
+        $maintenance = $assets->where('status', 'maintenance')->count();
+        $rusak = $assets->where('status', 'rusak')->count();
+
+        return view('dashboard', compact(
+            'assets',
+            'total',
+            'tersedia',
+            'maintenance',
+            'rusak'
+        ));
+    }
+
+
+    // =====================
+    // LAYANAN
+    // =====================
+    public function layanan()
+    {
+        return view('dashboard.layanan');
+    }
+
+
+    // =====================
+    // ASSET LIST (AMAN)
+    // =====================
+    public function aset()
+    {
+        $assets = Asset::with('category')->paginate(10); // ✅ FIX
+
+        return view('assets.index', compact('assets'));
+    }
+
+
+    // =====================
+    // PEMINJAMAN
+    // =====================
+    public function peminjaman()
+    {
+        return view('dashboard.peminjaman');
+    }
+
+
+    // =====================
+    // RIWAYAT
+    // =====================
+    public function riwayat()
+    {
+        return view('dashboard.riwayat');
     }
 }
