@@ -170,6 +170,10 @@
             document.getElementById('passwordSection').classList.remove('hidden');
             document.getElementById('actionButtons').classList.remove('hidden');
             editBtn.classList.add('hidden');
+            
+            // Clear password fields when entering edit mode
+            document.getElementById('password').value = '';
+            document.getElementById('password_confirmation').value = '';
         };
 
         cancelBtn.onclick = function() {
