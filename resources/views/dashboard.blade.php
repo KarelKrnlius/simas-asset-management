@@ -1,123 +1,264 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="p-4 lg:p-10 container mx-auto">
+<div class="container mx-auto px-4 lg:px-8">
     
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-        <div>
-            <h1 class="text-3xl font-black uppercase tracking-tight text-gray-900">
-                @if(Auth::user()->role_id == 1) ADMIN PANEL @else STAFF DASHBOARD @endif
-            </h1>
-            <p class="text-sm text-gray-400 font-bold uppercase tracking-widest">
-                Selamat datang kembali, <span class="text-red-600 underline cursor-pointer">{{ Auth::user()->name }}!</span>
-            </p>
-        </div>
+    {{-- BANNER SELAMAT DATANG (Warna Abu-abu Terang bg-slate-100) --}}
+    <div class="relative bg-slate-100 rounded-[3rem] p-12 overflow-hidden mb-12 shadow-sm border border-slate-200 group">
+        <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-red-600/10 to-transparent"></div>
+        <div class="absolute -bottom-24 -right-24 w-80 h-80 bg-red-600/5 rounded-full blur-3xl group-hover:bg-red-600/10 transition-all duration-700"></div>
         
-        <div class="flex items-center gap-4 bg-white p-2 pr-6 rounded-2xl shadow-sm border border-gray-100">
-            <div class="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white font-black text-xs uppercase shadow-lg shadow-gray-200">
-                {{ substr(Auth::user()->name, 0, 1) }}
+        <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="text-center md:text-left">
+                <span class="bg-red-600 text-white text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-[0.2em]">Operational Report</span>
+                <h2 class="text-5xl font-black text-slate-900 italic tracking-tighter uppercase mt-6 mb-2">
+                    Selamat Datang, <span class="text-red-600">{{ explode(' ', Auth::user()->name)[0] }}</span>
+                </h2>
+                <p class="text-slate-500 font-bold text-xs uppercase tracking-[0.3em]">Sistem pemantauan aset dalam kendali penuh.</p>
             </div>
-            <div>
-                <p class="text-[10px] font-black leading-none">{{ Auth::user()->name }}</p>
-                <p class="text-[8px] text-gray-400 font-black uppercase tracking-tighter mt-1">
-                    {{ Auth::user()->role_id == 1 ? 'Super Administrator' : 'Staff Internal' }}
-                </p>
+            <div class="hidden lg:block bg-slate-200/50 backdrop-blur-md border border-slate-300 p-6 rounded-3xl">
+                <p class="text-[10px] font-black text-red-600 uppercase italic">Staff Access</p>
+                <p class="text-xs font-bold text-slate-600 opacity-60">ID: {{ Auth::user()->id }}</p>
             </div>
         </div>
     </div>
 
     @if(Auth::user()->role_id == 1)
-    <div class="space-y-8">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border-b-8 border-red-600 hover:-translate-y-2 transition-all">
-                <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-red-600 mb-6 text-xl shadow-inner"><i class="fas fa-box"></i></div>
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Assets</p>
-                <p class="text-3xl font-black italic text-gray-900">{{ $total }} <span class="text-xs text-gray-300 not-italic">Items</span></p>
+        {{-- BAGIAN ADMIN --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 max-w-7xl mx-auto">
+            @foreach([
+                ['label' => 'Total Aset', 'val' => $stats['total'], 'icon' => 'fa-cubes', 'color' => 'red'],
+                ['label' => 'Aset Tersedia', 'val' => $stats['available'], 'icon' => 'fa-check-double', 'color' => 'slate'],
+                ['label' => 'Dalam Peminjaman', 'val' => $stats['loaned'], 'icon' => 'fa-hand-holding-box', 'color' => 'red'],
+                ['label' => 'Perlu Perbaikan', 'val' => $stats['maintenance'], 'icon' => 'fa-screwdriver-wrench', 'color' => 'slate'],
+            ] as $item)
+            <div class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
+                <div class="relative z-10">
+                    <div class="flex justify-between items-start mb-8">
+                        <div class="w-12 h-12 {{ $item['color'] == 'red' ? 'bg-red-600 text-white shadow-red-200 shadow-lg' : 'bg-slate-100 text-slate-900' }} rounded-2xl flex items-center justify-center">
+                            <i class="fas {{ $item['icon'] }} text-lg"></i>
+                        </div>
+                        <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">Live Status</span>
+                    </div>
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ $item['label'] }}</h4>
+                    <p class="text-4xl font-black text-slate-900 italic tracking-tighter">{{ $item['val'] }}</p>
+                </div>
+                <div class="absolute bottom-0 right-0 w-16 h-1 bg-{{ $item['color'] == 'red' ? 'red-600' : 'slate-900' }}"></div>
             </div>
-            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border-b-8 border-green-500 hover:-translate-y-2 transition-all">
-                <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-500 mb-6 text-xl shadow-inner"><i class="fas fa-check-circle"></i></div>
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Available</p>
-                <p class="text-3xl font-black italic text-gray-900">{{ $tersedia }} <span class="text-xs text-gray-300 not-italic">Items</span></p>
-            </div>
-            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border-b-8 border-yellow-500 hover:-translate-y-2 transition-all">
-                <div class="w-12 h-12 bg-yellow-50 rounded-2xl flex items-center justify-center text-yellow-500 mb-6 text-xl shadow-inner"><i class="fas fa-wrench"></i></div>
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Maintenance</p>
-                <p class="text-3xl font-black italic text-gray-900">{{ $maintenance }} <span class="text-xs text-gray-300 not-italic">Items</span></p>
-            </div>
-            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border-b-8 border-black hover:-translate-y-2 transition-all">
-                <div class="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-600 mb-6 text-xl shadow-inner"><i class="fas fa-times-circle"></i></div>
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Broken</p>
-                <p class="text-3xl font-black italic text-gray-900">{{ $rusak }} <span class="text-xs text-gray-300 not-italic">Items</span></p>
-            </div>
+            @endforeach
         </div>
 
-        <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-50">
-            <div class="flex justify-between items-center mb-10">
-                <h3 class="text-xl font-black uppercase italic border-l-8 border-red-600 pl-6">Recent Inventory Monitoring</h3>
-                <button class="bg-black text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 transition-all">View Full Report</button>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            <div class="lg:col-span-2 bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm h-full">
+                <div class="flex items-center justify-between mb-10">
+                    <h3 class="text-xl font-black text-slate-900 uppercase italic tracking-tighter border-l-4 border-red-600 pl-4">Statistik Inventaris</h3>
+                </div>
+                <div class="relative w-full h-[350px] overflow-hidden rounded-xl">
+    <div id="chartAnalytics" class="w-full h-full"></div>
+</div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] border-b border-gray-50">
-                            <th class="pb-6">Asset Name</th>
-                            <th class="pb-6 text-center">Status</th>
-                            <th class="pb-6 text-right">Last Update</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-50">
-                        @foreach($assets as $asset)
-                        <tr class="group hover:bg-gray-50/50 transition-colors">
-                            <td class="py-6 text-sm font-black text-gray-700 tracking-tight capitalize">{{ $asset->name }}</td>
-                            <td class="py-6 text-center">
-                                <span class="bg-green-100 text-green-600 text-[9px] font-black px-5 py-2 rounded-xl uppercase shadow-sm border border-green-200">
-                                    {{ $asset->status }}
-                                </span>
-                            </td>
-                            <td class="py-6 text-right text-[10px] font-bold text-gray-400">{{ $asset->updated_at->diffForHumans() }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+
+            <div class="space-y-8">
+                <div class="bg-red-600 p-10 rounded-[3rem] text-white shadow-2xl">
+                    <h3 class="text-lg font-black uppercase italic mb-6">Aksi Cepat</h3>
+                    <div class="space-y-3">
+                        <a href="/aset/create" class="block w-full bg-white text-red-600 py-5 rounded-2xl text-[10px] font-black uppercase text-center tracking-widest hover:scale-105 transition-all">
+                            <i class="fas fa-plus mr-2"></i> Input Aset Baru
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 italic border-b border-slate-100 pb-4">Validasi Antrean</h3>
+                    <div class="space-y-6">
+                        @forelse($pendingLoans ?? [] as $q)
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-red-600 border border-slate-100">
+                                <i class="fas fa-clock-rotate-left"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-[11px] font-black text-slate-900 uppercase italic leading-none">{{ $q->asset_name ?? 'Asset' }}</p>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">Oleh: {{ $q->user_name ?? 'Staff' }}</p>
+                            </div>
+                        </div>
+                        @empty
+                        <p class="text-[10px] font-bold text-slate-400 uppercase text-center">Tidak ada antrean</p>
+                        @endforelse
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
     @else
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        @foreach($assets as $asset)
-        <div class="bg-white p-8 rounded-[3rem] shadow-sm border border-gray-100 flex flex-col justify-between group hover:shadow-2xl hover:shadow-gray-200 transition-all duration-500">
-            <div class="relative overflow-hidden rounded-[2rem] bg-gray-50 aspect-video flex items-center justify-center mb-6">
-                <i class="fas fa-laptop text-5xl text-gray-200 group-hover:scale-110 group-hover:text-red-100 transition-transform duration-500"></i>
-                <div class="absolute top-4 right-4 bg-white/80 backdrop-blur px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white">
-                    {{ $asset->code }}
-                </div>
-            </div>
+        {{-- FLOW STAFF --}}
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-10 max-w-7xl mx-auto">
             
-            <div class="mb-6">
-                <h4 class="text-xl font-black text-gray-800 tracking-tight mb-2">{{ $asset->name }}</h4>
-                <p class="text-xs text-gray-400 font-medium mb-4">{{ Str::limit($asset->description, 50) }}</p>
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full {{ $asset->status == 'Tersedia' ? 'bg-green-500' : 'bg-red-500' }}"></span>
-                    <span class="text-[10px] font-black uppercase tracking-widest {{ $asset->status == 'Tersedia' ? 'text-green-600' : 'text-red-600' }}">
-                        {{ $asset->status }}
-                    </span>
+            <div class="lg:col-span-3 space-y-10">
+                <div class="bg-white p-10 rounded-[4rem] border border-slate-200 shadow-sm">
+                    <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                        <div>
+                            <h3 class="text-4xl font-black text-slate-900 uppercase italic tracking-tighter">Katalog Aset <span class="text-red-600">Tersedia</span></h3>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Pilih aset yang ingin dipinjam hari ini.</p>
+                        </div>
+                        <a href="/peminjaman" class="text-[10px] font-black text-red-600 uppercase tracking-widest border-b-2 border-red-600 pb-1">Lihat Semua Aset</a>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                        @forelse($recentAssets as $asset)
+                        <div class="group">
+                            <div class="bg-slate-50 rounded-[3rem] aspect-square flex flex-col items-center justify-center mb-6 relative overflow-hidden border border-slate-100 transition-all duration-500 group-hover:border-red-600 shadow-sm">
+                                <div class="absolute top-6 right-6">
+                                    <span class="bg-green-100 text-green-600 text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Ready</span>
+                                </div>
+                                
+                                <i class="fas fa-laptop text-7xl text-slate-200 group-hover:text-red-600/20 group-hover:scale-110 transition-all duration-700"></i>
+                                
+                                <div class="absolute bottom-0 left-0 w-full p-8 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+                                    <a href="/peminjaman/create?asset_id={{ $asset->id }}" class="block w-full bg-red-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase text-center tracking-widest shadow-xl shadow-red-900/20">Pinjam Aset</a>
+                                </div>
+                            </div>
+                            <div class="px-4 text-center">
+                                <h4 class="text-xl font-black text-slate-900 uppercase italic truncate">{{ $asset->name }}</h4>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase mt-2 italic tracking-widest">KODE: {{ $asset->code }}</p>
+                            </div>
+                        </div>
+                        @empty
+                        <div class="col-span-3 text-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
+                            <i class="fas fa-box-open text-5xl text-slate-200 mb-4"></i>
+                            <p class="text-slate-400 font-black uppercase italic tracking-widest">Belum ada aset tersedia untuk dipinjam</p>
+                        </div>
+                        @endforelse
+                    </div>
                 </div>
             </div>
 
-            @if($asset->status == 'Tersedia')
-            <button class="w-full bg-black text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-600 hover:shadow-xl hover:shadow-red-200 transition-all active:scale-95">
-                <i class="fas fa-plus mr-2"></i> Ajukan Peminjaman
-            </button>
-            @else
-            <button disabled class="w-full bg-gray-100 text-gray-400 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] cursor-not-allowed">
-                Asset Tidak Tersedia
-            </button>
-            @endif
-        </div>
-        @endforeach
-    </div>
-    @endif
+            <div class="space-y-8">
+                {{-- KOTAK PEMINJAMAN SAYA (Warna Abu-abu Terang bg-slate-100) --}}
+                <div class="bg-slate-100 p-10 rounded-[3rem] border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h3 class="text-xs font-black uppercase tracking-widest text-red-600 mb-8 italic">Peminjaman Saya</h3>
+                        <div class="space-y-6">
+                            @php
+                                $myLoans = [];
+                                if (class_exists('\App\Models\Loan')) {
+                                    $myLoans = \App\Models\Loan::where('user_id', Auth::id())
+                                                ->where('status', 'dipinjam')
+                                                ->get();
+                                }
+                            @endphp
+                            
+                            @forelse($myLoans as $loan)
+                            <div class="flex items-center gap-4 border-b border-slate-200 pb-4 last:border-0">
+                                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-200 shadow-sm">
+                                    <i class="fas fa-clock text-red-600"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[11px] font-black text-slate-900 uppercase italic">ID Peminjaman #{{ $loan->id }}</p>
+                                    <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">Pinjam: {{ \Carbon\Carbon::parse($loan->borrow_date)->format('d M Y') }}</p>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="text-center py-4">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Kamu belum meminjam aset</p>
+                            </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
 
+                <div class="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 italic border-b border-slate-100 pb-4 text-center">Panduan Staff</h3>
+                    <div class="space-y-4">
+                        <div class="flex gap-4">
+                            <span class="w-6 h-6 bg-red-50 text-red-600 rounded-lg flex items-center justify-center text-[10px] font-black">1</span>
+                            <p class="text-[10px] font-bold text-slate-600 uppercase leading-tight">Pilih aset dari katalog tersedia</p>
+                        </div>
+                        <div class="flex gap-4">
+                            <span class="w-6 h-6 bg-red-50 text-red-600 rounded-lg flex items-center justify-center text-[10px] font-black">2</span>
+                            <p class="text-[10px] font-bold text-slate-600 uppercase leading-tight">Klik pinjam dan tunggu validasi admin</p>
+                        </div>
+                        <div class="flex gap-4">
+                            <span class="w-6 h-6 bg-red-50 text-red-600 rounded-lg flex items-center justify-center text-[10px] font-black">3</span>
+                            <p class="text-[10px] font-bold text-slate-600 uppercase leading-tight">Kembalikan aset tepat waktu sesuai sistem</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@latest"></script>
+<script>
+    @if(Auth::user()->role_id == 1)
+    document.addEventListener('DOMContentLoaded', function() {
+        var options = {
+            series: [{ name: 'Aktivitas', data: [44, 55, 41, 67, 22, 43, 21] }],
+            chart: { 
+                type: 'bar', 
+                height: 350, 
+                toolbar: {show: false}, 
+                fontFamily: 'Plus Jakarta Sans',
+                responsive: true,
+                maintainAspectRatio: false
+            },
+            plotOptions: { 
+                bar: { 
+                    borderRadius: 12, 
+                    columnWidth: '40%', 
+                    distributed: true 
+                } 
+            },
+            colors: ['#ef4444', '#0f172a', '#ef4444', '#0f172a', '#ef4444', '#0f172a', '#ef4444'],
+            dataLabels: { enabled: false },
+            xaxis: { 
+                categories: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+                labels: { 
+                    style: { 
+                        fontWeight: 800, 
+                        fontSize: '10px',
+                        colors: '#64748b'
+                    } 
+                },
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            yaxis: {
+                labels: {
+                    style: {
+                        fontSize: '10px',
+                        colors: '#64748b'
+                    }
+                },
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            grid: { 
+                borderColor: '#f1f5f9',
+                strokeDashArray: 3,
+                padding: { top: 0, right: 0, bottom: 0, left: 0 }
+            },
+            tooltip: {
+                theme: 'light',
+                style: {
+                    fontSize: '12px',
+                    fontFamily: 'Plus Jakarta Sans'
+                }
+            }
+        };
+        
+        var chart = new ApexCharts(document.querySelector("#chartAnalytics"), options);
+        chart.render();
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            chart.updateOptions({
+                chart: {
+                    width: document.querySelector("#chartAnalytics").offsetWidth
+                }
+            });
+        });
+    });
+    @endif
+</script>
 @endsection

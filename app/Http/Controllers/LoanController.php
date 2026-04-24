@@ -7,7 +7,7 @@ use App\Models\Asset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class PeminjamanController extends Controller
+class LoanController extends Controller
 {
     public function index()
     {
@@ -15,7 +15,7 @@ class PeminjamanController extends Controller
         $peminjaman = Loan::with(['assets', 'user'])->latest()->get();
         $assets = Asset::all();
 
-        return view('asset.peminjaman', compact('peminjaman', 'assets'));
+        return view('asset.loan', compact('peminjaman', 'assets'));
     }
 
     public function store(Request $request)

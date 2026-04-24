@@ -8,11 +8,9 @@
     .bg-red-primary { background-color: #E11D48 !important; }
     .text-red-primary { color: #E11D48 !important; }
     .border-red-primary { border-color: #E11D48 !important; }
-    
 </style>
 
-<div class="min-h-screen bg-slate-50 p-4 md:p-10 font-sans text-slate-900">
-    <div class="max-w-4xl mx-auto">
+<div class="max-w-4xl w-full mx-auto -mt-4">
         <div class="bg-white rounded-[2rem] shadow-xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
             
             <div class="h-32 bg-red-primary relative"></div>
@@ -26,7 +24,7 @@
                         
                         <div class="pb-1">
                             <h1 class="text-4xl font-black text-slate-800 tracking-tight leading-none">Profil</h1>
-                            <p class="text-sm text-slate-400 font-medium mt-3">Kelola informasi kredensial akun Anda</p>
+                            <p class="text-sm text-slate-400 font-medium mt-3">Kelola informasi akun Anda</p>
                         </div>
                     </div>
 
@@ -150,18 +148,14 @@
 
         profileForm.onsubmit = function(e) {
             e.preventDefault();
-            
-            // Client-side password validation
             const password = document.getElementById('password').value;
             const passwordConfirmation = document.getElementById('password_confirmation').value;
             
-            // Check if password fields are filled but don't match
             if ((password || passwordConfirmation) && password !== passwordConfirmation) {
                 alert('Konfirmasi password tidak sama dengan password baru!');
                 return false;
             }
             
-            // Check if password is filled but less than 8 characters
             if (password && password.length < 8) {
                 alert('Password harus minimal 8 karakter!');
                 return false;
@@ -171,15 +165,10 @@
         };
 
         editBtn.onclick = function() {
-            // Tampilkan input, sembunyikan tampilan teks
             document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('[id^="input-"]').forEach(el => el.classList.remove('hidden'));
-            
-            // Tampilkan section password & tombol simpan
             document.getElementById('passwordSection').classList.remove('hidden');
             document.getElementById('actionButtons').classList.remove('hidden');
-            
-            // Sembunyikan tombol edit itu sendiri
             editBtn.classList.add('hidden');
         };
 
@@ -190,7 +179,6 @@
         };
     });
 
-    // Toggle password visibility
     function togglePassword(fieldId) {
         const passwordField = document.getElementById(fieldId);
         const eyeIcon = document.getElementById(fieldId + '-eye');

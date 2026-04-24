@@ -5,9 +5,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Log;
 
 use App\Models\User;
-use App\Http\Controllers\PeminjamanController;
+use App\Http\Controllers\LoanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 
@@ -17,21 +18,21 @@ use App\Http\Controllers\ProfileController;
 |--------------------------------------------------------------------------
 */
 
+// =====================
 // HOME → LOGIN
+// =====================
 Route::get('/', function () {
-    return redirect('/login');
+    return redirect()->route('login');
 });
 
-
 // =====================
-// LOGIN
+// LOGIN & AUTH
 // =====================
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
 
 Route::post('/login', function (Request $request) {
-
     $user = User::where('email', $request->email)->first();
 
     if (!$user) {
@@ -113,30 +114,31 @@ Route::post('/reset-password', function (Request $request) {
 
 
 // LOGOUT
+// =====================
 Route::post('/logout', function () {
     Auth::logout();
     return redirect('/login');
 })->name('logout');
 
-
-   // =====================
-    // PROFILE
-    // =====================
-    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-
-    
 // =====================
 // AUTH AREA
 // =====================
 Route::middleware(['auth'])->group(function () {
 
+    // DASHBOARD UTAMA
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // MENU DASHBOARD
     Route::get('/layanan', [DashboardController::class, 'layanan'])->name('layanan');
     Route::get('/aset', [DashboardController::class, 'aset'])->name('aset');
-    Route::get('/peminjaman', [PeminjamanController::class, 'index'])->name('peminjaman');
+    Route::get('/peminjaman', [LoanController::class, 'index'])->name('peminjaman');
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
+
+    // =====================
+    // PROFILE
+    // =====================
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
 
     Route::get('/assets', function () {
