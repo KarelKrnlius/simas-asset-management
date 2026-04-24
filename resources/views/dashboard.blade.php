@@ -12,7 +12,7 @@
             <div class="text-center md:text-left">
                 <span class="bg-red-600 text-white text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-[0.2em]">Operational Report</span>
                 <h2 class="text-5xl font-black text-slate-900 italic tracking-tighter uppercase mt-6 mb-2">
-                    Selamat Datang, <span class="text-red-600">{{ explode(' ', Auth::user()->name)[0] }}</span>
+                    Selamat Datang, <span class="text-red-600">{{ Auth::user()->name }}</span>
                 </h2>
                 <p class="text-slate-500 font-bold text-xs uppercase tracking-[0.3em]">Sistem pemantauan aset dalam kendali penuh.</p>
             </div>
