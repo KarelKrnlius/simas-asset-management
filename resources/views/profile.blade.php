@@ -203,42 +203,5 @@
             eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
         }
     }
-
-    // Real-time password validation
-    document.addEventListener('DOMContentLoaded', function() {
-        const passwordField = document.getElementById('password');
-        const confirmationField = document.getElementById('password_confirmation');
-        
-        if (passwordField && confirmationField) {
-            function validatePasswords() {
-                const password = passwordField.value;
-                const confirmation = confirmationField.value;
-                
-                // Reset border colors
-                passwordField.style.borderColor = '';
-                confirmationField.style.borderColor = '';
-                
-                // Check if both fields have values
-                if (password || confirmation) {
-                    if (password !== confirmation) {
-                        // Passwords don't match - red border
-                        passwordField.style.borderColor = '#EF4444';
-                        confirmationField.style.borderColor = '#EF4444';
-                    } else if (password.length < 8) {
-                        // Password too short - orange border
-                        passwordField.style.borderColor = '#F97316';
-                        confirmationField.style.borderColor = '#F97316';
-                    } else {
-                        // Valid - green border
-                        passwordField.style.borderColor = '#22C55E';
-                        confirmationField.style.borderColor = '#22C55E';
-                    }
-                }
-            }
-            
-            passwordField.addEventListener('input', validatePasswords);
-            confirmationField.addEventListener('input', validatePasswords);
-        }
-    });
 </script>
 @endsection

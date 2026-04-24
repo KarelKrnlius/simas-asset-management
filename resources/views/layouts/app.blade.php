@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'SIMAS') — PT. Magang Jaya</title>
+    <title>@yield('title', 'Dashboard') -- SIMAS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -50,7 +50,7 @@
 
             <div class="p-4 border-t border-gray-50">
                 <a href="{{ route('profile') }}" class="flex items-center gap-3 p-4 {{ Request::routeIs('profile') ? 'bg-red-50 text-red-600' : 'text-gray-500 hover:bg-gray-50' }} rounded-2xl font-bold text-xs uppercase tracking-wider transition-all mb-2">
-                    <i class="fas fa-user-circle"></i> Profile
+                    <i class="fas fa-user-circle"></i> Profil
                 </a>
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
