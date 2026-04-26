@@ -9,12 +9,20 @@ class Asset extends Model
     protected $table = 'assets';
 
     protected $fillable = [
+        'category_id',
         'name',
+        'code',
+        'description',
+        'stock',
+        'condition',
         'status',
     ];
 
-    public function peminjaman()
+    /**
+     * Get the category that owns the asset.
+     */
+    public function category()
     {
-        return $this->belongsToMany(Peminjaman::class, 'asset_peminjaman');
+        return $this->belongsTo(Category::class);
     }
 }

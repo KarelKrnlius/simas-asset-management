@@ -11,6 +11,8 @@ use App\Models\User;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AssetController;
+use App\Http\Controllers\CategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -130,20 +132,21 @@ Route::middleware(['auth'])->group(function () {
 
     // MENU DASHBOARD
     Route::get('/layanan', [DashboardController::class, 'layanan'])->name('layanan');
-    Route::get('/aset', [DashboardController::class, 'aset'])->name('aset');
     Route::get('/peminjaman', [LoanController::class, 'index'])->name('peminjaman');
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
+    
+    // Assets Resource Routes
+    Route::resource('assets', AssetController::class);
+    Route::get('/assets/next-code', [AssetController::class, 'getNextCode']);
+    
+    // Categories Resource Routes
+    Route::resource('categories', CategoryController::class);
 
     // =====================
     // PROFILE
     // =====================
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-
-
-    Route::get('/assets', function () {
-        return view('assets.index');
-    })->name('assets');
 
     Route::get('/assets/create', function () {
         return view('assets.create');

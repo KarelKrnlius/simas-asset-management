@@ -15,7 +15,7 @@ class LoanController extends Controller
         $peminjaman = Loan::with(['assets', 'user'])->latest()->get();
         $assets = Asset::all();
 
-        return view('asset.loan', compact('peminjaman', 'assets'));
+        return view('assets.loan', compact('peminjaman', 'assets'));
     }
 
     public function store(Request $request)
