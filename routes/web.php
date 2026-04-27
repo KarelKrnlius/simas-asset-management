@@ -13,12 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\CategoryController;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
+use App\Http\Controllers\AuthController;
 
 // =====================
 // HOME → LOGIN
@@ -31,6 +26,10 @@ Route::get('/', function () {
 // LOGIN & AUTH
 // =====================
 Route::get('/login', function () {
+    // If user is already authenticated, redirect to dashboard
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
     return view('auth.login');
 })->name('login');
 
@@ -52,9 +51,6 @@ Route::post('/login', function (Request $request) {
 })->name('login.process');
 
 
-// =====================
-// FORGOT PASSWORD
-// =====================
 
 // FORM
 Route::get('/forgot-password', function () {
@@ -79,10 +75,6 @@ Route::post('/forgot-password', function (Request $request) {
 
 })->name('password.email');
 
-
-// =====================
-// RESET PASSWORD
-// =====================
 
 // FORM RESET
 Route::get('/reset-password/{token}', function ($token) {
@@ -118,14 +110,24 @@ Route::post('/reset-password', function (Request $request) {
 // LOGOUT
 // =====================
 Route::post('/logout', function () {
+    // Invalidate current session
     Auth::logout();
-    return redirect('/login');
+    
+    // Clear all session data
+    session()->invalidate();
+    session()->regenerateToken();
+    
+    // Clear cookies
+    \Cookie::queue(\Cookie::forget('laravel_session'));
+    \Cookie::queue(\Cookie::forget('XSRF-TOKEN'));
+    
+    return redirect('/login')->with('status', 'Anda telah berhasil logout.');
 })->name('logout');
 
 // =====================
 // AUTH AREA
 // =====================
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'nocache'])->group(function () {
 
     // DASHBOARD UTAMA
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -135,29 +137,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/peminjaman', [LoanController::class, 'index'])->name('peminjaman');
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
     
-    // Assets Resource Routes
-    Route::resource('assets', AssetController::class);
-    Route::get('/assets/next-code', [AssetController::class, 'getNextCode']);
+    // Assets Resource Routes (Admin Only)
+    Route::resource('assets', AssetController::class)->middleware('role:admin');
+    Route::get('/assets/next-code', [AssetController::class, 'getNextCode'])->middleware('role:admin');
+    Route::post('/assets/bulk-delete', [AssetController::class, 'bulkDelete'])->middleware('role:admin');
     
-    // Categories Resource Routes
-    Route::resource('categories', CategoryController::class);
+    // Categories Resource Routes (Admin Only)
+    Route::resource('categories', CategoryController::class)->middleware('role:admin');
 
     // =====================
     // PROFILE
     // =====================
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/logout-all-devices', [AuthController::class, 'logoutAllDevices'])->name('logout.all.devices');
 
-    Route::get('/assets/create', function () {
-        return view('assets.create');
-    })->name('assets.create');
-
-    Route::get('/users', function () {
-        return view('users.index');
-    })->name('users');
-
-    Route::get('/users/create', function () {
-        return view('users.create');
-    })->name('users.create');
-
+    
 });

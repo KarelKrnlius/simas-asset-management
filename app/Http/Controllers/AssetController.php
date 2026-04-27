@@ -14,8 +14,56 @@ class AssetController extends Controller
      */
     public function index()
     {
-        $assets = Asset::with('category')->latest()->get();
-        $categories = Category::orderBy('name')->get();
+        // Get sorting parameters
+        $sortBy = request('sort_by'); // No default, let it be null if not provided
+        $order = request('order', 'desc'); // Default: desc
+        
+        // Build query with relationships
+        $query = Asset::with('category');
+        
+        // Handle dynamic category sorting from dropdown first
+        if ($sortBy && str_starts_with($sortBy, 'category_')) {
+            $categoryId = str_replace('category_', '', $sortBy);
+            $query->where('assets.category_id', $categoryId)
+                  ->orderBy('assets.created_at', 'desc');
+        } else {
+            // Apply regular sorting if not category-specific
+            switch ($sortBy) {
+                case 'category':
+                    // Handle specific category filtering
+                    if (request('category_id')) {
+                        $query->where('assets.category_id', request('category_id'))
+                              ->orderBy('assets.created_at', 'desc');
+                    } else {
+                        $query->join('categories', 'assets.category_id', '=', 'categories.id')
+                              ->orderBy('categories.name', $order)
+                              ->select('assets.*');
+                    }
+                    break;
+                case 'code':
+                    // Extract numeric part for proper numeric sorting
+                    $query->orderByRaw('CAST(SUBSTRING(code, 5) AS UNSIGNED) ' . $order);
+                    break;
+                case 'name':
+                    $query->orderBy('name', $order);
+                    break;
+                case 'created_at':
+                    $query->orderBy('created_at', $order);
+                    break;
+                default:
+                    // Only use latest if no sort_by parameter at all
+                    if (!$sortBy) {
+                        $query->latest();
+                    }
+                    break;
+            }
+        }
+        
+        $assets = $query->paginate(15);
+        
+        // Append sort parameters to pagination links
+        $assets->appends(request()->only(['sort_by', 'order', 'category_id']));
+        $categories = Category::withCount('assets')->orderBy('name')->get();
         
         // Calculate highest code numbers per category for instant code generation
         $categoryHighestCodes = [];
@@ -100,8 +148,6 @@ class AssetController extends Controller
             'name' => 'required|string|max:100',
             'description' => 'nullable|string|max:1000',
             'stock' => 'required|integer|min:0',
-            'condition' => 'required|string|max:20',
-            'status' => 'required|string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -140,6 +186,8 @@ class AssetController extends Controller
                 $assetData = $request->all();
                 $assetData['code'] = $assetCode;
                 $assetData['stock'] = 1; // Each individual item has stock of 1
+                $assetData['condition'] = 'baik'; // Auto-set condition
+                $assetData['status'] = 'tersedia'; // Auto-set status
                 
                 $asset = Asset::create($assetData);
                 $createdAssets[] = $asset;
@@ -247,6 +295,38 @@ class AssetController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete asset: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk delete assets.
+     */
+    public function bulkDelete(Request $request)
+    {
+        try {
+            $assetIds = json_decode($request->asset_ids, true);
+            
+            if (!is_array($assetIds) || empty($assetIds)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No assets selected for deletion'
+                ], 400);
+            }
+            
+            // Delete assets
+            $deletedCount = Asset::whereIn('id', $assetIds)->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Berhasil menghapus {$deletedCount} aset",
+                'deleted_count' => $deletedCount
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete assets: ' . $e->getMessage()
             ], 500);
         }
     }
