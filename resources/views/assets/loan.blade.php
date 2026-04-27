@@ -17,7 +17,7 @@
             </p>
         </div>
 
-        <form action="{{ route('peminjaman') }}" method="POST">
+        <form action="{{ route('peminjaman.store') }}" method="POST">
             @csrf
 
             {{-- NAMA PEMINJAM --}}
@@ -76,6 +76,66 @@
             </button>
         </form>
 
+    </div>
+</div>
+
+<div class="w-full max-w-2xl mt-8">
+    <div class="bg-white rounded-[2.5rem] shadow-2xl p-8 border border-slate-200">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div>
+                <h3 class="text-xl font-black text-slate-900 uppercase tracking-tighter">Daftar Peminjaman</h3>
+                <p class="text-sm text-slate-500 mt-2">Data peminjaman terbaru dari database.</p>
+            </div>
+            <span class="px-4 py-2 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 bg-slate-100 rounded-full">Total: {{ $peminjaman->count() }}</span>
+        </div>
+
+        @if($peminjaman->isEmpty())
+            <div class="text-center py-16 text-slate-400 font-bold uppercase tracking-[0.2em]">Belum ada data peminjaman</div>
+        @else
+            <div class="space-y-4">
+                @foreach($peminjaman as $loan)
+                    <div class="p-5 border border-slate-200 rounded-[2rem] hover:shadow-sm transition-all">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-[0.3em] font-black text-slate-400">ID Peminjaman</p>
+                                <p class="text-lg font-black text-slate-900">#{{ $loan->id }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] uppercase tracking-[0.3em] font-black text-slate-400">Peminjam</p>
+                                <p class="text-sm font-bold text-slate-900">{{ $loan->user->name ?? 'Tidak diketahui' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-600">
+                            <div class="rounded-2xl bg-slate-50 p-4">
+                                <p class="text-[10px] uppercase tracking-[0.25em] font-black text-slate-400">Tgl Pinjam</p>
+                                <p class="font-semibold">{{ \Carbon\Carbon::parse($loan->borrow_date)->translatedFormat('d M Y') }}</p>
+                            </div>
+                            <div class="rounded-2xl bg-slate-50 p-4">
+                                <p class="text-[10px] uppercase tracking-[0.25em] font-black text-slate-400">Tgl Kembali</p>
+                                <p class="font-semibold">{{ \Carbon\Carbon::parse($loan->return_date)->translatedFormat('d M Y') }}</p>
+                            </div>
+                            <div class="rounded-2xl bg-slate-50 p-4">
+                                <p class="text-[10px] uppercase tracking-[0.25em] font-black text-slate-400">Status</p>
+                                <p class="font-semibold uppercase">{{ $loan->status }}</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 space-y-3">
+                            @foreach($loan->assets as $asset)
+                                <div class="flex items-center justify-between gap-3 p-4 bg-slate-50 rounded-3xl">
+                                    <div>
+                                        <p class="font-black text-slate-900">{{ $asset->name }}</p>
+                                        <p class="text-[10px] text-slate-400">Qty: {{ $asset->pivot->quantity }}</p>
+                                    </div>
+                                    <span class="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">{{ $asset->status }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
     </div>
 </div>
 

@@ -15,7 +15,7 @@ class LoanController extends Controller
         $peminjaman = Loan::with(['assets', 'user'])->latest()->get();
         $assets = Asset::all();
 
-        return view('asset.loan', compact('peminjaman', 'assets'));
+        return view('assets.loan', compact('peminjaman', 'assets'));
     }
 
     public function store(Request $request)
@@ -45,14 +45,19 @@ class LoanController extends Controller
             'user_id' => Auth::id(),
             'borrow_date' => $request->borrow_date,
             'return_date' => $request->return_date,
-            'status' => 'pending',
+            'status' => 'dipinjam',
         ]);
 
-        // attach assets
-        $loan->assets()->attach($request->asset_id);
+        // attach assets with required quantity pivot value
+        $attachData = collect($request->asset_id)
+            ->unique()
+            ->mapWithKeys(fn ($assetId) => [$assetId => ['quantity' => 1]])
+            ->all();
+
+        $loan->assets()->attach($attachData);
 
         // update status asset
-        Asset::whereIn('id', $request->asset_id)->update([
+        Asset::whereIn('id', array_keys($attachData))->update([
             'status' => 'dipinjam'
         ]);
 

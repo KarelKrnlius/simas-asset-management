@@ -55,4 +55,16 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
         ];
     }
+
+    /**
+     * Get the role name based on role_id.
+     */
+    public function getRoleAttribute(): string
+    {
+        return match($this->role_id) {
+            1 => 'admin',
+            2 => 'staff',
+            default => 'staff',
+        };
+    }
 }

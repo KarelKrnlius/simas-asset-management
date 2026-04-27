@@ -55,13 +55,13 @@ class Loan extends Model
     }
 
     /**
-     * Relasi Many-to-Many ke Asset melalui tabel perantara asset_loan.
+     * Relasi Many-to-Many ke Asset melalui tabel perantara loan_details.
      * Menggunakan withPivot agar bisa mengakses 'quantity' barang yang dipinjam.
      */
     public function assets()
     {
-        return $this->belongsToMany(Asset::class, 'asset_loan') 
-                    ->withPivot('quantity', 'id'); 
+        return $this->belongsToMany(Asset::class, 'loan_details')
+                    ->withPivot('quantity');
     }
 
     public function createdBy()

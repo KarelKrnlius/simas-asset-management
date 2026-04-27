@@ -17,7 +17,7 @@ class AssetReturnController extends Controller
          * Karena tidak ada LoanDetail, kita memanggil relasi 'assets' langsung dari 'loans'.
          */
         $users = User::whereHas('loans', function($q) {
-            $q->whereIn('status', ['dipinjam', 'terlambat']);
+            $q->where('status', '<>', 'dikembalikan');
         })->with(['loans.assets'])->get();
 
         return view('pengembalian.index', compact('users'));
@@ -25,46 +25,59 @@ class AssetReturnController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'returns' => 'required_without:loan_id|array|min:1',
+            'returns.*.loan_id' => 'required_with:returns|exists:loans,id',
+            'returns.*.asset_id' => 'required_with:returns|exists:assets,id',
+            'returns.*.condition' => 'required_with:returns|in:baik,rusak,hilang',
+            'loan_id' => 'required_without:returns|exists:loans,id',
+            'asset_id' => 'required_without:returns|exists:assets,id',
+            'condition' => 'required_without:returns|in:baik,rusak,hilang',
+        ]);
+
+        $returns = $request->input('returns');
+        if (!$returns) {
+            $returns = [[
+                'loan_id' => $request->loan_id,
+                'asset_id' => $request->asset_id,
+                'condition' => $request->condition,
+            ]];
+        }
+
         try {
-            DB::transaction(function () use ($request) {
-                /**
-                 * 1. Cari data Peminjaman (Loan) dan Aset yang dipilih.
-                 * Kita menggunakan loan_id dan asset_id karena data disimpan di tabel pivot.
-                 */
-                $loan = Loan::findOrFail($request->loan_id);
-                $asset = Asset::findOrFail($request->asset_id);
+            DB::transaction(function () use ($returns) {
+                $processedLoanIds = [];
 
-                /**
-                 * 2. Update stok fisik di tabel assets.
-                 * Barang kembali = Input Baik + Input Rusak.
-                 */
-                $qtyKembali = (int)$request->baik + (int)$request->rusak;
-                $asset->increment('stock', $qtyKembali);
+                foreach ($returns as $returnItem) {
+                    $loan = Loan::findOrFail($returnItem['loan_id']);
+                    $asset = Asset::findOrFail($returnItem['asset_id']);
 
-                /**
-                 * 3. Update kondisi global aset jika ada yang dilaporkan rusak.
-                 */
-                if ((int)$request->rusak > 0) {
-                    $asset->update(['condition' => 'rusak']);
+                    // Ambil quantity yang dipinjam dari pivot
+                    $pivot = $loan->assets()->where('asset_id', $returnItem['asset_id'])->first();
+                    $qtyDipinjam = $pivot ? $pivot->pivot->quantity : 0;
+
+                    if ($returnItem['condition'] === 'baik') {
+                        $asset->increment('stock', $qtyDipinjam);
+                    } elseif ($returnItem['condition'] === 'rusak') {
+                        $asset->increment('stock', $qtyDipinjam);
+                        $asset->update(['condition' => 'rusak']);
+                    } elseif ($returnItem['condition'] === 'hilang') {
+                        $asset->update(['condition' => 'hilang']);
+                    }
+
+                    $loan->assets()->detach($returnItem['asset_id']);
+                    $processedLoanIds[] = $loan->id;
                 }
 
-                /**
-                 * 4. Logika Pengurangan Item di Pivot atau Update Status Transaksi.
-                 * Karena kamu ingin mengembalikan barang per item:
-                 * Kita lepas (detach) asset ini dari loan tersebut karena sudah dikembalikan.
-                 */
-                $loan->assets()->detach($asset->id);
-
-                /**
-                 * 5. Cek apakah masih ada aset lain yang belum dikembalikan dalam transaksi ini.
-                 * Jika sudah kosong, ubah status peminjaman menjadi 'dikembalikan'.
-                 */
-                if ($loan->assets()->count() == 0) {
-                    $loan->update(['status' => 'dikembalikan']);
+                foreach (array_unique($processedLoanIds) as $loanId) {
+                    $loan = Loan::findOrFail($loanId);
+                    if ($loan->assets()->count() == 0) {
+                        $loan->update(['status' => 'dikembalikan']);
+                    }
                 }
             });
 
-            return response()->json(['message' => 'Barang berhasil dikembalikan ke stok!']);
+            return response()->json(['message' => 'Barang berhasil dikembalikan!']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Gagal: ' . $e->getMessage()], 500);
         }
