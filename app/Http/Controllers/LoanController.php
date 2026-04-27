@@ -11,11 +11,11 @@ class LoanController extends Controller
 {
     public function index()
     {
-        // pakai Loan, tapi tetap kirim ke variable $peminjaman biar view aman
         $peminjaman = Loan::with(['assets', 'user'])->latest()->get();
-        $assets = Asset::all();
+        $assets = Asset::with('category')->get();
+        $categories = \App\Models\Category::all();
 
-        return view('assets.loan', compact('peminjaman', 'assets'));
+        return view('assets.loan', compact('peminjaman', 'assets', 'categories'));
     }
 
     public function store(Request $request)
@@ -27,11 +27,17 @@ class LoanController extends Controller
             'return_date' => 'required|date|after_or_equal:borrow_date',
         ]);
 
+        // ✅ CEK DUPLIKAT
+        if (count(array_unique($request->asset_id)) != count($request->asset_id)) {
+            return back()->with('error', 'Asset tidak boleh sama!');
+        }
+
+        // ✅ MAX 5
         if (count($request->asset_id) > 5) {
             return back()->with('error', 'Maksimal 5 asset!');
         }
 
-        // cek availability
+        // ✅ CEK KETERSEDIAAN
         foreach ($request->asset_id as $id) {
             $asset = Asset::find($id);
 
@@ -40,7 +46,7 @@ class LoanController extends Controller
             }
         }
 
-        // create loan
+        // ✅ SIMPAN LOAN
         $loan = Loan::create([
             'user_id' => Auth::id(),
             'borrow_date' => $request->borrow_date,
@@ -48,10 +54,10 @@ class LoanController extends Controller
             'status' => 'pending',
         ]);
 
-        // attach assets
+        // ✅ ATTACH ASSET
         $loan->assets()->attach($request->asset_id);
 
-        // update status asset
+        // ✅ UPDATE STATUS
         Asset::whereIn('id', $request->asset_id)->update([
             'status' => 'dipinjam'
         ]);
