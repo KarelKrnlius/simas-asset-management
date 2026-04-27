@@ -5,14 +5,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Log;
 
 use App\Models\User;
+
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,13 +29,14 @@ Route::get('/', function () {
 });
 
 // =====================
-// LOGIN & AUTH
+// LOGIN
 // =====================
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
 
 Route::post('/login', function (Request $request) {
+
     $user = User::where('email', $request->email)->first();
 
     if (!$user) {
@@ -43,6 +45,11 @@ Route::post('/login', function (Request $request) {
 
     if (!Hash::check($request->password, $user->password)) {
         return back()->withErrors(['email' => 'Email atau password salah']);
+    }
+
+    // 🔥 TAMBAHAN PRO (USER NONAKTIF GA BISA LOGIN)
+    if (!$user->is_active) {
+        return back()->withErrors(['email' => 'Akun anda nonaktif']);
     }
 
     Auth::login($user);
@@ -55,14 +62,10 @@ Route::post('/login', function (Request $request) {
 // =====================
 // FORGOT PASSWORD
 // =====================
-
-// FORM
 Route::get('/forgot-password', function () {
     return view('auth.forgot-password');
 })->name('password.request');
 
-
-// KIRIM EMAIL
 Route::post('/forgot-password', function (Request $request) {
 
     $request->validate([
@@ -83,14 +86,10 @@ Route::post('/forgot-password', function (Request $request) {
 // =====================
 // RESET PASSWORD
 // =====================
-
-// FORM RESET
 Route::get('/reset-password/{token}', function ($token) {
     return view('auth.reset-password', ['token' => $token]);
 })->name('password.reset');
 
-
-// SIMPAN PASSWORD BARU
 Route::post('/reset-password', function (Request $request) {
 
     $request->validate([
@@ -115,6 +114,7 @@ Route::post('/reset-password', function (Request $request) {
 })->name('password.update');
 
 
+// =====================
 // LOGOUT
 // =====================
 Route::post('/logout', function () {
@@ -122,42 +122,43 @@ Route::post('/logout', function () {
     return redirect('/login');
 })->name('logout');
 
+
 // =====================
 // AUTH AREA
 // =====================
 Route::middleware(['auth'])->group(function () {
 
-    // DASHBOARD UTAMA
+    // DASHBOARD
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // MENU DASHBOARD
+    // MENU
     Route::get('/layanan', [DashboardController::class, 'layanan'])->name('layanan');
     Route::get('/peminjaman', [LoanController::class, 'index'])->name('peminjaman');
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
-    
-    // Assets Resource Routes
+
+    // =====================
+    // 🔥 ASSET
+    // =====================
     Route::resource('assets', AssetController::class);
     Route::get('/assets/next-code', [AssetController::class, 'getNextCode']);
-    
-    // Categories Resource Routes
+
+    // =====================
+    // 🔥 CATEGORY
+    // =====================
     Route::resource('categories', CategoryController::class);
+
+    // =====================
+    // 🔥 MASTER USER PRO
+    // =====================
+    Route::resource('users', UserController::class);
+
+    Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset');
+    Route::post('/users/{id}/toggle', [UserController::class, 'toggle'])->name('users.toggle');
 
     // =====================
     // PROFILE
     // =====================
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-
-    Route::get('/assets/create', function () {
-        return view('assets.create');
-    })->name('assets.create');
-
-    Route::get('/users', function () {
-        return view('users.index');
-    })->name('users');
-
-    Route::get('/users/create', function () {
-        return view('users.create');
-    })->name('users.create');
 
 });
