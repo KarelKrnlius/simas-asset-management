@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AssetReturnController;
 
 /*
 |--------------------------------------------------------------------------
@@ -139,7 +140,11 @@ Route::middleware(['auth'])->group(function () {
     // =====================
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    
+    
 
+    Route::get('/pengembalian', [AssetReturnController::class, 'index'])->name('pengembalian.index');
+    Route::post('/pengembalian/store', [AssetReturnController::class, 'store'])->name('pengembalian.store');
 
     Route::get('/assets', function () {
         return view('assets.index');
