@@ -17,9 +17,18 @@ class AssetController extends Controller
         // Get sorting parameters
         $sortBy = request('sort_by'); // No default, let it be null if not provided
         $order = request('order', 'desc'); // Default: desc
+        $search = request('search'); // Search parameter
         
         // Build query with relationships
         $query = Asset::with('category');
+        
+        // Apply search filter
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('code', 'like', '%' . $search . '%')
+                  ->orWhere('name', 'like', '%' . $search . '%');
+            });
+        }
         
         // Handle dynamic category sorting from dropdown first
         if ($sortBy && str_starts_with($sortBy, 'category_')) {
@@ -61,8 +70,8 @@ class AssetController extends Controller
         
         $assets = $query->paginate(15);
         
-        // Append sort parameters to pagination links
-        $assets->appends(request()->only(['sort_by', 'order', 'category_id']));
+        // Append search and sort parameters to pagination links
+        $assets->appends(request()->only(['search', 'sort_by', 'order', 'category_id']));
         $categories = Category::withCount('assets')->orderBy('name')->get();
         
         // Calculate highest code numbers per category for instant code generation

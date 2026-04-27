@@ -87,8 +87,8 @@
                     class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors">
                     <option value="">-- Pilih Kondisi --</option>
                     <option value="baik">Baik</option>
-                    <option value="cukup">Cukup</option>
                     <option value="rusak">Rusak</option>
+                    <option value="hilang">Hilang</option>
                 </select>
             </div>
             
@@ -103,6 +103,7 @@
                     <option value="tersedia">Tersedia</option>
                     <option value="dipinjam">Dipinjam</option>
                     <option value="maintenance">Maintenance</option>
+                    <option value="tidak_tersedia">Tidak Tersedia</option>
                 </select>
             </div>
             

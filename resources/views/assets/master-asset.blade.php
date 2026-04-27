@@ -55,8 +55,30 @@
                     </span>
                 </div>
                 
-                <!-- Sort and Bulk Actions -->
-                <div class="flex flex-col sm:flex-row gap-3">
+                <!-- Search, Sort and Bulk Actions -->
+                <div class="flex flex-col lg:flex-row gap-3">
+                    <!-- Search Input -->
+                    <div class="flex-1">
+                        <label class="text-sm font-semibold text-slate-700 mb-1 block">Search</label>
+                        <div class="flex gap-2">
+                            <div class="relative flex-1">
+                                <input type="text" 
+                                       id="searchInput" 
+                                       placeholder="Cari kode asset" 
+                                       class="w-full px-4 py-2 pr-10 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent"
+                                       onkeyup="handleSearch(event)">
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                    <i class="fas fa-search text-slate-400"></i>
+                                </div>
+                            </div>
+                            <button onclick="performRefresh()" 
+                                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                                <i class="fas fa-sync-alt"></i>
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+                    
                     <!-- Sort Dropdown -->
                     <div class="relative">
                         <label class="text-sm font-semibold text-slate-700 mb-1 block text-center">Sort by</label>
@@ -91,7 +113,7 @@
             </div>
             
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="w-full" id="assetsTable">
                     <thead>
                         <tr class="border-b-2 border-slate-200">
                             <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">
@@ -137,7 +159,9 @@
                                     </span>
                                 </td>
                                 <td class="py-4 px-4">
-                                    <span class="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-lg font-bold text-sm">
+                                    <span class="inline-block px-3 py-1 rounded-lg font-bold text-sm
+                                        @if($asset->stock == 0) bg-red-100 text-red-700
+                                        @else bg-green-100 text-green-700 @endif">
                                         {{ $asset->stock }}
                                     </span>
                                 </td>
@@ -240,7 +264,7 @@
     </div>
 </div>
 
-{{-- INCLUDE MODALS --}}
+{{-- INCLUDE ASSET --}}
 @include('assets.tambah-asset')
 @include('assets.tambah-kategori')
 @include('assets.category-list')
@@ -248,7 +272,7 @@
 @include('assets.edit-asset')
 @include('assets.delete-asset')
 
-{{-- BULK DELETE MODAL --}}
+{{-- DELETE ASSET --}}
 <div id="bulkDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
     <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
         <div class="flex items-center gap-3 mb-4">
@@ -300,6 +324,71 @@
 
 {{-- SORTING AND BULK DELETE JAVASCRIPT --}}
 <script>
+// Debounce timer for search
+let searchTimeout;
+
+// Search functionality - Enter key only
+function handleSearch(event) {
+    if (event.key === 'Enter') {
+        const searchTerm = event.target.value.trim();
+        
+        if (searchTerm === '') {
+            // Reset to default view
+            performRefresh();
+        } else {
+            // Submit search to server
+            performSearch(searchTerm);
+        }
+    }
+}
+
+function performSearch(searchTerm) {
+    const url = new URL(window.location);
+    
+    // Clear page parameter to start from page 1
+    url.searchParams.delete('page');
+    
+    // Set search parameter
+    url.searchParams.set('search', searchTerm);
+    
+    // Reload page with search
+    window.location.href = url.toString();
+}
+
+function performRefresh() {
+    const url = new URL(window.location);
+    const currentSortBy = url.searchParams.get('sort_by');
+    const currentOrder = url.searchParams.get('order');
+    const currentCategoryId = url.searchParams.get('category_id');
+    
+    // Clear all parameters
+    url.searchParams.delete('search');
+    url.searchParams.delete('page');
+    
+    // Preserve sort by parameters
+    if (currentSortBy) {
+        url.searchParams.set('sort_by', currentSortBy);
+    }
+    if (currentOrder) {
+        url.searchParams.set('order', currentOrder);
+    }
+    if (currentCategoryId) {
+        url.searchParams.set('category_id', currentCategoryId);
+    }
+    
+    // Reload page with clean URL
+    window.location.href = url.toString();
+}
+
+function updateEmptyState() {
+    const visibleRows = document.querySelectorAll('#assetsTable tbody tr:not([style*="display: none"])');
+    const emptyState = document.querySelector('.empty-state');
+    
+    if (emptyState) {
+        emptyState.style.display = visibleRows.length === 0 ? 'block' : 'none';
+    }
+}
+
 // Sorting functionality
 function applySorting() {
     const sortValue = document.getElementById('sortSelect').value;
@@ -367,14 +456,16 @@ function updateBulkDeleteButton() {
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
     const totalCheckboxes = document.querySelectorAll('.asset-checkbox');
     
-    // Update button state
+    // Update button and checkbox states
     bulkDeleteBtn.disabled = checkboxes.length === 0;
     
-    // Update select all checkbox state
-    if (checkboxes.length === 0) {
+    const checkedCount = checkboxes.length;
+    const totalCount = totalCheckboxes.length;
+    
+    if (checkedCount === 0) {
         selectAllCheckbox.checked = false;
         selectAllCheckbox.indeterminate = false;
-    } else if (checkboxes.length === totalCheckboxes.length) {
+    } else if (checkedCount === totalCount) {
         selectAllCheckbox.checked = true;
         selectAllCheckbox.indeterminate = false;
     } else {
@@ -469,6 +560,21 @@ function confirmBulkDelete() {
 
 // Check for bulk delete success on page load
 document.addEventListener('DOMContentLoaded', function() {
+    // Check for open_modal parameter to auto-open add asset modal
+    const urlParams = new URLSearchParams(window.location.search);
+    const openModal = urlParams.get('open_modal');
+    
+    if (openModal === 'add') {
+        // Remove the parameter from URL
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        
+        // Open add asset modal
+        setTimeout(() => {
+            openAddAssetModal();
+        }, 500);
+    }
+    
     const bulkDeleteSuccess = sessionStorage.getItem('bulkDeleteSuccess');
     const bulkDeleteMessage = sessionStorage.getItem('bulkDeleteMessage');
     
