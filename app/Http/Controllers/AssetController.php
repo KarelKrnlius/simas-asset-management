@@ -157,6 +157,8 @@ class AssetController extends Controller
             'name' => 'required|string|max:100',
             'description' => 'nullable|string|max:1000',
             'stock' => 'required|integer|min:0',
+            'condition' => 'required|string|max:20',
+            'status' => 'required|in:tersedia,dipinjam,diperbaiki',
         ]);
 
         if ($validator->fails()) {
@@ -246,7 +248,7 @@ class AssetController extends Controller
             'description' => 'nullable|string|max:1000',
             'stock' => 'required|integer|min:0',
             'condition' => 'required|string|max:20',
-            'status' => 'required|string|max:20',
+            'status' => 'required|in:tersedia,dipinjam,diperbaiki',
         ]);
 
         if ($validator->fails()) {

@@ -102,7 +102,7 @@
                     <option value="">-- Pilih Status --</option>
                     <option value="tersedia">Tersedia</option>
                     <option value="dipinjam">Dipinjam</option>
-                    <option value="maintenance">Maintenance</option>
+                    <option value="perlu_perbaikan">Perlu Perbaikan</option>
                     <option value="tidak_tersedia">Tidak Tersedia</option>
                 </select>
             </div>

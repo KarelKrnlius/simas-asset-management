@@ -4,132 +4,238 @@
 
 @section('content')
 
-{{-- Container Utama: Form card untuk peminjaman --}}
 <div class="w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl p-10 h-auto -mt-4">
 
-        {{-- JUDUL --}}
-        <div class="text-center mb-8">
-            <h2 class="text-2xl font-black text-red-600 uppercase tracking-tighter mb-2">
-                PEMINJAMAN ASSET
-            </h2>
-            <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">
-                Isi data dengan teliti dan benar
-            </p>
-        </div>
-
-        <form action="{{ route('peminjaman') }}" method="POST">
-            @csrf
-
-            {{-- NAMA PEMINJAM --}}
-            <div class="mb-6">
-                <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Nama Peminjam
-                </label>
-                <input type="text"
-                    value="{{ auth()->user()->name ?? '' }}"
-                    readonly
-                    class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700">
-            </div>
-
-            {{-- ASSET SECTION --}}
-            <div class="mb-6">
-                <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Asset (Maksimal 5)
-                </label>
-                <div id="asset-wrapper" class="space-y-3 mb-4">
-                    {{-- Row asset akan muncul di sini --}}
-                </div>
-
-                <button type="button" onclick="addAsset()" 
-                    class="bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-wider px-4 py-3 rounded-xl transition-all duration-300 hover:shadow-lg">
-                    <i class="fas fa-plus mr-2"></i> Tambah Asset
-                </button>
-
-                <div class="flex gap-4 mt-3 text-xs font-bold text-slate-400">
-                    <span>🟢 Tersedia</span>
-                    <span>🔴 Sedang dipinjam</span>
-                </div>
-            </div>
-
-            {{-- TANGGAL --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                        Tgl Pinjam
-                    </label>
-                    <input type="date" name="borrow_date" required 
-                        class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-500 focus:outline-none transition-colors">
-                </div>
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                        Tgl Kembali
-                    </label>
-                    <input type="date" name="return_date" required 
-                        class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-500 focus:outline-none transition-colors">
-                </div>
-            </div>
-
-            {{-- TOMBOL KIRIM --}}
-            <button type="submit" 
-                class="w-full bg-red-600 hover:bg-red-700 text-white font-black text-sm uppercase tracking-wider py-4 rounded-xl transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
-                KIRIM PERMINTAAN
-            </button>
-        </form>
-
-    </div>
+<div class="text-center mb-8">
+    <h2 class="text-2xl font-black text-red-600 uppercase tracking-tighter mb-2">
+        PEMINJAMAN ASSET
+    </h2>
+    <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">
+        Isi data dengan teliti dan benar
+    </p>
 </div>
 
-{{-- JS UNTUK DYNAMIC ASSET --}}
+<form action="{{ route('peminjaman.store') }}" method="POST" onsubmit="return validateForm()">
+    @csrf
+
+    {{-- NAMA --}}
+    <div class="mb-6">
+        <label class="block text-xs font-black text-slate-600 mb-2">
+            Nama Peminjam
+        </label>
+        <input type="text"
+            value="{{ auth()->user()->name ?? '' }}"
+            readonly
+            class="w-full px-4 py-3 bg-slate-50 border rounded-xl font-bold">
+    </div>
+
+    {{-- ASSET --}}
+    <div class="mb-6">
+        <label class="block text-xs font-black text-slate-600 mb-2">
+            Asset (Max 5)
+        </label>
+
+        <div id="asset-wrapper" class="space-y-3 mb-4"></div>
+
+        <button type="button" onclick="addAsset()"
+            class="bg-slate-900 text-white px-4 py-3 rounded-xl text-xs font-bold">
+            + Tambah Asset
+        </button>
+
+        <div class="flex gap-4 mt-3 text-xs font-bold text-slate-400">
+            <span>🟢 Tersedia</span>
+            <span>🔴 Dipinjam</span>
+            <span>🟡 Perlu Perbaikan</span>
+            <span>⚫ Tidak Tersedia</span>
+        </div>
+    </div>
+
+    {{-- TANGGAL --}}
+    <div class="grid grid-cols-2 gap-4 mb-6">
+        <input type="date" name="borrow_date" required class="border p-3 rounded-xl">
+        <input type="date" name="return_date" required class="border p-3 rounded-xl">
+    </div>
+
+    <button class="w-full bg-red-600 text-white py-3 rounded-xl font-bold">
+        KIRIM
+    </button>
+
+</form>
+
+
+</div>
+
 <script>
 let maxAsset = 5;
 let count = 0;
-const assets = @json($assets);
 
+const assets = @json($assets);
+const categories = @json($categories);
+
+// ambil asset yg sudah dipilih
+function getSelectedAssets() {
+    return Array.from(document.querySelectorAll('input[name="asset_id[]"]'))
+        .map(i => i.value);
+}
+
+// tambah row
 function addAsset() {
-    if (count >= maxAsset) {
-        alert("Maksimal 5 asset per peminjaman!");
-        return;
-    }
+    if (count >= maxAsset) return alert("Max 5!");
 
     let wrapper = document.getElementById('asset-wrapper');
+
     let div = document.createElement('div');
-    div.className = "flex gap-3 items-center animate-fadeIn";
+    div.className = "p-3 border rounded-xl space-y-2";
 
-    let select = `<select name="asset_id[]" class="flex-1 px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-500 focus:outline-none transition-colors" required>
-                    <option value="">-- Pilih Asset --</option>`;
+    div.innerHTML = `
+        <select onchange="resetRow(this)" class="w-full border p-2 rounded-xl">
+            <option value="">Pilih Kategori</option>
+            ${categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+        </select>
 
-    assets.forEach(a => {
-        let isAvailable = a.status === 'tersedia';
-        let label = isAvailable ? `🟢 ${a.name}` : `🔴 ${a.name}`;
-        let disabled = isAvailable ? '' : 'disabled';
-        let colorClass = isAvailable ? 'text-slate-700' : 'text-slate-400';
-        select += `<option value="${a.id}" ${disabled} class="${colorClass}">${label}</option>`;
-    });
+        <div class="relative">
+            <input type="text" placeholder="Cari asset..."
+                onkeyup="searchAsset(this)"
+                class="w-full border p-2 rounded-xl">
 
-    select += `</select>`;
+            <div class="asset-list absolute w-full bg-white border mt-1 rounded-xl shadow max-h-40 overflow-auto hidden"></div>
+        </div>
 
-    div.innerHTML = select + `
-        <button type="button" onclick="this.parentElement.remove(); count--" 
-            class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 w-12 h-12 rounded-xl font-bold transition-all duration-200 hover:shadow-md">
-            <i class="fas fa-trash"></i>
-        </button>`;
+        <input type="hidden" name="asset_id[]">
+
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-600 font-semibold">KODE ASSET:</span>
+                <span id="asset-code-display" class="text-xs font-bold text-red-600">-</span>
+            </div>
+            <button type="button" onclick="removeRow(this)" class="text-red-500 text-xs">
+                Hapus
+            </button>
+        </div>
+    `;
 
     wrapper.appendChild(div);
     count++;
 }
 
-// Auto add first asset row on load
+// hapus
+function removeRow(btn) {
+    btn.closest('.p-3').remove();
+    count--;
+}
+
+// reset
+function resetRow(select) {
+    let parent = select.parentElement;
+    parent.querySelector('.asset-list').innerHTML = '';
+    parent.querySelector('input[type="text"]').value = '';
+}
+
+// search
+function searchAsset(input) {
+    let keyword = input.value.toLowerCase();
+    let parent = input.closest('.p-3');
+
+    let categoryId = parent.querySelector('select').value;
+    let list = parent.querySelector('.asset-list');
+
+    list.innerHTML = '';
+
+    if (!keyword) {
+        list.classList.add('hidden');
+        return;
+    }
+
+    if (!categoryId) {
+        list.innerHTML = `<div class="p-2 text-red-500">Pilih kategori dulu</div>`;
+        list.classList.remove('hidden');
+        return;
+    }
+
+    let selected = getSelectedAssets();
+
+    let filtered = assets.filter(a =>
+        a.category_id == categoryId &&
+        a.name.toLowerCase().includes(keyword)
+    );
+
+    filtered.forEach(a => {
+        let isAvailable = a.status === 'tersedia';
+        let isBorrowed = a.status === 'dipinjam';
+        let isRepair = a.status === 'perlu_perbaiki';
+        let isNotAvailable = a.status === 'tidak_tersedia';
+        let isSelected = selected.includes(a.id.toString());
+
+        let item = document.createElement('div');
+        item.className = "p-2 flex justify-between";
+
+        item.innerHTML = `
+            <span>${a.name}</span>
+            <span class="text-xs">${a.code}</span>
+        `;
+
+        if (!isAvailable || isBorrowed || isRepair || isNotAvailable || isSelected) {
+            item.classList.add('opacity-50');
+        } else {
+            item.classList.add('cursor-pointer', 'hover:bg-slate-100');
+            item.onclick = () => selectAsset(parent, input, a);
+        }
+
+        list.appendChild(item);
+    });
+
+    list.classList.remove('hidden');
+}
+
+// pilih
+function selectAsset(parent, input, asset) {
+    let list = parent.querySelector('.asset-list');
+    let codeDisplay = parent.querySelector('#asset-code-display');
+
+    input.value = asset.name;
+    codeDisplay.textContent = asset.code;
+
+    list.innerHTML = `
+        <div class="bg-green-100 p-2 rounded flex justify-between">
+            <span>✔ ${asset.name}</span>
+            <span>${asset.code}</span>
+        </div>
+    `;
+
+    parent.querySelector('input[name="asset_id[]"]').value = asset.id;
+    list.classList.remove('hidden');
+}
+
+// klik luar close
+document.addEventListener('click', function(e) {
+    document.querySelectorAll('.asset-list').forEach(list => {
+        if (!list.contains(e.target)) {
+            list.classList.add('hidden');
+        }
+    });
+});
+
+// validate form
+function validateForm() {
+    const selectedAssets = document.querySelectorAll('input[name="asset_id[]"]');
+    let hasSelectedAsset = false;
+    
+    selectedAssets.forEach(input => {
+        if (input.value && input.value !== '') {
+            hasSelectedAsset = true;
+        }
+    });
+    
+    if (!hasSelectedAsset) {
+        alert('Silakan pilih minimal satu asset terlebih dahulu!');
+        return false;
+    }
+    
+    return true;
+}
+
+// auto first
 window.onload = addAsset;
 </script>
-
-<style>
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.animate-fadeIn {
-    animation: fadeIn 0.3s ease-out;
-}
-</style>
 
 @endsection

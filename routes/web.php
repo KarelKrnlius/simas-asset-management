@@ -135,6 +135,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // MENU DASHBOARD
     Route::get('/layanan', [DashboardController::class, 'layanan'])->name('layanan');
     Route::get('/peminjaman', [LoanController::class, 'index'])->name('peminjaman');
+Route::post('/peminjaman', [LoanController::class, 'store'])->name('peminjaman.store');
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
     
     // Assets Resource Routes (Admin Only)
