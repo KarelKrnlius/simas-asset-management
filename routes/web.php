@@ -166,26 +166,21 @@ Route::post('/peminjaman', [LoanController::class, 'store'])->name('peminjaman.s
     Route::post('/pengembalian', [AssetReturnController::class, 'store'])->middleware('role:admin')->name('pengembalian.store');
 
     // =====================
-    // 🔥 MASTER USER PRO
+    // 🔥 MASTER USER (Admin Only)
     // =====================
-    Route::resource('users', UserController::class);
-
-    Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset');
-    Route::post('/users/{id}/toggle', [UserController::class, 'toggle'])->name('users.toggle');
+    Route::middleware('role:admin')->group(function () {
+        Route::resource('users', UserController::class);
+        Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset');
+        Route::post('/users/{id}/toggle', [UserController::class, 'toggle'])->name('users.toggle');
+        Route::get('/users/{id}/history', [UserController::class, 'getHistory'])->name('users.history');
+        Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
+    });
 
     // =====================
-    // PROFILE
+    // PROFILE (All Authenticated Users)
     // =====================
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-
-    
-    Route::get('/users', function () {
-        return view('users.index');
-    })->name('users');
-
-    Route::get('/users/create', function () {
-        return view('users.create');
-    })->name('users.create');
+    Route::post('/profile/logout-all-devices', [ProfileController::class, 'logoutAllDevices'])->name('profile.logout-all-devices');
 
 });

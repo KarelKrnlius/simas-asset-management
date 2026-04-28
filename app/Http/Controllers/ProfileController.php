@@ -36,4 +36,31 @@ class ProfileController extends Controller
 
         return redirect()->route('profile')->with('success', 'Profil berhasil diperbarui!');
     }
+
+    /**
+     * Logout user from all devices
+     */
+    public function logoutAllDevices()
+    {
+        $user = Auth::user();
+        
+        // Revoke all tokens for the user (if using API tokens)
+        if (method_exists($user, 'tokens')) {
+            $user->tokens()->delete();
+        }
+        
+        // Invalidate all sessions by updating password hash
+        // This will force logout from all devices
+        $user->password = Hash::make($user->password);
+        $user->save();
+        
+        // Logout current session
+        Auth::logout();
+        
+        // Invalidate current session
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+        
+        return redirect()->route('login')->with('success', 'Anda telah keluar dari semua perangkat!');
+    }
 }
