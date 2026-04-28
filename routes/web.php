@@ -5,15 +5,22 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Log;
 
 use App\Models\User;
+
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
 
 // =====================
 // HOME → LOGIN
@@ -23,7 +30,7 @@ Route::get('/', function () {
 });
 
 // =====================
-// LOGIN & AUTH
+// LOGIN
 // =====================
 Route::get('/login', function () {
     // If user is already authenticated, redirect to dashboard
@@ -34,6 +41,7 @@ Route::get('/login', function () {
 })->name('login');
 
 Route::post('/login', function (Request $request) {
+
     $user = User::where('email', $request->email)->first();
 
     if (!$user) {
@@ -44,21 +52,24 @@ Route::post('/login', function (Request $request) {
         return back()->withErrors(['email' => 'Email atau password salah']);
     }
 
+    // 🔥 TAMBAHAN PRO (USER NONAKTIF GA BISA LOGIN)
+    if (!$user->is_active) {
+        return back()->withErrors(['email' => 'Akun anda nonaktif']);
+    }
+
     Auth::login($user);
 
     return redirect()->route('dashboard');
 
 })->name('login.process');
 
-
-
-// FORM
+// =====================
+// FORGOT PASSWORD
+// =====================
 Route::get('/forgot-password', function () {
     return view('auth.forgot-password');
 })->name('password.request');
 
-
-// KIRIM EMAIL
 Route::post('/forgot-password', function (Request $request) {
 
     $request->validate([
@@ -75,14 +86,13 @@ Route::post('/forgot-password', function (Request $request) {
 
 })->name('password.email');
 
-
-// FORM RESET
+// =====================
+// RESET PASSWORD
+// =====================
 Route::get('/reset-password/{token}', function ($token) {
     return view('auth.reset-password', ['token' => $token]);
 })->name('password.reset');
 
-
-// SIMPAN PASSWORD BARU
 Route::post('/reset-password', function (Request $request) {
 
     $request->validate([
@@ -107,6 +117,7 @@ Route::post('/reset-password', function (Request $request) {
 })->name('password.update');
 
 
+// =====================
 // LOGOUT
 // =====================
 Route::post('/logout', function () {
@@ -124,15 +135,16 @@ Route::post('/logout', function () {
     return redirect('/login')->with('status', 'Anda telah berhasil logout.');
 })->name('logout');
 
+
 // =====================
 // AUTH AREA
 // =====================
 Route::middleware(['auth', 'nocache'])->group(function () {
 
-    // DASHBOARD UTAMA
+    // DASHBOARD
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // MENU DASHBOARD
+    // MENU
     Route::get('/layanan', [DashboardController::class, 'layanan'])->name('layanan');
     Route::get('/peminjaman', [LoanController::class, 'index'])->name('peminjaman');
 Route::post('/peminjaman', [LoanController::class, 'store'])->name('peminjaman.store');
@@ -147,11 +159,18 @@ Route::post('/peminjaman', [LoanController::class, 'store'])->name('peminjaman.s
     Route::resource('categories', CategoryController::class)->middleware('role:admin');
 
     // =====================
+    // 🔥 MASTER USER PRO
+    // =====================
+    Route::resource('users', UserController::class);
+
+    Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset');
+    Route::post('/users/{id}/toggle', [UserController::class, 'toggle'])->name('users.toggle');
+
+    // =====================
     // PROFILE
     // =====================
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/logout-all-devices', [AuthController::class, 'logoutAllDevices'])->name('logout.all.devices');
 
-    
 });

@@ -54,10 +54,11 @@ class Loan extends Model
         return $this->belongsTo(User::class);
     }
 
-    // 🔥 INI YANG KAMU BELUM ADA
+    // Use loan_details table for asset relationship
     public function assets()
     {
-        return $this->belongsToMany(Asset::class);
+        return $this->belongsToMany(Asset::class, 'loan_details', 'loan_id', 'asset_id')
+                    ->withPivot('quantity');
     }
 
     public function createdBy()
