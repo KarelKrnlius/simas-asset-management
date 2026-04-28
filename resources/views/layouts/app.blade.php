@@ -47,6 +47,10 @@
                     <div class="min-w-[20px] text-center"><i class="fas fa-boxes"></i></div>
                     <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Master Asset</span>
                 </a>
+                <a href="/pengembalian" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('pengembalian*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
+                    <div class="min-w-[20px] text-center"><i class="fas fa-undo"></i></div>
+                    <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Pengembalian</span>
+                </a>
             </div>
             @endif
 
@@ -96,63 +100,10 @@
                             </div>
                         </button>
                     </form>
-                    
-                    <!-- Logout All Devices -->
-                    <button @click="showLogoutAllModal = true" class="w-full flex items-center gap-3 p-3 text-red-600 hover:bg-red-50 text-left border-t border-slate-100">
-                        <i class="fas fa-shield-alt text-sm"></i>
-                        <div>
-                            <div class="text-xs font-semibold">Keluar dari Semua Perangkat</div>
-                            <div class="text-[9px] text-slate-400">Logout semua perangkat kecuali yang ini</div>
-                        </div>
-                    </button>
                 </div>
             </div>
         </div>
     </aside>
-
-    <!-- Logout All Devices Modal -->
-    <div x-show="showLogoutAllModal" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-         @click.self="showLogoutAllModal = false">
-        
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 transform scale-95"
-             x-transition:enter-end="opacity-100 transform scale-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100 transform scale-95"
-             x-transition:leave-end="opacity-0 transform scale-95">
-            
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-shield-alt text-red-600 text-2xl"></i>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-2">Keluar dari Semua Perangkat</h3>
-                <p class="text-sm text-slate-500">Apakah Anda yakin ingin keluar dari semua perangkat kecuali perangkat ini?</p>
-            </div>
-            
-            <div class="flex gap-3">
-                <button type="button" 
-                        @click="showLogoutAllModal = false"
-                        class="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors">
-                    Batal
-                </button>
-                <form action="{{ route('logout.all.devices') }}" method="POST" class="flex-1">
-                    @csrf
-                    <button type="submit" 
-                            class="w-full px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors">
-                        Ya, Keluar Semua
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <main :class="sidebarOpen ? 'ml-72' : 'ml-24'" class="sidebar-transition min-h-screen flex flex-col">
         <header class="h-24 px-8 flex items-center justify-between sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 flex-shrink-0">

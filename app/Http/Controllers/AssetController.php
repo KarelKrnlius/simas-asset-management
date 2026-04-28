@@ -50,8 +50,8 @@ class AssetController extends Controller
                     }
                     break;
                 case 'code':
-                    // Extract numeric part for proper numeric sorting
-                    $query->orderByRaw('CAST(SUBSTRING(code, 5) AS UNSIGNED) ' . $order);
+                    // Extract numeric part for proper numeric sorting and ignore invalid blank codes
+                    $query->orderByRaw("NULLIF(REGEXP_REPLACE(SUBSTRING(code, 5), '[^0-9].*', ''), '')::int {$order}");
                     break;
                 case 'name':
                     $query->orderBy('name', $order);
@@ -78,13 +78,14 @@ class AssetController extends Controller
         $categoryHighestCodes = [];
         foreach ($categories as $category) {
             $lastAsset = Asset::where('category_id', $category->id)
-                ->orderByRaw('CAST(SUBSTRING(code, 5) AS INTEGER) DESC')
+                ->whereRaw("SUBSTRING(code, 5) ~ '^[0-9]+'")
+                ->orderByRaw("NULLIF(REGEXP_REPLACE(SUBSTRING(code, 5), '[^0-9].*', ''), '')::int DESC")
                 ->first();
             
             if ($lastAsset) {
                 // Extract number from code (handle both single and range codes)
                 $codeParts = explode('-', $lastAsset->code);
-                $highestNumber = (int)substr($codeParts[0], 4);
+                $highestNumber = (int)preg_replace('/[^0-9]/', '', $codeParts[0]);
             } else {
                 $highestNumber = 0;
             }
@@ -116,14 +117,15 @@ class AssetController extends Controller
             
             // Get the highest existing asset number for this category
             $lastAsset = Asset::where('category_id', $categoryId)
-                ->orderByRaw('CAST(SUBSTRING(code, 5) AS INTEGER) DESC')
+                ->whereRaw("SUBSTRING(code, 5) ~ '^[0-9]+'")
+                ->orderByRaw("NULLIF(REGEXP_REPLACE(SUBSTRING(code, 5), '[^0-9].*', ''), '')::int DESC")
                 ->first();
             
             $lastNumber = 0;
             if ($lastAsset) {
                 // Extract number from code (handle both single and range codes)
                 $codeParts = explode('-', $lastAsset->code);
-                $lastNumber = (int)substr($codeParts[0], 4);
+                $lastNumber = (int)preg_replace('/[^0-9]/', '', $codeParts[0]);
             }
             
             $startNumber = $lastNumber + 1;
@@ -175,14 +177,15 @@ class AssetController extends Controller
             
             // Get the highest existing asset number for this category
             $lastAsset = Asset::where('category_id', $request->category_id)
-                ->orderByRaw('CAST(SUBSTRING(code, 5) AS INTEGER) DESC')
+                ->whereRaw("SUBSTRING(code, 5) ~ '^[0-9]+'")
+                ->orderByRaw("NULLIF(REGEXP_REPLACE(SUBSTRING(code, 5), '[^0-9].*', ''), '')::int DESC")
                 ->first();
             
             $lastNumber = 0;
             if ($lastAsset) {
                 // Extract number from code (handle both single and range codes)
                 $codeParts = explode('-', $lastAsset->code);
-                $lastNumber = (int)substr($codeParts[0], 4);
+                $lastNumber = (int)preg_replace('/[^0-9]/', '', $codeParts[0]);
             }
             
             $stock = (int) $request->stock;

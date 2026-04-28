@@ -5,6 +5,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cookie;
 
 use App\Models\User;
 
@@ -15,6 +17,7 @@ use App\Http\Controllers\AssetController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AssetReturnController;
 
 /*
 |--------------------------------------------------------------------------
@@ -129,8 +132,8 @@ Route::post('/logout', function () {
     session()->regenerateToken();
     
     // Clear cookies
-    \Cookie::queue(\Cookie::forget('laravel_session'));
-    \Cookie::queue(\Cookie::forget('XSRF-TOKEN'));
+    Cookie::queue(Cookie::forget('laravel_session'));
+    Cookie::queue(Cookie::forget('XSRF-TOKEN'));
     
     return redirect('/login')->with('status', 'Anda telah berhasil logout.');
 })->name('logout');
@@ -158,6 +161,10 @@ Route::post('/peminjaman', [LoanController::class, 'store'])->name('peminjaman.s
     // Categories Resource Routes (Admin Only)
     Route::resource('categories', CategoryController::class)->middleware('role:admin');
 
+    // Asset Return Routes (Admin Only)
+    Route::get('/pengembalian', [AssetReturnController::class, 'index'])->middleware('role:admin')->name('pengembalian');
+    Route::post('/pengembalian', [AssetReturnController::class, 'store'])->middleware('role:admin')->name('pengembalian.store');
+
     // =====================
     // 🔥 MASTER USER PRO
     // =====================
@@ -171,6 +178,14 @@ Route::post('/peminjaman', [LoanController::class, 'store'])->name('peminjaman.s
     // =====================
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::post('/logout-all-devices', [AuthController::class, 'logoutAllDevices'])->name('logout.all.devices');
+
+    
+    Route::get('/users', function () {
+        return view('users.index');
+    })->name('users');
+
+    Route::get('/users/create', function () {
+        return view('users.create');
+    })->name('users.create');
 
 });

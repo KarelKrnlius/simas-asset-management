@@ -51,14 +51,19 @@ class LoanController extends Controller
             'user_id' => Auth::id(),
             'borrow_date' => $request->borrow_date,
             'return_date' => $request->return_date,
-            'status' => 'pending',
+            'status' => 'dipinjam',
         ]);
 
-        // ✅ ATTACH ASSET
-        $loan->assets()->attach($request->asset_id);
+// attach assets with required quantity pivot value
+        $attachData = collect($request->asset_id)
+            ->unique()
+            ->mapWithKeys(fn ($assetId) => [$assetId => ['quantity' => 1]])
+            ->all();
 
-        // ✅ UPDATE STATUS
-        Asset::whereIn('id', $request->asset_id)->update([
+        $loan->assets()->attach($attachData);
+
+        // update status asset
+        Asset::whereIn('id', array_keys($attachData))->update([
             'status' => 'dipinjam'
         ]);
 

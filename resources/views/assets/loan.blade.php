@@ -65,6 +65,7 @@
 
 </div>
 
+{{-- JS UNTUK DYNAMIC ASSET --}}
 <script>
 let maxAsset = 5;
 let count = 0;
