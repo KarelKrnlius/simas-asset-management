@@ -246,9 +246,9 @@ body {
       *Link reset akan dikirim jika email terdaftar
     </p>
 
-    <div class="back">
+    <!-- <div class="back">
       <a href="/login" onclick="goLogin(event)">← Kembali ke Login</a>
-    </div>
+    </div> -->
   </div>
 
   <!-- MERAH -->

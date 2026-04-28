@@ -27,12 +27,26 @@ class ProfileController extends Controller
         $user->name = $request->name;
         $user->email = $request->email;
 
-        // Update password hanya jika input tidak kosong
+        // Check if password is being updated
+        $passwordChanged = false;
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
+            $passwordChanged = true;
         }
 
         $user->save();
+
+        // If password was changed, logout user and redirect to login
+        if ($passwordChanged) {
+            // Logout user
+            Auth::logout();
+            
+            // Invalidate all sessions
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
+            
+            return redirect()->route('login')->with('success', 'Password berhasil diubah! Silakan login kembali dengan password baru.');
+        }
 
         return redirect()->route('profile')->with('success', 'Profil berhasil diperbarui!');
     }

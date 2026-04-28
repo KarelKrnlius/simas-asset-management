@@ -92,10 +92,14 @@
                                 <div class="space-y-3">
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">Kata Sandi Baru</label>
                                     <div class="relative">
-                                        <input type="password" id="password" name="password" placeholder="••••••••" class="w-full px-6 py-4 pr-12 bg-white border-2 border-slate-200 rounded-2xl focus:border-red-primary focus:outline-none font-bold transition-all">
+                                        <input type="password" id="password" name="password" placeholder="••••••••" minlength="8" class="w-full px-6 py-4 pr-12 bg-white border-2 border-slate-200 rounded-2xl focus:border-red-primary focus:outline-none font-bold transition-all">
                                         <button type="button" onclick="togglePassword('password')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600">
                                             <svg id="password-eye" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                         </button>
+                                    </div>
+                                    <!-- Password requirement -->
+                                    <div class="mt-2">
+                                        <span class="text-[8px] text-gray-500">• Password minimal 8 karakter</span>
                                     </div>
                                     @error('password')
                                         <span class="text-red-500 text-xs block mt-1 font-medium">{{ $message }}</span>
@@ -108,6 +112,11 @@
                                         <button type="button" onclick="togglePassword('password_confirmation')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600">
                                             <svg id="password_confirmation-eye" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                         </button>
+                                    </div>
+                                    <!-- Password match indicator -->
+                                    <div id="passwordMatchIndicator" class="hidden flex items-center gap-2 mt-1">
+                                        <i id="matchIcon" class="fas text-xs"></i>
+                                        <span id="matchText" class="text-xs font-medium"></span>
                                     </div>
                                     @error('password_confirmation')
                                         <span class="text-red-500 text-xs block mt-1 font-medium">{{ $message }}</span>
@@ -288,16 +297,22 @@
     document.addEventListener('DOMContentLoaded', function() {
         const passwordField = document.getElementById('password');
         const passwordConfirmField = document.getElementById('password_confirmation');
+        const matchIndicator = document.getElementById('passwordMatchIndicator');
+        const matchIcon = document.getElementById('matchIcon');
+        const matchText = document.getElementById('matchText');
 
         function validatePasswords() {
             const password = passwordField.value;
             const passwordConfirmation = passwordConfirmField.value;
 
             // Reset borders
-            passwordField.classList.remove('border-red-500');
-            passwordConfirmField.classList.remove('border-red-500');
+            passwordField.classList.remove('border-red-500', 'border-emerald-500');
+            passwordConfirmField.classList.remove('border-red-500', 'border-emerald-500');
             passwordField.classList.add('border-slate-200');
             passwordConfirmField.classList.add('border-slate-200');
+
+            // Hide indicator by default
+            matchIndicator.classList.add('hidden');
 
             // Check if both fields have value
             if (password || passwordConfirmation) {
@@ -306,16 +321,30 @@
                     passwordField.classList.add('border-red-500');
                 }
 
-                if (passwordConfirmation && password !== passwordConfirmation) {
-                    passwordConfirmField.classList.remove('border-slate-200');
-                    passwordConfirmField.classList.add('border-red-500');
-                }
-
-                if (password.length >= 8 && password === passwordConfirmation) {
-                    passwordField.classList.remove('border-red-500');
-                    passwordField.classList.add('border-emerald-500');
-                    passwordConfirmField.classList.remove('border-red-500');
-                    passwordConfirmField.classList.add('border-emerald-500');
+                if (passwordConfirmation) {
+                    matchIndicator.classList.remove('hidden');
+                    
+                    if (password !== passwordConfirmation) {
+                        passwordConfirmField.classList.remove('border-slate-200');
+                        passwordConfirmField.classList.add('border-red-500');
+                        
+                        // Show red indicator
+                        matchIcon.className = 'fas fa-times-circle text-red-500 text-xs';
+                        matchText.textContent = 'Password tidak cocok';
+                        matchText.className = 'text-xs font-medium text-red-500';
+                    } else {
+                        // Show green indicator
+                        matchIcon.className = 'fas fa-check-circle text-emerald-500 text-xs';
+                        matchText.textContent = 'Password cocok';
+                        matchText.className = 'text-xs font-medium text-emerald-500';
+                        
+                        if (password.length >= 8) {
+                            passwordField.classList.remove('border-red-500');
+                            passwordField.classList.add('border-emerald-500');
+                            passwordConfirmField.classList.remove('border-red-500');
+                            passwordConfirmField.classList.add('border-emerald-500');
+                        }
+                    }
                 }
             }
         }
