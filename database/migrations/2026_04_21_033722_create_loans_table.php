@@ -14,11 +14,16 @@ return new class extends Migration
         Schema::create('loans', function (Blueprint $table) {
             $table->id();
 
+<<<<<<< HEAD
             // Relasi user peminjam
+=======
+            // 🔗 Relasi user peminjam
+>>>>>>> origin/feature/ubah-password
             $table->foreignId('user_id')
                   ->constrained('users')
                   ->cascadeOnDelete();
 
+<<<<<<< HEAD
             // Data peminjaman
             $table->date('borrow_date');
             $table->date('return_date')->nullable();
@@ -27,6 +32,16 @@ return new class extends Migration
             $table->string('status', 20);
 
             // Audit trail
+=======
+            // 📅 Data peminjaman
+            $table->date('borrow_date');
+            $table->date('return_date')->nullable();
+
+            // 📌 Status 
+            $table->string('status', 20);
+
+            // 👤 Audit trail 
+>>>>>>> origin/feature/ubah-password
             $table->foreignId('created_by')
                   ->nullable()
                   ->references('id')
@@ -45,11 +60,19 @@ return new class extends Migration
                   ->on('users')
                   ->nullOnDelete();
 
+<<<<<<< HEAD
             // Timestamp
             $table->timestamps();
 
             // Soft delete
             $table->softDeletes();
+=======
+            // ⏱️ Timestamp
+            $table->timestamps();
+
+            // 🗑️ Soft delete 
+            $table->softDeletes(); 
+>>>>>>> origin/feature/ubah-password
         });
     }
 
@@ -60,4 +83,8 @@ return new class extends Migration
     {
         Schema::dropIfExists('loans');
     }
+<<<<<<< HEAD
 };
+=======
+}; 
+>>>>>>> origin/feature/ubah-password
