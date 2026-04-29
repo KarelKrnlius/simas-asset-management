@@ -62,8 +62,8 @@
                 <div class="bg-red-600 p-10 rounded-[3rem] text-white shadow-2xl">
                     <h3 class="text-lg font-black uppercase italic mb-6">Aksi Cepat</h3>
                     <div class="space-y-3">
-                        <a href="/aset/create" class="block w-full bg-white text-red-600 py-5 rounded-2xl text-[10px] font-black uppercase text-center tracking-widest hover:scale-105 transition-all">
-                            <i class="fas fa-plus mr-2"></i> Input Aset Baru
+                        <a href="/assets?open_modal=add" class="block w-full bg-white text-red-600 py-5 rounded-2xl text-[10px] font-black uppercase text-center tracking-widest hover:scale-105 transition-all">
+                            <i class="fas fa-plus mr-2"></i> Tambah Asset Baru
                         </a>
                     </div>
                 </div>

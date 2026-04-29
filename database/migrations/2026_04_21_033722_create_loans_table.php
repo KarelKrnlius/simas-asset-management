@@ -15,14 +15,18 @@ return new class extends Migration
             $table->id();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             // Relasi user peminjam
 =======
             // 🔗 Relasi user peminjam
 >>>>>>> origin/feature/ubah-password
+=======
+>>>>>>> 5b9805554f3dcdefd7f38340bb9bd8bb4b4864b8
             $table->foreignId('user_id')
                   ->constrained('users')
                   ->cascadeOnDelete();
 
+<<<<<<< HEAD
 <<<<<<< HEAD
             // Data peminjaman
             $table->date('borrow_date');
@@ -33,6 +37,8 @@ return new class extends Migration
 
             // Audit trail
 =======
+=======
+>>>>>>> 5b9805554f3dcdefd7f38340bb9bd8bb4b4864b8
             // 📅 Data peminjaman
             $table->date('borrow_date');
             $table->date('return_date')->nullable();
@@ -41,7 +47,10 @@ return new class extends Migration
             $table->string('status', 20);
 
             // 👤 Audit trail 
+<<<<<<< HEAD
 >>>>>>> origin/feature/ubah-password
+=======
+>>>>>>> 5b9805554f3dcdefd7f38340bb9bd8bb4b4864b8
             $table->foreignId('created_by')
                   ->nullable()
                   ->references('id')
@@ -61,18 +70,24 @@ return new class extends Migration
                   ->nullOnDelete();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             // Timestamp
             $table->timestamps();
 
             // Soft delete
             $table->softDeletes();
 =======
+=======
+>>>>>>> 5b9805554f3dcdefd7f38340bb9bd8bb4b4864b8
             // ⏱️ Timestamp
             $table->timestamps();
 
             // 🗑️ Soft delete 
             $table->softDeletes(); 
+<<<<<<< HEAD
 >>>>>>> origin/feature/ubah-password
+=======
+>>>>>>> 5b9805554f3dcdefd7f38340bb9bd8bb4b4864b8
         });
     }
 
@@ -84,7 +99,11 @@ return new class extends Migration
         Schema::dropIfExists('loans');
     }
 <<<<<<< HEAD
+<<<<<<< HEAD
 };
 =======
 }; 
 >>>>>>> origin/feature/ubah-password
+=======
+};
+>>>>>>> 5b9805554f3dcdefd7f38340bb9bd8bb4b4864b8

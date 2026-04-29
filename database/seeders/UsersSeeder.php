@@ -20,7 +20,7 @@ class UsersSeeder extends Seeder
             'password' => Hash::make('admin123'),
             'email_verified_at' => now(),
         ]);
-
+            
         // Staff account
         User::create([
             'name' => 'Staff User',

@@ -205,16 +205,7 @@ body {
 
   <!-- LEFT -->
   <div class="left">
-    {{-- Try multiple approaches --}}
-@if(file_exists(public_path('images/logo/logo.png')))
     <img src="{{ asset('images/logo/logo.png') }}" alt="SIMAS Logo" style="max-width: 120px; height: auto;">
-@else
-    {{-- Fallback: Inline SVG Logo --}}
-    <svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100" height="100" rx="20" fill="#DC2626"/>
-        <path d="M25 50H37.5L50 37.5L62.5 50H77.5L50 72.5L25 50Z" fill="white"/>
-    </svg>
-@endif
     <h2>SIMAS</h2>
     <p>Sistem Manajemen Aset</p>
   </div>
@@ -272,6 +263,22 @@ body {
 </div>
 
 <script>
+// Prevent authenticated users from accessing login page
+(function() {
+    // Check if user is already logged in
+    @if(auth()->check())
+        // Redirect immediately to dashboard
+        window.location.replace('/dashboard');
+        return;
+    @endif
+    
+    // Add cache control headers
+    if (!window.location.search.includes('no-cache')) {
+        window.location.replace(window.location.pathname + '?no-cache=1');
+        return;
+    }
+})();
+
 function togglePassword() {
   const pass = document.getElementById("password");
   const toggle = document.querySelector(".toggle");
@@ -284,6 +291,28 @@ document.getElementById("loginForm").addEventListener("submit", function(){
   const btn = document.getElementById("btnLogin");
   btn.classList.add("loading");
   btn.innerText = "Loading...";
+});
+
+// Continuous monitoring for authentication changes
+setInterval(function() {
+    @if(auth()->check())
+        window.location.replace('/dashboard');
+    @endif
+}, 100);
+
+// Prevent back button to login page
+window.addEventListener('pageshow', function(event) {
+    @if(auth()->check())
+        window.location.replace('/dashboard');
+    @endif
+});
+
+// Handle browser back button
+window.addEventListener('popstate', function(event) {
+    @if(auth()->check())
+        event.preventDefault();
+        window.location.replace('/dashboard');
+    @endif
 });
 </script>
 

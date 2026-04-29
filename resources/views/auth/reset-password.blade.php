@@ -31,7 +31,7 @@
 
             <div class="relative z-10 text-center px-12">
                 <div class="mb-10 inline-block transition-transform hover:scale-105 duration-500">
-                    <img src="{{ asset('images/logo-brin.png') }}" 
+                    <img src="{{ asset('images/logo/logo.png') }}" 
                          alt="Logo BRIN" 
                          class="w-36 white-shadow-glow">
                 </div>
@@ -39,7 +39,7 @@
                 <h1 class="text-5xl font-extrabold tracking-tighter mb-4">SIMAS</h1>
                 <div class="h-1.5 w-12 bg-white/40 mx-auto mb-6 rounded-full"></div>
                 <p class="text-sm font-light opacity-80 leading-relaxed uppercase tracking-[0.3em]">
-                    Asset Management <br> <span class="font-bold">Excellence</span>
+                    Sistem Manajemen <br> <span class="font-bold">Asset</span>
                 </p>
             </div>
             
@@ -69,8 +69,23 @@
                 <div class="group">
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 ml-1">Password Baru</label>
                     <div class="relative transition-all duration-300 group-focus-within:transform group-focus-within:-translate-y-1">
-                        <input type="password" name="password" placeholder="••••••••" required
-                            class="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 focus:border-[#bc1c1c] focus:bg-white rounded-2xl transition-all duration-300 outline-none text-sm shadow-sm @error('password') border-red-500 @enderror">
+                        <input type="password" name="password" id="password" placeholder="••••••••" required minlength="8"
+                            class="w-full px-5 py-4 pr-12 bg-gray-50 border-2 border-gray-100 focus:border-[#bc1c1c] focus:bg-white rounded-2xl transition-all duration-300 outline-none text-sm shadow-sm @error('password') border-red-500 @enderror">
+                        <button type="button" onclick="togglePassword('password')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <i id="password-toggle" class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="mt-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] ml-1 uppercase font-bold text-gray-400" id="password-strength-text">Minimal 8 karakter</span>
+                            <span class="text-[10px] uppercase font-bold text-gray-400" id="password-length">0/8</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                            <div id="password-strength" class="h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div class="mt-1">
+                            <span id="password-requirement" class="text-[9px] text-gray-500">• Password harus minimal 8 karakter</span>
+                        </div>
                     </div>
                     @error('password')
                         <span class="text-red-500 text-[10px] mt-2 block ml-1 uppercase font-bold">{{ $message }}</span>
@@ -80,8 +95,17 @@
                 <div class="group">
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 ml-1">Konfirmasi Password Baru</label>
                     <div class="relative transition-all duration-300 group-focus-within:transform group-focus-within:-translate-y-1">
-                        <input type="password" name="password_confirmation" placeholder="••••••••" required
-                            class="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 focus:border-[#bc1c1c] focus:bg-white rounded-2xl transition-all duration-300 outline-none text-sm shadow-sm">
+                        <input type="password" name="password_confirmation" id="password_confirmation" placeholder="••••••••" required minlength="8"
+                            class="w-full px-5 py-4 pr-12 bg-gray-50 border-2 border-gray-100 focus:border-[#bc1c1c] focus:bg-white rounded-2xl transition-all duration-300 outline-none text-sm shadow-sm">
+                        <button type="button" onclick="togglePassword('password_confirmation')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <i id="password_confirmation-toggle" class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="mt-2">
+                        <div class="flex items-center">
+                            <i id="match-icon" class="fas fa-times-circle text-gray-400 mr-2"></i>
+                            <span id="match-text" class="text-[10px] uppercase font-bold text-gray-400">Password tidak cocok</span>
+                        </div>
                     </div>
                 </div>
 
@@ -93,15 +117,96 @@
                 </div>
             </form>
 
-            <div class="mt-12 flex items-center justify-center space-x-4">
-                <div class="h-[1px] w-8 bg-gray-200"></div>
-                <a href="{{ url('/login') }}" class="text-[11px] font-bold text-gray-400 hover:text-[#bc1c1c] transition-colors uppercase tracking-widest">
-                    Kembali ke Login
-                </a>
-                <div class="h-[1px] w-8 bg-gray-200"></div>
-            </div>
-        </div>
+                    </div>
     </div>
 
+<script>
+// Toggle password visibility
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const toggle = document.getElementById(fieldId + '-toggle');
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        toggle.classList.remove('fa-eye');
+        toggle.classList.add('fa-eye-slash');
+    } else {
+        field.type = 'password';
+        toggle.classList.remove('fa-eye-slash');
+        toggle.classList.add('fa-eye');
+    }
+}
+
+// Password strength and validation
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordField = document.getElementById('password');
+    const confirmField = document.getElementById('password_confirmation');
+    const strengthBar = document.getElementById('password-strength');
+    const strengthText = document.getElementById('password-strength-text');
+    const lengthText = document.getElementById('password-length');
+    const matchIcon = document.getElementById('match-icon');
+    const matchText = document.getElementById('match-text');
+    
+    // Password strength checker
+    passwordField.addEventListener('input', function() {
+        const password = this.value;
+        const length = password.length;
+        const requirementText = document.getElementById('password-requirement');
+        
+        // Update length counter
+        lengthText.textContent = `${length}/8`;
+        lengthText.className = length >= 8 ? 'text-[10px] uppercase font-bold text-green-500' : 'text-[10px] uppercase font-bold text-red-500';
+        
+        // Update strength bar and text
+        if (length === 0) {
+            strengthBar.style.width = '0%';
+            strengthBar.className = 'h-2 rounded-full transition-all duration-300';
+            strengthText.textContent = 'Minimal 8 karakter';
+            strengthText.className = 'text-[10px] ml-1 uppercase font-bold text-gray-400';
+            requirementText.innerHTML = '• Password harus minimal 8 karakter';
+            requirementText.className = 'text-[9px] text-gray-500';
+        } else if (length < 8) {
+            strengthBar.style.width = '50%';
+            strengthBar.className = 'h-2 rounded-full transition-all duration-300 bg-red-500';
+            strengthText.textContent = 'Terlalu pendek';
+            strengthText.className = 'text-[10px] ml-1 uppercase font-bold text-red-500';
+            requirementText.innerHTML = '• Password harus minimal 8 karakter (<span class="text-red-500 font-bold">' + (8 - length) + ' karakter lagi</span>)';
+            requirementText.className = 'text-[9px] text-red-500';
+        } else {
+            strengthBar.style.width = '100%';
+            strengthBar.className = 'h-2 rounded-full transition-all duration-300 bg-green-500';
+            strengthText.textContent = 'Kuat';
+            strengthText.className = 'text-[10px] ml-1 uppercase font-bold text-green-500';
+            requirementText.innerHTML = '✓ Password memenuhi syarat minimal 8 karakter';
+            requirementText.className = 'text-[9px] text-green-500';
+        }
+        
+        // Check match with confirmation
+        checkPasswordMatch();
+    });
+    
+    // Password confirmation checker
+    confirmField.addEventListener('input', checkPasswordMatch);
+    
+    function checkPasswordMatch() {
+        const password = passwordField.value;
+        const confirmation = confirmField.value;
+        
+        if (confirmation.length === 0) {
+            matchIcon.className = 'fas fa-times-circle text-gray-400 mr-2';
+            matchText.textContent = 'Password tidak cocok';
+            matchText.className = 'text-[10px] uppercase font-bold text-gray-400';
+        } else if (password === confirmation) {
+            matchIcon.className = 'fas fa-check-circle text-green-500 mr-2';
+            matchText.textContent = 'Password cocok';
+            matchText.className = 'text-[10px] uppercase font-bold text-green-500';
+        } else {
+            matchIcon.className = 'fas fa-times-circle text-red-500 mr-2';
+            matchText.textContent = 'Password tidak cocok';
+            matchText.className = 'text-[10px] uppercase font-bold text-red-500';
+        }
+    }
+});
+</script>
 </body>
 </html>

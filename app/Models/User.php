@@ -6,11 +6,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Auth\Passwords\CanResetPassword;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, CanResetPassword;
+
+    // Tambahkan ini di dalam class User
+    public function loans()
+    {
+        return $this->hasMany(Loan::class);
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -46,5 +52,17 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Get the role name based on role_id.
+     */
+    public function getRoleAttribute(): string
+    {
+        return match($this->role_id) {
+            1 => 'admin',
+            2 => 'staff',
+            default => 'staff',
+        };
     }
 }
