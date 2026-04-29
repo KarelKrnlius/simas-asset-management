@@ -26,7 +26,7 @@ class DashboardController extends Controller
             'rusak'       => Asset::where('status', 'Rusak')->count(),
         ];
 
-        // 3. Logic Grafik Maintenance untuk PostgreSQL (Balikin dari file lama lo)
+        // 3. Logic Grafik Maintenance untuk PostgreSQL (Balikin dari file lama)
         $chartRaw = Asset::select(
             DB::raw("COUNT(*) as count"), 
             DB::raw("to_char(created_at, 'Mon') as month"),
