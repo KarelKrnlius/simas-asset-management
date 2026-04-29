@@ -52,7 +52,7 @@ class AssetSeeder extends Seeder
             ],
             [
                 'category_id' => $categories['Monitor'] ?? 2,
-                'name' => 'Monitor Samsung S24F350',
+                'name' => 'Monitor Samsung',
                 'code' => 'MTR-002',
                 'description' => 'Monitor Samsung',
                 'stock' => 1,
