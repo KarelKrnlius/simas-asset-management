@@ -79,34 +79,19 @@
                     oninput="updateCodePreview()">
             </div>
             
-            {{-- CONDITION --}}
-            <div class="mb-6">
-                <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Kondisi
-                </label>
-                <select name="condition" required
-                    class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors">
-                    <option value="">-- Pilih Kondisi --</option>
-                    <option value="baik">Baik</option>
-                    <option value="cukup">Cukup</option>
-                    <option value="rusak">Rusak</option>
-                </select>
+            {{-- INFO AUTO-SET --}}
+            <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-info-circle text-green-600"></i>
+                    <span class="text-sm font-bold text-green-800">Informasi Otomatis</span>
+                </div>
+                <p class="text-xs text-green-700">
+                    • Status akan otomatis diatur menjadi <span class="font-bold">"Tersedia"</span><br>
+                    • Kondisi akan otomatis diatur menjadi <span class="font-bold">"Baik"</span><br>
+                </p>
             </div>
             
-            {{-- STATUS --}}
-            <div class="mb-8">
-                <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Status
-                </label>
-                <select name="status" required
-                    class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors">
-                    <option value="">-- Pilih Status --</option>
-                    <option value="tersedia">Tersedia</option>
-                    <option value="dipinjam">Dipinjam</option>
-                    <option value="maintenance">Maintenance</option>
-                </select>
-            </div>
-            
+                        
             {{-- BUTTONS --}}
             <div class="flex gap-4">
                 <button type="button" onclick="closeAddAssetModal()" 

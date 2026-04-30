@@ -7,12 +7,15 @@ use App\Models\Role;
 
 class RoleController extends Controller
 {
-    public function index()
-    {
-        $roles = Role::latest()->paginate(5);
-        return view('roles.index', compact('roles'));
-    }
+   public function index(Request $request)
+{
+    $roles = \App\Models\Role::withCount('users')
+        ->orderByRaw("CASE WHEN name = 'Admin' THEN 0 ELSE 1 END")
+        ->orderBy('name')
+        ->paginate(5);
 
+    return view('roles.index', compact('roles'));
+}
     public function store(Request $request)
     {
         $request->validate([
@@ -20,7 +23,8 @@ class RoleController extends Controller
         ]);
 
         Role::create([
-            'name' => $request->name
+            'name' => $request->name,
+            'description' => $request->description
         ]);
 
         return back()->with('success', 'Role berhasil ditambahkan');
@@ -28,12 +32,15 @@ class RoleController extends Controller
 
     public function update(Request $request, $id)
     {
+        $role = Role::findOrFail($id);
+
         $request->validate([
             'name' => 'required|unique:roles,name,' . $id
         ]);
 
-        Role::findOrFail($id)->update([
-            'name' => $request->name
+        $role->update([
+            'name' => $request->name,
+            'description' => $request->description
         ]);
 
         return back()->with('success', 'Role berhasil diupdate');

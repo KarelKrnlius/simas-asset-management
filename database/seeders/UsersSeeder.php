@@ -19,14 +19,16 @@ class UsersSeeder extends Seeder
             'email' => 'admin@simas.com',
             'password' => Hash::make('admin123'),
             'email_verified_at' => now(),
+            'role_id' => 1, 
         ]);
-
+            
         // Staff account
         User::create([
             'name' => 'Staff User',
             'email' => 'staff@simas.com',
             'password' => Hash::make('staff123'),
             'email_verified_at' => now(),
+            'role_id' => 2, 
         ]);
     }
 }

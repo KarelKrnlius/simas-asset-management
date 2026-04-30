@@ -14,20 +14,78 @@ class AssetController extends Controller
      */
     public function index()
     {
-        $assets = Asset::with('category')->latest()->get();
-        $categories = Category::orderBy('name')->get();
+        // Get sorting parameters
+        $sortBy = request('sort_by'); // No default, let it be null if not provided
+        $order = request('order', 'desc'); // Default: desc
+        $search = request('search'); // Search parameter
+        
+        // Build query with relationships
+        $query = Asset::with('category');
+        
+        // Apply search filter
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('code', 'like', '%' . $search . '%')
+                  ->orWhere('name', 'like', '%' . $search . '%');
+            });
+        }
+        
+        // Handle dynamic category sorting from dropdown first
+        if ($sortBy && str_starts_with($sortBy, 'category_')) {
+            $categoryId = str_replace('category_', '', $sortBy);
+            $query->where('assets.category_id', $categoryId)
+                  ->orderBy('assets.created_at', 'desc');
+        } else {
+            // Apply regular sorting if not category-specific
+            switch ($sortBy) {
+                case 'category':
+                    // Handle specific category filtering
+                    if (request('category_id')) {
+                        $query->where('assets.category_id', request('category_id'))
+                              ->orderBy('assets.created_at', 'desc');
+                    } else {
+                        $query->join('categories', 'assets.category_id', '=', 'categories.id')
+                              ->orderBy('categories.name', $order)
+                              ->select('assets.*');
+                    }
+                    break;
+                case 'code':
+                    // Extract numeric part for proper numeric sorting and ignore invalid blank codes
+                    $query->orderByRaw("NULLIF(REGEXP_REPLACE(SUBSTRING(code, 5), '[^0-9].*', ''), '')::int {$order}");
+                    break;
+                case 'name':
+                    $query->orderBy('name', $order);
+                    break;
+                case 'created_at':
+                    $query->orderBy('created_at', $order);
+                    break;
+                default:
+                    // Only use latest if no sort_by parameter at all
+                    if (!$sortBy) {
+                        $query->latest();
+                    }
+                    break;
+            }
+        }
+        
+        $assets = $query->paginate(15);
+        
+        // Append search and sort parameters to pagination links
+        $assets->appends(request()->only(['search', 'sort_by', 'order', 'category_id']));
+        $categories = Category::withCount('assets')->orderBy('name')->get();
         
         // Calculate highest code numbers per category for instant code generation
         $categoryHighestCodes = [];
         foreach ($categories as $category) {
             $lastAsset = Asset::where('category_id', $category->id)
-                ->orderByRaw('CAST(SUBSTRING(code, 5) AS INTEGER) DESC')
+                ->whereRaw("SUBSTRING(code, 5) ~ '^[0-9]+'")
+                ->orderByRaw("NULLIF(REGEXP_REPLACE(SUBSTRING(code, 5), '[^0-9].*', ''), '')::int DESC")
                 ->first();
             
             if ($lastAsset) {
                 // Extract number from code (handle both single and range codes)
                 $codeParts = explode('-', $lastAsset->code);
-                $highestNumber = (int)substr($codeParts[0], 4);
+                $highestNumber = (int)preg_replace('/[^0-9]/', '', $codeParts[0]);
             } else {
                 $highestNumber = 0;
             }
@@ -59,14 +117,15 @@ class AssetController extends Controller
             
             // Get the highest existing asset number for this category
             $lastAsset = Asset::where('category_id', $categoryId)
-                ->orderByRaw('CAST(SUBSTRING(code, 5) AS INTEGER) DESC')
+                ->whereRaw("SUBSTRING(code, 5) ~ '^[0-9]+'")
+                ->orderByRaw("NULLIF(REGEXP_REPLACE(SUBSTRING(code, 5), '[^0-9].*', ''), '')::int DESC")
                 ->first();
             
             $lastNumber = 0;
             if ($lastAsset) {
                 // Extract number from code (handle both single and range codes)
                 $codeParts = explode('-', $lastAsset->code);
-                $lastNumber = (int)substr($codeParts[0], 4);
+                $lastNumber = (int)preg_replace('/[^0-9]/', '', $codeParts[0]);
             }
             
             $startNumber = $lastNumber + 1;
@@ -101,7 +160,7 @@ class AssetController extends Controller
             'description' => 'nullable|string|max:1000',
             'stock' => 'required|integer|min:0',
             'condition' => 'required|string|max:20',
-            'status' => 'required|string|max:20',
+            'status' => 'required|in:tersedia,dipinjam,diperbaiki',
         ]);
 
         if ($validator->fails()) {
@@ -118,14 +177,15 @@ class AssetController extends Controller
             
             // Get the highest existing asset number for this category
             $lastAsset = Asset::where('category_id', $request->category_id)
-                ->orderByRaw('CAST(SUBSTRING(code, 5) AS INTEGER) DESC')
+                ->whereRaw("SUBSTRING(code, 5) ~ '^[0-9]+'")
+                ->orderByRaw("NULLIF(REGEXP_REPLACE(SUBSTRING(code, 5), '[^0-9].*', ''), '')::int DESC")
                 ->first();
             
             $lastNumber = 0;
             if ($lastAsset) {
                 // Extract number from code (handle both single and range codes)
                 $codeParts = explode('-', $lastAsset->code);
-                $lastNumber = (int)substr($codeParts[0], 4);
+                $lastNumber = (int)preg_replace('/[^0-9]/', '', $codeParts[0]);
             }
             
             $stock = (int) $request->stock;
@@ -140,6 +200,8 @@ class AssetController extends Controller
                 $assetData = $request->all();
                 $assetData['code'] = $assetCode;
                 $assetData['stock'] = 1; // Each individual item has stock of 1
+                $assetData['condition'] = 'baik'; // Auto-set condition
+                $assetData['status'] = 'tersedia'; // Auto-set status
                 
                 $asset = Asset::create($assetData);
                 $createdAssets[] = $asset;
@@ -189,7 +251,7 @@ class AssetController extends Controller
             'description' => 'nullable|string|max:1000',
             'stock' => 'required|integer|min:0',
             'condition' => 'required|string|max:20',
-            'status' => 'required|string|max:20',
+            'status' => 'required|in:tersedia,dipinjam,diperbaiki',
         ]);
 
         if ($validator->fails()) {
@@ -247,6 +309,38 @@ class AssetController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete asset: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk delete assets.
+     */
+    public function bulkDelete(Request $request)
+    {
+        try {
+            $assetIds = json_decode($request->asset_ids, true);
+            
+            if (!is_array($assetIds) || empty($assetIds)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No assets selected for deletion'
+                ], 400);
+            }
+            
+            // Delete assets
+            $deletedCount = Asset::whereIn('id', $assetIds)->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Berhasil menghapus {$deletedCount} aset",
+                'deleted_count' => $deletedCount
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete assets: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -92,10 +92,14 @@
                                 <div class="space-y-3">
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">Kata Sandi Baru</label>
                                     <div class="relative">
-                                        <input type="password" id="password" name="password" placeholder="••••••••" class="w-full px-6 py-4 pr-12 bg-white border-2 border-slate-200 rounded-2xl focus:border-red-primary focus:outline-none font-bold transition-all">
+                                        <input type="password" id="password" name="password" placeholder="••••••••" minlength="8" class="w-full px-6 py-4 pr-12 bg-white border-2 border-slate-200 rounded-2xl focus:border-red-primary focus:outline-none font-bold transition-all">
                                         <button type="button" onclick="togglePassword('password')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600">
                                             <svg id="password-eye" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                         </button>
+                                    </div>
+                                    <!-- Password requirement -->
+                                    <div class="mt-2">
+                                        <span class="text-[8px] text-gray-500">• Password minimal 8 karakter</span>
                                     </div>
                                     @error('password')
                                         <span class="text-red-500 text-xs block mt-1 font-medium">{{ $message }}</span>
@@ -108,6 +112,11 @@
                                         <button type="button" onclick="togglePassword('password_confirmation')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600">
                                             <svg id="password_confirmation-eye" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                         </button>
+                                    </div>
+                                    <!-- Password match indicator -->
+                                    <div id="passwordMatchIndicator" class="hidden flex items-center gap-2 mt-1">
+                                        <i id="matchIcon" class="fas text-xs"></i>
+                                        <span id="matchText" class="text-xs font-medium"></span>
                                     </div>
                                     @error('password_confirmation')
                                         <span class="text-red-500 text-xs block mt-1 font-medium">{{ $message }}</span>
@@ -123,9 +132,12 @@
                         </div>
                     </div>
 
-                    <div id="actionButtons" class="hidden flex flex-col md:flex-row justify-end gap-4">
-                        <button type="button" id="cancelBtn" class="px-8 py-4 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-2xl transition-all order-2 md:order-1">Batal</button>
-                        <button type="submit" class="px-12 py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-black hover:shadow-xl transition-all order-1 md:order-2 transform active:scale-95">Simpan Perubahan</button>
+                    
+                    <div id="actionButtons" class="hidden flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex gap-4">
+                            <button type="button" id="cancelBtn" class="px-8 py-4 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-2xl transition-all order-2 md:order-1">Batal</button>
+                            <button type="submit" class="px-12 py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-black hover:shadow-xl transition-all order-1 md:order-2 transform active:scale-95">Simpan Perubahan</button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -133,12 +145,6 @@
     </div>
 </div>
 
-@if(session('success'))
-<div class="fixed bottom-4 right-4 bg-emerald-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01L7 9.01"/></svg>
-    <span class="font-medium">{{ session('success') }}</span>
-</div>
-@endif
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -150,14 +156,30 @@
             e.preventDefault();
             const password = document.getElementById('password').value;
             const passwordConfirmation = document.getElementById('password_confirmation').value;
+            const passwordConfirmField = document.getElementById('password_confirmation');
+            
+            // Reset border color
+            passwordConfirmField.classList.remove('border-red-500');
+            passwordConfirmField.classList.add('border-slate-200');
             
             if ((password || passwordConfirmation) && password !== passwordConfirmation) {
-                alert('Konfirmasi password tidak sama dengan password baru!');
+                // Add red border
+                passwordConfirmField.classList.remove('border-slate-200');
+                passwordConfirmField.classList.add('border-red-500');
+                
+                // Show 3-second notification
+                showNotification('Konfirmasi password tidak sama dengan password baru!', 'error');
                 return false;
             }
             
             if (password && password.length < 8) {
-                alert('Password harus minimal 8 karakter!');
+                // Add red border to password field
+                const passwordField = document.getElementById('password');
+                passwordField.classList.remove('border-slate-200');
+                passwordField.classList.add('border-red-500');
+                
+                // Show 3-second notification
+                showNotification('Password harus minimal 8 karakter!', 'error');
                 return false;
             }
             
@@ -181,7 +203,8 @@
                 window.location.reload();
             }
         };
-    });
+
+            });
 
     function togglePassword(fieldId) {
         const passwordField = document.getElementById(fieldId);
@@ -195,5 +218,102 @@
             eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
         }
     }
+
+    function showNotification(message, type = 'error') {
+        // Remove existing notification
+        const existing = document.querySelector('.notification-popup');
+        if (existing) {
+            existing.remove();
+        }
+
+        // Create notification
+        const notification = document.createElement('div');
+        notification.className = `notification-popup fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300 ${
+            type === 'error' ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'
+        }`;
+        
+        notification.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                ${type === 'error' 
+                    ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+                    : '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01L7 9.01"/>'
+                }
+            </svg>
+            <span class="font-medium">${message}</span>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            notification.classList.add('opacity-0', 'translate-y-full');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 300);
+        }, 3000);
+    }
+
+    // Real-time password validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordField = document.getElementById('password');
+        const passwordConfirmField = document.getElementById('password_confirmation');
+        const matchIndicator = document.getElementById('passwordMatchIndicator');
+        const matchIcon = document.getElementById('matchIcon');
+        const matchText = document.getElementById('matchText');
+
+        function validatePasswords() {
+            const password = passwordField.value;
+            const passwordConfirmation = passwordConfirmField.value;
+
+            // Reset borders
+            passwordField.classList.remove('border-red-500', 'border-emerald-500');
+            passwordConfirmField.classList.remove('border-red-500', 'border-emerald-500');
+            passwordField.classList.add('border-slate-200');
+            passwordConfirmField.classList.add('border-slate-200');
+
+            // Hide indicator by default
+            matchIndicator.classList.add('hidden');
+
+            // Check if both fields have value
+            if (password || passwordConfirmation) {
+                if (password.length > 0 && password.length < 8) {
+                    passwordField.classList.remove('border-slate-200');
+                    passwordField.classList.add('border-red-500');
+                }
+
+                if (passwordConfirmation) {
+                    matchIndicator.classList.remove('hidden');
+                    
+                    if (password !== passwordConfirmation) {
+                        passwordConfirmField.classList.remove('border-slate-200');
+                        passwordConfirmField.classList.add('border-red-500');
+                        
+                        // Show red indicator
+                        matchIcon.className = 'fas fa-times-circle text-red-500 text-xs';
+                        matchText.textContent = 'Password tidak cocok';
+                        matchText.className = 'text-xs font-medium text-red-500';
+                    } else {
+                        // Show green indicator
+                        matchIcon.className = 'fas fa-check-circle text-emerald-500 text-xs';
+                        matchText.textContent = 'Password cocok';
+                        matchText.className = 'text-xs font-medium text-emerald-500';
+                        
+                        if (password.length >= 8) {
+                            passwordField.classList.remove('border-red-500');
+                            passwordField.classList.add('border-emerald-500');
+                            passwordConfirmField.classList.remove('border-red-500');
+                            passwordConfirmField.classList.add('border-emerald-500');
+                        }
+                    }
+                }
+            }
+        }
+
+        // Add event listeners
+        if (passwordField) passwordField.addEventListener('input', validatePasswords);
+        if (passwordConfirmField) passwordConfirmField.addEventListener('input', validatePasswords);
+    });
 </script>
 @endsection
