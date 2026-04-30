@@ -3,7 +3,7 @@
 @section('title', 'Master User SIMAS')
 
 @section('content')
-<div class="min-h-screenflex flex-col items-start pt-4 px-6">
+<div class="min-h-screenflex flex-col items-start pt-4 px-6" x-data="{ search: '' }" x-init="$watch('search', () => renumberRows())">
     
     {{-- HEADER --}}
     <div class="w-full max-w-7xl mx-auto mb-6">
@@ -47,8 +47,8 @@
                 {{-- Search --}}
                 <div class="flex-1">
                     <div class="relative">
-                        <input type="text" 
-                            id="searchInput" 
+                        <input type="text"
+                            x-model="search"
                             placeholder="Cari user berdasarkan nama atau email..."
                             class="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-red-500 focus:outline-none transition-colors">
                         <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
@@ -86,12 +86,13 @@
                                 $hasLoans = \App\Models\Loan::where('user_id', $user->id)->exists();
                                 $isSelf = $user->id === auth()->id();
                             @endphp
-                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors user-row" 
+                            <tr x-show="search === '' || '{{ strtolower($user->name) }}'.includes(search.toLowerCase()) || '{{ strtolower($user->email) }}'.includes(search.toLowerCase())"
+                                class="border-b border-slate-100 hover:bg-slate-50 transition-colors user-row" 
                                 data-name="{{ strtolower($user->name) }}" 
                                 data-email="{{ strtolower($user->email) }}" 
                                 data-role="{{ $user->role_id }}"
                                 data-role-name="{{ strtolower($user->role->name ?? '') }}">
-                                <td class="py-4 px-4 font-semibold text-slate-700">
+                                <td class="py-4 px-4 font-semibold text-slate-700 row-number">
                                     {{ $loop->iteration + ($users->currentPage() - 1) * $users->perPage() }}
                                 </td>
                                 <td class="py-4 px-4">
@@ -252,54 +253,21 @@
 // Global variables
 let currentEditingUserId = null;
 
-// Search functionality
-document.getElementById('searchInput').addEventListener('input', function() {
-    const searchTerm = this.value.toLowerCase();
+// Renumber rows based on visible rows
+function renumberRows() {
     const rows = document.querySelectorAll('#usersTableBody .user-row');
-    let visibleCount = 0;
+    let visibleIndex = 1;
     
     rows.forEach(row => {
-        const name = row.dataset.name;
-        const email = row.dataset.email;
-        
-        if (name.includes(searchTerm) || email.includes(searchTerm)) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
+        const rowNumberCell = row.querySelector('.row-number');
+        if (row.style.display !== 'none' && !row.style.display.includes('none')) {
+            if (rowNumberCell) {
+                rowNumberCell.textContent = visibleIndex;
+            }
+            visibleIndex++;
         }
     });
-    
-    // Handle no results message
-    let noResultsRow = document.getElementById('noResultsRow');
-    
-    if (visibleCount === 0 && searchTerm !== '') {
-        if (!noResultsRow) {
-            noResultsRow = document.createElement('tr');
-            noResultsRow.id = 'noResultsRow';
-            noResultsRow.className = 'h-20';
-            noResultsRow.innerHTML = `
-                <td class="py-4 px-4 text-slate-400 text-center align-middle">-</td>
-                <td class="py-4 px-4 text-slate-400 text-center align-middle">
-                    <div class="text-slate-400">
-                        <i class="fas fa-search text-2xl mb-2"></i>
-                        <p class="font-bold uppercase tracking-wider">Tidak ada hasil pencarian</p>
-                        <p class="text-sm">Untuk "${searchTerm}"</p>
-                    </div>
-                </td>
-                <td class="py-4 px-4 text-slate-400 text-center align-middle">-</td>
-                <td class="py-4 px-4 text-slate-400 text-center align-middle">-</td>
-                <td class="py-4 px-4 text-slate-400 text-center align-middle">-</td>
-                <td class="py-4 px-4 text-slate-400 text-center align-middle">-</td>
-            `;
-            document.getElementById('usersTableBody').appendChild(noResultsRow);
-        }
-    } else {
-        if (noResultsRow) {
-            noResultsRow.remove();
-        }
-    }
-});
+}
 
 // Sort functionality
 document.getElementById('sortSelect').addEventListener('change', function() {
@@ -319,6 +287,14 @@ document.getElementById('sortSelect').addEventListener('change', function() {
             }
         });
     }
+    
+    // Renumber rows after filtering
+    renumberRows();
+});
+
+// Call renumberRows on page load
+document.addEventListener('DOMContentLoaded', function() {
+    renumberRows();
 });
 
 // Modal functions

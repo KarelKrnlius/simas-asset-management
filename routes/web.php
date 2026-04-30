@@ -10,6 +10,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AssetReturnController;
+use App\Http\Controllers\RoleController;
 
     // HOME → LOGIN
     Route::get('/', function () { return redirect()->route('login');});
@@ -53,6 +54,8 @@ use App\Http\Controllers\AssetReturnController;
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset');
         Route::post('/users/{id}/toggle', [UserController::class, 'toggle'])->name('users.toggle');
     });
+
+    Route::resource('roles', RoleController::class)->except(['create','edit','show']);
 
     // PROFILE (All Authenticated Users)
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');

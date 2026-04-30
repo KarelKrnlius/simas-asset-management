@@ -20,15 +20,6 @@ class UserController extends Controller
     {
         $query = User::query();
         
-        // Search functionality
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-        
         // Sort by role
         if ($request->has('role') && $request->role) {
             $query->where('role_id', $request->role);
@@ -357,6 +348,7 @@ class UserController extends Controller
             'user_name' => $user->name,
             'active_loans' => $activeLoans,
             'past_history' => $pastHistory
-        ]);
+       ]);
+       
     }
 }

@@ -17,18 +17,9 @@ class AssetController extends Controller
         // Get sorting parameters
         $sortBy = request('sort_by'); // No default, let it be null if not provided
         $order = request('order', 'desc'); // Default: desc
-        $search = request('search'); // Search parameter
         
         // Build query with relationships
         $query = Asset::with('category');
-        
-        // Apply search filter (case-insensitive)
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->whereRaw('LOWER(code) LIKE ?', ['%' . strtolower($search) . '%'])
-                  ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']);
-            });
-        }
         
         // Handle dynamic category sorting from dropdown first
         if ($sortBy && str_starts_with($sortBy, 'category_')) {
@@ -157,7 +148,7 @@ class AssetController extends Controller
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:100',
-            'description' => 'nullable|string|max:1000',
+            'description' => 'nullable|string|max:500',
             'stock' => 'required|integer|min:0',
             'condition' => 'required|string|max:20',
             'status' => 'required|in:tersedia,dipinjam,diperbaiki',
@@ -248,7 +239,7 @@ class AssetController extends Controller
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:100',
             'code' => 'required|string|max:50|unique:assets,code,' . $asset->id,
-            'description' => 'nullable|string|max:1000',
+            'description' => 'nullable|string|max:500',
             'stock' => 'required|integer|min:0',
             'condition' => 'required|string|max:20',
             'status' => 'required|in:tersedia,dipinjam,diperbaiki',

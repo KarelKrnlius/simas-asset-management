@@ -73,7 +73,7 @@ class LoanController extends Controller
     public function destroy(Loan $loan)
     {
         // ambil asset id
-        $assetIds = $loan->assets()->pluck('assets.id');
+        $assetIds =kfi $loan->assets()->pluck('assets.id');
 
         // balikin status asset
         Asset::whereIn('id', $assetIds)->update([

@@ -3,7 +3,7 @@
 @section('title', 'Master Asset')
 
 @section('content')
-<div class="min-h-screen pt-1 items-start">
+<div class="min-h-screen pt-1 items-start" x-data="{ search: '' }">
     <div class="container mx-auto px-4 py-8">
         {{-- HEADER, BUTTONS, AND CATATAN CONTAINER --}}
         <div class="bg-white rounded-[2rem] shadow-xl p-8 mb-8">
@@ -55,27 +55,14 @@
                     </span>
                 </div>
                 
-                <!-- Search, Sort and Bulk Actions -->
+                <!-- Sort and Bulk Actions -->
                 <div class="flex flex-col lg:flex-row gap-3">
                     <!-- Search Input -->
                     <div class="flex-1">
-                        <div class="flex gap-2">
-                            <div class="relative flex-1">
-                                <input type="text" 
-                                       id="searchInput" 
-                                       placeholder="Cari kode asset" 
-                                       class="w-full px-4 py-2 pr-10 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent"
-                                       onkeyup="handleSearch(event)">
-                                <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                    <i class="fas fa-search text-slate-400"></i>
-                                </div>
-                            </div>
-                            <button onclick="performRefresh()" 
-                                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
-                                <i class="fas fa-sync-alt"></i>
-                                Clear
-                            </button>
-                        </div>
+                        <input type="text"
+                            x-model="search"
+                            placeholder="Cari kode asset..."
+                            class="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent">
                     </div>
                     
                     <!-- Sort Dropdown -->
@@ -130,7 +117,8 @@
                     </thead>
                     <tbody>
                         @forelse($assets as $index => $asset)
-                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                            <tr x-show="search === '' || '{{ strtolower($asset->code) }}'.includes(search.toLowerCase()) || '{{ strtolower($asset->name) }}'.includes(search.toLowerCase())"
+                                class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                                 <td class="py-4 px-4 text-center">
                                     <input type="checkbox" class="asset-checkbox" value="{{ $asset->id }}" onchange="updateBulkDeleteButton()"
                                         class="w-4 h-4 text-red-primary border-slate-300 rounded focus:ring-red-primary focus:ring-2">
@@ -322,86 +310,6 @@
 
 {{-- SORTING AND BULK DELETE JAVASCRIPT --}}
 <script>
-// Debounce timer for search
-let searchTimeout;
-
-// Search functionality - Automatic search with debounce
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        let searchTimeout;
-        
-        // Restore search value from URL parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const searchParam = urlParams.get('search');
-        if (searchParam) {
-            searchInput.value = searchParam;
-        }
-        
-        searchInput.addEventListener('input', function(event) {
-            clearTimeout(searchTimeout);
-            const searchTerm = event.target.value.trim();
-            
-            searchTimeout = setTimeout(() => {
-                if (searchTerm === '') {
-                    // Reset to default view
-                    performRefresh();
-                } else {
-                    // Submit search to server
-                    performSearch(searchTerm);
-                }
-            }, 500); // 500ms delay
-        });
-    }
-});
-
-function performSearch(searchTerm) {
-    const url = new URL(window.location);
-    
-    // Clear page parameter to start from page 1
-    url.searchParams.delete('page');
-    
-    // Set search parameter
-    url.searchParams.set('search', searchTerm);
-    
-    // Reload page with search
-    window.location.href = url.toString();
-}
-
-function performRefresh() {
-    const url = new URL(window.location);
-    const currentSortBy = url.searchParams.get('sort_by');
-    const currentOrder = url.searchParams.get('order');
-    const currentCategoryId = url.searchParams.get('category_id');
-    
-    // Clear all parameters
-    url.searchParams.delete('search');
-    url.searchParams.delete('page');
-    
-    // Preserve sort by parameters
-    if (currentSortBy) {
-        url.searchParams.set('sort_by', currentSortBy);
-    }
-    if (currentOrder) {
-        url.searchParams.set('order', currentOrder);
-    }
-    if (currentCategoryId) {
-        url.searchParams.set('category_id', currentCategoryId);
-    }
-    
-    // Reload page with clean URL
-    window.location.href = url.toString();
-}
-
-function updateEmptyState() {
-    const visibleRows = document.querySelectorAll('#assetsTable tbody tr:not([style*="display: none"])');
-    const emptyState = document.querySelector('.empty-state');
-    
-    if (emptyState) {
-        emptyState.style.display = visibleRows.length === 0 ? 'block' : 'none';
-    }
-}
-
 // Sorting functionality
 function applySorting() {
     const sortValue = document.getElementById('sortSelect').value;
