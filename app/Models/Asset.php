@@ -16,6 +16,7 @@ class Asset extends Model
         'stock',
         'condition',
         'status',
+        'photo',
     ];
 
     /**

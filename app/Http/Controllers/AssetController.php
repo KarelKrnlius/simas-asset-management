@@ -6,6 +6,7 @@ use App\Models\Asset;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class AssetController extends Controller
 {
@@ -161,6 +162,7 @@ class AssetController extends Controller
             'stock' => 'required|integer|min:0',
             'condition' => 'required|string|max:20',
             'status' => 'required|in:tersedia,dipinjam,diperbaiki',
+            'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048', // Foto WAJIB
         ]);
 
         if ($validator->fails()) {
@@ -172,6 +174,14 @@ class AssetController extends Controller
         }
 
         try {
+            // Handle photo upload
+            $photoPath = null;
+            if ($request->hasFile('photo')) {
+                $photo = $request->file('photo');
+                $photoName = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+                $photoPath = $photo->storeAs('assets', $photoName, 'public');
+            }
+            
             $category = Category::findOrFail($request->category_id);
             $categoryPrefix = strtoupper(substr($category->name, 0, 4));
             
@@ -202,6 +212,7 @@ class AssetController extends Controller
                 $assetData['stock'] = 1; // Each individual item has stock of 1
                 $assetData['condition'] = 'baik'; // Auto-set condition
                 $assetData['status'] = 'tersedia'; // Auto-set status
+                $assetData['photo'] = $photoPath; // Add photo path
                 
                 $asset = Asset::create($assetData);
                 $createdAssets[] = $asset;

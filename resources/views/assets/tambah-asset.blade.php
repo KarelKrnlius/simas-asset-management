@@ -19,7 +19,7 @@
             <p class="text-slate-600 text-sm mt-2">Isi detail aset di bawah ini</p>
         </div>
         
-        <form id="addAssetForm" method="POST">
+        <form id="addAssetForm" method="POST" enctype="multipart/form-data">
             @csrf
             
             {{-- CATEGORY --}}
@@ -79,6 +79,42 @@
                     oninput="updateCodePreview()">
             </div>
             
+            {{-- PHOTO UPLOAD --}}
+            <div class="mb-6">
+                <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
+                    Foto Aset <span class="text-red-500">*</span>
+                </label>
+                
+                {{-- PHOTO BUTTON --}}
+                <button type="button" onclick="document.getElementById('addAssetPhoto').click()" 
+                    class="w-full bg-red-primary hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Pilih File</span>
+                </button>
+                
+                {{-- HIDDEN FILE INPUT --}}
+                <input type="file" name="photo" id="addAssetPhoto" accept="image/*" required class="hidden" onchange="previewAddAssetPhoto(event)">
+                
+                <p class="text-xs text-slate-500 mt-2">
+                    <i class="fas fa-exclamation-circle text-red-500"></i> 
+                    Format: JPG, PNG, JPEG (Max: 2MB) - <span class="font-bold text-red-600">Wajib diisi</span>
+                </p>
+                
+                {{-- PHOTO PREVIEW --}}
+                <div id="addPhotoPreviewContainer" class="mt-4 hidden">
+                    <div class="relative inline-block">
+                        <img id="addPhotoPreview" src="" alt="Preview" class="w-full max-w-xs h-48 object-cover rounded-xl border-2 border-slate-200 shadow-md">
+                        <button type="button" onclick="removeAddAssetPhoto()" 
+                            class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-green-600 mt-2 font-bold">
+                        <i class="fas fa-check-circle"></i> Foto berhasil dipilih
+                    </p>
+                </div>
+            </div>
+            
             {{-- INFO AUTO-SET --}}
             <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
                 <div class="flex items-center gap-2 mb-2">
@@ -106,3 +142,53 @@
         </form>
     </div>
 </div>
+
+<script>
+// Preview foto saat upload
+function previewAddAssetPhoto(event) {
+    const file = event.target.files[0];
+    const previewContainer = document.getElementById('addPhotoPreviewContainer');
+    const previewImage = document.getElementById('addPhotoPreview');
+    
+    if (file) {
+        // Validasi ukuran file (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Ukuran file terlalu besar! Maksimal 2MB');
+            event.target.value = '';
+            return;
+        }
+        
+        // Validasi tipe file
+        if (!file.type.match('image.*')) {
+            alert('File harus berupa gambar!');
+            event.target.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Hapus foto yang dipilih
+function removeAddAssetPhoto() {
+    const fileInput = document.getElementById('addAssetPhoto');
+    const previewContainer = document.getElementById('addPhotoPreviewContainer');
+    const previewImage = document.getElementById('addPhotoPreview');
+    
+    fileInput.value = '';
+    previewImage.src = '';
+    previewContainer.classList.add('hidden');
+}
+
+// Reset form saat modal ditutup
+function closeAddAssetModal() {
+    document.getElementById('addAssetModal').classList.add('hidden');
+    document.getElementById('addAssetForm').reset();
+    removeAddAssetPhoto();
+}
+</script>
