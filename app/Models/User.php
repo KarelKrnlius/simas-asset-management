@@ -18,6 +18,11 @@ class User extends Authenticatable
         return $this->hasMany(Loan::class);
     }
 
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -52,17 +57,5 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
         ];
-    }
-
-    /**
-     * Get the role name based on role_id.
-     */
-    public function getRoleAttribute(): string
-    {
-        return match($this->role_id) {
-            1 => 'admin',
-            2 => 'staff',
-            default => 'staff',
-        };
     }
 }

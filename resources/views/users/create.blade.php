@@ -8,7 +8,7 @@
     {{-- HEADER --}}
     <div class="w-full max-w-7xl mx-auto mb-6">
         <div>
-            <h1 class="text-3xl font-black text-red-600 uppercase tracking-tighter">
+<h1 class="text-3xl font-black uppercase tracking-tighter">
                 Tambah User Baru
             </h1>
             <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider mt-1">
@@ -112,8 +112,9 @@
                                     required
                                     class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-red-500 focus:outline-none transition-colors pl-12 appearance-none">
                                     <option value="">-- Pilih Role --</option>
-                                    <option value="1" {{ old('role_id') == '1' ? 'selected' : '' }}>Admin</option>
-                                    <option value="2" {{ old('role_id') == '2' ? 'selected' : '' }}>Staff</option>
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>{{ ucfirst($role->name) }}</option>
+                                    @endforeach
                                 </select>
                                 <i class="fas fa-user-shield absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
                                 <i class="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>

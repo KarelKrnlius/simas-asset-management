@@ -8,9 +8,9 @@
     {{-- HEADER --}}
     <div class="w-full max-w-7xl mx-auto mb-6">
         <div class="flex justify-between items-center">
-            <div>
-                <h1 class="text-3xl font-black text-slate-900 uppercase tracking-tighter">
-                    Master User
+            <div> 
+                <h1 class="text-3xl font-black text-red-600 uppercase tracking-tighter">
+                    Master User 
                 </h1>
                 <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider mt-1">
                     Kelola pengguna sistem SIMAS
@@ -60,8 +60,9 @@
                     <select id="sortSelect" 
                         class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-red-500 focus:outline-none transition-colors">
                         <option value="">Semua Role</option>
-                        <option value="admin">Admin</option>
-                        <option value="staff">Staff</option>
+                        @foreach($roles as $role)
+                            <option value="{{ $role->id }}">{{ ucfirst($role->name) }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
@@ -74,8 +75,8 @@
                             <th class="text-left py-4 px-4 font-black text-slate-700 uppercase tracking-wider text-xs" style="width: 60px">No</th>
                             <th class="text-left py-4 px-4 font-black text-slate-700 uppercase tracking-wider text-xs" style="width: 250px">Nama</th>
                             <th class="text-left py-4 px-4 font-black text-slate-700 uppercase tracking-wider text-xs" style="width: 280px">Email</th>
-                            <th class="text-left py-4 px-4 font-black text-slate-700 uppercase tracking-wider text-xs" style="width: 100px">Role</th>
-                            <th class="text-left py-4 px-4 font-black text-slate-700 uppercase tracking-wider text-xs" style="width: 120px">Status</th>
+                            <th class="text-center py-4 px-4 font-black text-slate-700 uppercase tracking-wider text-xs" style="width: 100px">Role</th>
+                            <th class="text-center py-4 px-4 font-black text-slate-700 uppercase tracking-wider text-xs" style="width: 120px">Status</th>
                             <th class="text-center py-4 px-4 font-black text-slate-700 uppercase tracking-wider text-xs" style="width: 200px">Aksi</th>
                         </tr>
                     </thead>
@@ -88,7 +89,8 @@
                             <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors user-row" 
                                 data-name="{{ strtolower($user->name) }}" 
                                 data-email="{{ strtolower($user->email) }}" 
-                                data-role="{{ $user->role }}">
+                                data-role="{{ $user->role_id }}"
+                                data-role-name="{{ strtolower($user->role->name ?? '') }}">
                                 <td class="py-4 px-4 font-semibold text-slate-700">
                                     {{ $loop->iteration + ($users->currentPage() - 1) * $users->perPage() }}
                                 </td>
@@ -107,13 +109,20 @@
                                 <td class="py-4 px-4">
                                     <p class="font-semibold text-slate-700">{{ $user->email }}</p>
                                 </td>
-                                <td class="py-4 px-4">
-                                    <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider
-                                        {{ $user->role_id === 1 ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700' }}">
-                                        {{ $user->role_id === 1 ? 'Admin' : 'Staff' }}
-                                    </span>
+                                <td class="py-4 px-4 text-center">
+                                    @php
+                                        $roleColor = match(strtolower($user->role->name ?? '')) {
+                                            'admin' => 'bg-purple-100 text-purple-700',
+                                            default => 'bg-blue-100 text-blue-700',
+                                        };
+                                    @endphp
+                                    <div class="flex justify-center">
+                                        <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider {{ $roleColor }}">
+                                            {{ $user->role ? ucfirst($user->role->name) : 'Unknown' }}
+                                        </span>
+                                    </div>
                                 </td>
-                                <td class="py-4 px-4">
+                                <td class="py-4 px-4 text-center">
                                     <label class="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" 
                                             {{ $user->is_active ? 'checked' : '' }}
@@ -301,7 +310,7 @@ document.getElementById('sortSelect').addEventListener('change', function() {
         // Show all
         rows.forEach(row => row.style.display = '');
     } else {
-        // Filter by role
+        // Filter by role ID
         rows.forEach(row => {
             if (row.dataset.role === sortValue) {
                 row.style.display = '';
@@ -379,7 +388,8 @@ function toggleUserStatus(userId, isActive) {
     .then(data => {
         if (data.success) {
             // Update UI to reflect new status
-            const checkbox = document.querySelector(`input[onchange*="toggleUserStatus(${userId}"]`);
+            const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+            const checkbox = Array.from(allCheckboxes).find(cb => cb.getAttribute('onchange') && cb.getAttribute('onchange').includes(`toggleUserStatus(${userId}`));
             if (checkbox) {
                 checkbox.checked = data.is_active;
             }

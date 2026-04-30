@@ -20,10 +20,26 @@ class RoleMiddleware
             return redirect()->route('login');
         }
 
-        $user = Auth::user();
+        $user = Auth::user()->load('role');
         
         // Check if user has any of the required roles
-        if (!$user || !in_array($user->role, $roles)) {
+        if (!$user || !$user->role) {
+            return redirect()->route('dashboard')
+                ->with('error', 'You do not have permission to access this page.');
+        }
+
+        // Check if user's role name matches any of the required roles
+        $userRoleName = strtolower($user->role->name);
+        $hasRole = false;
+        
+        foreach ($roles as $role) {
+            if ($userRoleName === strtolower($role)) {
+                $hasRole = true;
+                break;
+            }
+        }
+
+        if (!$hasRole) {
             return redirect()->route('dashboard')
                 ->with('error', 'You do not have permission to access this page.');
         }

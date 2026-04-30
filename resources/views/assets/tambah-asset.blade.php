@@ -1,4 +1,4 @@
-{{-- ADD ASSET MODAL --}}
+{{-- TOMBOL TAMBAH ASSET --}}
 <style>
     .bg-red-primary { background-color: #E11D48 !important; }
     .hover\:bg-red-primary:hover { background-color: #E11D48 !important; opacity: 0.9 !important; }
@@ -21,6 +21,8 @@
         
         <form id="addAssetForm" method="POST">
             @csrf
+            <input type="hidden" name="condition" value="baik">
+            <input type="hidden" name="status" value="tersedia">
             
             {{-- CATEGORY --}}
             <div class="mb-6">

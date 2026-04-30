@@ -22,11 +22,11 @@ class AssetController extends Controller
         // Build query with relationships
         $query = Asset::with('category');
         
-        // Apply search filter
+        // Apply search filter (case-insensitive)
         if ($search) {
             $query->where(function($q) use ($search) {
-                $q->where('code', 'like', '%' . $search . '%')
-                  ->orWhere('name', 'like', '%' . $search . '%');
+                $q->whereRaw('LOWER(code) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']);
             });
         }
         

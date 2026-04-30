@@ -22,7 +22,20 @@ use App\Http\Controllers\AssetReturnController;
     Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    // HOME → LOGIN
+    Route::get('/', function () { return redirect()->route('login');});
 
+    // AUTHENTICATION ROUTES
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.process');
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // AUTH AREA
+    Route::middleware(['auth', 'nocache'])->group(function () {
     // AUTH AREA
     Route::middleware(['auth', 'nocache'])->group(function () {
 
@@ -32,6 +45,7 @@ use App\Http\Controllers\AssetReturnController;
     // MENU
     Route::get('/layanan', [DashboardController::class, 'layanan'])->name('layanan');
     Route::get('/peminjaman', [LoanController::class, 'index'])->name('peminjaman');
+    Route::post('/peminjaman', [LoanController::class, 'store'])->name('peminjaman.store');
     Route::post('/peminjaman', [LoanController::class, 'store'])->name('peminjaman.store');
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
     
@@ -48,6 +62,7 @@ use App\Http\Controllers\AssetReturnController;
     Route::post('/pengembalian', [AssetReturnController::class, 'store'])->middleware('role:admin')->name('pengembalian.store');
 
     // MASTER USER (Admin Only)
+    // MASTER USER (Admin Only)
     Route::middleware('role:admin')->group(function () {
         Route::resource('users', UserController::class);
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset');
@@ -56,5 +71,6 @@ use App\Http\Controllers\AssetReturnController;
     // PROFILE (All Authenticated Users)
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    
     
 });
