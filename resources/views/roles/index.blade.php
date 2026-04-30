@@ -10,18 +10,18 @@
      }">
 
     <!-- HEADER -->
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-2xl font-extrabold text-slate-800">Role Master</h1>
-            <p class="text-sm text-slate-400">Manajemen role sistem</p>
-        </div>
-
-        <button @click="openModal = true"
-            class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl text-sm font-bold shadow transition hover:scale-105">
-            + Tambah Role
-        </button>
+   <!-- HEADER -->
+<div class="flex justify-between items-center mb-6">
+    <div>
+        <h1 class="text-2xl font-extrabold text-red-600">Master Role</h1>
+        <p class="text-sm text-slate-400">Manajemen role sistem</p>
     </div>
 
+    <button @click="openModal = true"
+        class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl text-sm font-bold shadow transition hover:scale-105">
+        + Tambah Role
+    </button>
+</div>
     <!-- STATS -->
     <div class="grid grid-cols-2 gap-4 mb-6">
         <div class="bg-white p-4 rounded-xl shadow">
@@ -43,80 +43,77 @@
     <!-- TABLE -->
     <div class="bg-white rounded-2xl shadow overflow-hidden">
         <table class="w-full text-sm">
-            <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
-                <tr>
-                    <th class="p-4 text-left">Role</th>
-                    <th>Total User</th>
-                    <th class="text-center">Aksi</th>
-                </tr>
-            </thead>
+           <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+    <tr>
+        <th class="p-4 text-left">No</th>
+        <th class="p-4 text-left">Role</th>
+        <th class="text-center">Total User</th>
+        <th class="text-center">Aksi</th>
+    </tr>
+</thead>
 
-            <tbody>
-                @forelse($roles as $role)
-                <tr x-show="search === '' || '{{ strtolower($role->name) }}'.includes(search.toLowerCase())"
-                    class="border-t hover:bg-slate-50 transition">
+<tbody>
+@forelse($roles as $index => $role)
+<tr class="border-t hover:bg-slate-50 transition">
 
-                    <!-- ROLE -->
-                    <td class="p-4 font-semibold text-slate-700 flex items-center gap-2">
-                        {{ $role->name }}
+    <!-- NO (AUTO SESUAI PAGINATION) -->
+    <td class="p-4 text-slate-500 font-semibold">
+        {{ $roles->firstItem() + $index }}
+    </td>
 
-                        @if($role->name == 'Admin')
-                            <span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-bold">
-                                UTAMA
-                            </span>
-                        @endif
-                    </td>
+    <!-- ROLE -->
+    <td class="p-4 font-semibold text-slate-700">
+        {{ $role->name }}
+    </td>
 
-                    <!-- USER COUNT -->
-                    <td class="p-4">
-                        <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">
-                            {{ $role->users_count }} User
-                        </span>
-                    </td>
+    <!-- TOTAL USER -->
+    <td class="p-4 text-center align-middle">
+        <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold inline-flex items-center justify-center">
+            {{ $role->users_count }} User
+        </span>
+    </td>
 
-                    <!-- ACTION -->
-                    <td class="p-4 text-center space-x-2">
+    <!-- ACTION -->
+    <td class="p-4 text-center">
+        <div class="flex justify-center items-center gap-3">
 
-                        <!-- EDIT -->
-                        <button 
-                            @click="
-                                editModal = true;
-                                editData = {
-                                    id: {{ $role->id }},
-                                    name: '{{ $role->name }}'
-                                }
-                            "
-                            class="text-blue-500 hover:underline text-xs font-bold">
-                            Edit
-                        </button>
+            <!-- EDIT -->
+            <button 
+                @click="
+                    editModal = true;
+                    editData = {
+                        id: {{ $role->id }},
+                        name: '{{ $role->name }}'
+                    }
+                "
+                class="w-10 h-10 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
+                <i class="fas fa-edit"></i>
+            </button>
 
-                        <!-- DELETE LOGIC -->
-                        @if($role->name == 'Admin')
-                            <button class="text-gray-400 text-xs cursor-not-allowed">
-                                Tidak bisa dihapus
-                            </button>
-                        @else
-                            <button onclick="confirmDelete({{ $role->id }})"
-                                class="text-red-500 hover:underline text-xs font-bold">
-                                Hapus
-                            </button>
-                        @endif
+            <!-- DELETE -->
+            @if($role->name == 'Admin')
+                <div class="w-10 h-10 flex items-center justify-center bg-gray-300 text-white rounded-xl cursor-not-allowed">
+                    <i class="fas fa-trash"></i>
+                </div>
+            @else
+                <button onclick="confirmDelete({{ $role->id }})"
+                    class="w-10 h-10 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-md transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
+                    <i class="fas fa-trash"></i>
+                </button>
+            @endif
 
-                        <form id="delete-{{ $role->id }}" action="{{ route('roles.destroy', $role->id) }}" method="POST">
-                            @csrf
-                            @method('DELETE')
-                        </form>
+        </div>
+    </td>
 
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="3" class="text-center py-10 text-slate-400">
-                        Belum ada role
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
+</tr>
+@empty
+<tr>
+    <td colspan="4" class="text-center py-10 text-slate-400">
+        Belum ada role
+    </td>
+</tr>
+@endforelse
+</tbody>
         </table>
     </div>
 
