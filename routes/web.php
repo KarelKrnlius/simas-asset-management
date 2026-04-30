@@ -51,6 +51,7 @@ use App\Http\Controllers\AssetReturnController;
     Route::middleware('role:admin')->group(function () {
         Route::resource('users', UserController::class);
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset');
+        Route::post('/users/{id}/toggle', [UserController::class, 'toggle'])->name('users.toggle');
     });
 
     // PROFILE (All Authenticated Users)

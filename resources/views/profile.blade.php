@@ -41,7 +41,7 @@
                     <div class="flex flex-wrap justify-center md:justify-start gap-4">
                         <div class="bg-slate-900 px-8 py-2.5 rounded-2xl flex items-center justify-center min-w-[120px] text-white shadow-sm">
                             <span class="text-xs font-bold uppercase tracking-[0.15em] text-center w-full">
-                                {{ Auth::user()->role_id == 1 ? 'Administrator' : 'Staff' }}
+                                {{ Auth::user()->role ? ucfirst(Auth::user()->role->name) : 'Unknown' }}
                             </span>
                         </div>
 

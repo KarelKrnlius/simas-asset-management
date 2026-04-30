@@ -59,7 +59,6 @@
                 <div class="flex flex-col lg:flex-row gap-3">
                     <!-- Search Input -->
                     <div class="flex-1">
-                        <label class="text-sm font-semibold text-slate-700 mb-1 block">Search</label>
                         <div class="flex gap-2">
                             <div class="relative flex-1">
                                 <input type="text" 
@@ -74,14 +73,13 @@
                             <button onclick="performRefresh()" 
                                     class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
                                 <i class="fas fa-sync-alt"></i>
-                                Refresh
+                                Clear
                             </button>
                         </div>
                     </div>
                     
                     <!-- Sort Dropdown -->
                     <div class="relative">
-                        <label class="text-sm font-semibold text-slate-700 mb-1 block text-center">Sort by</label>
                         <select id="sortSelect" onchange="applySorting()" 
                             class="appearance-none bg-white border border-slate-200 rounded-lg px-4 py-2 pr-8 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent">
                             <option value="latest" {{ request('sort_by') == 'latest' ? 'selected' : '' }}>Terbaru</option>
@@ -327,20 +325,35 @@
 // Debounce timer for search
 let searchTimeout;
 
-// Search functionality - Enter key only
-function handleSearch(event) {
-    if (event.key === 'Enter') {
-        const searchTerm = event.target.value.trim();
+// Search functionality - Automatic search with debounce
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        let searchTimeout;
         
-        if (searchTerm === '') {
-            // Reset to default view
-            performRefresh();
-        } else {
-            // Submit search to server
-            performSearch(searchTerm);
+        // Restore search value from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search');
+        if (searchParam) {
+            searchInput.value = searchParam;
         }
+        
+        searchInput.addEventListener('input', function(event) {
+            clearTimeout(searchTimeout);
+            const searchTerm = event.target.value.trim();
+            
+            searchTimeout = setTimeout(() => {
+                if (searchTerm === '') {
+                    // Reset to default view
+                    performRefresh();
+                } else {
+                    // Submit search to server
+                    performSearch(searchTerm);
+                }
+            }, 500); // 500ms delay
+        });
     }
-}
+});
 
 function performSearch(searchTerm) {
     const url = new URL(window.location);

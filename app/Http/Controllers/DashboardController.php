@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Asset;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -12,10 +13,11 @@ class DashboardController extends Controller
     public function index()
     {
         // 1. Proteksi Auth (Balikin dari file lama lo)
-        $user = Auth::user();
-        if (!$user) {
+        if (!Auth::check()) {
             return redirect()->route('login');
         }
+        
+        $user = User::with('role')->find(Auth::id());
 
         // 2. Statistik Dashboard (Lengkap untuk Admin & Staff)
         $stats = [

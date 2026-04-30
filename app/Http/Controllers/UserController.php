@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Loan;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -30,12 +31,13 @@ class UserController extends Controller
         
         // Sort by role
         if ($request->has('role') && $request->role) {
-            $query->where('role', $request->role);
+            $query->where('role_id', $request->role);
         }
         
         $users = $query->latest()->paginate(15);
+        $roles = Role::orderBy('name')->get();
         
-        return view('users.index', compact('users'));
+        return view('users.index', compact('users', 'roles'));
     }
 
     /**
@@ -43,7 +45,8 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('users.create');
+        $roles = Role::orderBy('name')->get();
+        return view('users.create', compact('roles'));
     }
 
     /**
@@ -123,9 +126,12 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
+        $user->load('role');
+        $roles = Role::orderBy('name')->get();
         return response()->json([
             'success' => true,
-            'user' => $user
+            'user' => $user,
+            'roles' => $roles
         ]);
     }
 

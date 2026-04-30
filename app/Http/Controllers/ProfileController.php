@@ -15,7 +15,7 @@ class ProfileController extends Controller
 
     public function update(Request $request)
     {
-        $user = Auth::user();
+        $user = Auth::user()->load('role');
 
         $request->validate([
             'name' => 'required|string|max:255',
