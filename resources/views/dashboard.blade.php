@@ -55,7 +55,7 @@
                 </div>
                 <div class="relative w-full h-[350px] overflow-hidden rounded-xl">
     <div id="chartAnalytics" class="w-full h-full"></div>
-</div>
+</div> 
             </div>
 
             <div class="space-y-8">

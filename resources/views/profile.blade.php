@@ -134,10 +134,6 @@
 
                     
                     <div id="actionButtons" class="hidden flex flex-col md:flex-row justify-between items-center gap-4">
-                        <button type="button" onclick="logoutAllDevices()" class="px-6 py-3 text-sm font-bold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-2xl transition-all border border-red-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 inline mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                            Keluar Semua Perangkat
-                        </button>
                         <div class="flex gap-4">
                             <button type="button" id="cancelBtn" class="px-8 py-4 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-2xl transition-all order-2 md:order-1">Batal</button>
                             <button type="submit" class="px-12 py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-black hover:shadow-xl transition-all order-1 md:order-2 transform active:scale-95">Simpan Perubahan</button>
@@ -208,41 +204,7 @@
             }
         };
 
-        // Logout all devices function
-        window.logoutAllDevices = function() {
-            if (confirm('Apakah Anda yakin ingin keluar dari semua perangkat? Ini akan mengeluarkan Anda dari semua sesi aktif.')) {
-                fetch('/profile/logout-all-devices', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({})
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.href = '/login';
-                    } else {
-                        alert('Terjadi kesalahan saat logout dari semua perangkat');
-                    }
-                })
-                .catch(error => {
-                    // Fallback to direct form submission
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/profile/logout-all-devices';
-                    const csrfToken = document.createElement('input');
-                    csrfToken.type = 'hidden';
-                    csrfToken.name = '_token';
-                    csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    form.appendChild(csrfToken);
-                    document.body.appendChild(form);
-                    form.submit();
-                });
-            }
-        };
-    });
+            });
 
     function togglePassword(fieldId) {
         const passwordField = document.getElementById(fieldId);

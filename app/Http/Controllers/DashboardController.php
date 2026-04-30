@@ -27,6 +27,16 @@ class DashboardController extends Controller
         ];
 
         // 3. Logic Grafik Maintenance untuk PostgreSQL (Balikin dari file lama)
+        $chartRaw = Asset::select(
+            DB::raw("COUNT(*) as count"), 
+            DB::raw("to_char(created_at, 'Mon') as month"),
+            DB::raw("EXTRACT(MONTH FROM created_at) as month_num")
+        )
+        ->where('status', 'Maintenance')
+        ->groupBy('month', 'month_num')
+        ->orderBy('month_num')
+        ->get();
+        // 3. Logic Grafik Maintenance untuk PostgreSQL (Balikin dari file lama)
         // $chartRaw = Asset::select(
         //     DB::raw("COUNT(*) as count"), 
         //     DB::raw("to_char(created_at, 'Mon') as month"),
