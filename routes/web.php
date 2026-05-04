@@ -10,6 +10,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AssetReturnController;
+use App\Http\Controllers\RoleController;
 
     // HOME → LOGIN
     Route::get('/', function () { return redirect()->route('login');});
@@ -39,6 +40,7 @@ use App\Http\Controllers\AssetReturnController;
     Route::resource('assets', AssetController::class)->middleware('role:admin');
     Route::get('/assets/next-code', [AssetController::class, 'getNextCode'])->middleware('role:admin');
     Route::post('/assets/bulk-delete', [AssetController::class, 'bulkDelete'])->middleware('role:admin');
+    Route::get('/test-photo/{id}', [AssetController::class, 'testPhoto'])->middleware('role:admin');
     
     // Categories Resource Routes (Admin Only)
     Route::resource('categories', CategoryController::class)->middleware('role:admin');
@@ -51,7 +53,10 @@ use App\Http\Controllers\AssetReturnController;
     Route::middleware('role:admin')->group(function () {
         Route::resource('users', UserController::class);
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset');
+        Route::post('/users/{id}/toggle', [UserController::class, 'toggle'])->name('users.toggle');
     });
+
+    Route::resource('roles', RoleController::class)->except(['create','edit','show']);
 
     // PROFILE (All Authenticated Users)
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');

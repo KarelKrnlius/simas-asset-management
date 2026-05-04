@@ -49,8 +49,9 @@
                         required
                         class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-red-500 focus:outline-none transition-colors">
                         <option value="">-- Pilih Role --</option>
-                        <option value="1">Admin</option>
-                        <option value="2">Staff</option>
+                        @foreach($roles as $role)
+                            <option value="{{ $role->id }}">{{ ucfirst($role->name) }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>

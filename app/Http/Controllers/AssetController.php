@@ -16,18 +16,24 @@ class AssetController extends Controller
     public function index()
     {
         // Get sorting parameters
-        $sortBy = request('sort_by'); // No default, let it be null if not provided
-        $order = request('order', 'desc'); // Default: desc
+        $sortBy = request('sort_by', 'code'); // Default: sort by code
+        $order = request('order', 'asc'); // Default: asc
         $search = request('search'); // Search parameter
         
         // Build query with relationships
         $query = Asset::with('category');
         
-        // Apply search filter
+        // Apply search filter (case-insensitive) - search in code, name, category, condition, status, description
         if ($search) {
             $query->where(function($q) use ($search) {
-                $q->where('code', 'like', '%' . $search . '%')
-                  ->orWhere('name', 'like', '%' . $search . '%');
+                $q->whereRaw('LOWER(code) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereHas('category', function($catQ) use ($search) {
+                      $catQ->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']);
+                  })
+                  ->orWhereRaw('LOWER(condition) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw('LOWER(status) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw('LOWER(description) LIKE ?', ['%' . strtolower($search) . '%']);
             });
         }
         
@@ -39,6 +45,9 @@ class AssetController extends Controller
         } else {
             // Apply regular sorting if not category-specific
             switch ($sortBy) {
+                case 'latest':
+                    $query->orderBy('created_at', 'desc');
+                    break;
                 case 'category':
                     // Handle specific category filtering
                     if (request('category_id')) {
@@ -158,7 +167,7 @@ class AssetController extends Controller
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:100',
-            'description' => 'nullable|string|max:1000',
+            'description' => 'nullable|string|max:500',
             'stock' => 'required|integer|min:0',
             'condition' => 'required|string|max:20',
             'status' => 'required|in:tersedia,dipinjam,diperbaiki',
@@ -174,12 +183,22 @@ class AssetController extends Controller
         }
 
         try {
-            // Handle photo upload
+            // Handle photo upload - SIMPAN KE RUSTFS
             $photoPath = null;
             if ($request->hasFile('photo')) {
                 $photo = $request->file('photo');
                 $photoName = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
-                $photoPath = $photo->storeAs('assets', $photoName, 'public');
+                
+                // Upload ke RustFS (object storage)
+                $photoPath = $photo->storeAs('assets', $photoName, 'rustfs');
+                
+                // Jika upload gagal, return error
+                if (!$photoPath) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to upload photo to RustFS'
+                    ], 500);
+                }
             }
             
             $category = Category::findOrFail($request->category_id);
@@ -207,7 +226,7 @@ class AssetController extends Controller
                 $currentNumber = $startNumber + $i;
                 $assetCode = $categoryPrefix . $currentNumber;
                 
-                $assetData = $request->all();
+                $assetData = $request->except(['_token', '_method', 'photo']);
                 $assetData['code'] = $assetCode;
                 $assetData['stock'] = 1; // Each individual item has stock of 1
                 $assetData['condition'] = 'baik'; // Auto-set condition
@@ -231,6 +250,11 @@ class AssetController extends Controller
                 'count' => $stock
             ]);
         } catch (\Exception $e) {
+            // Jika ada error, hapus foto yang sudah diupload
+            if (isset($photoPath) && $photoPath) {
+                Storage::disk('rustfs')->delete($photoPath);
+            }
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create asset: ' . $e->getMessage()
@@ -244,9 +268,17 @@ class AssetController extends Controller
     public function show(Asset $asset)
     {
         $asset->load('category');
+        
+        // Get photo URL (support both local and RustFS)
+        $photoUrl = null;
+        if ($asset->photo) {
+            $photoUrl = \App\Helpers\AssetHelper::getPhotoUrl($asset->photo);
+        }
+        
         return response()->json([
             'success' => true,
-            'data' => $asset
+            'data' => $asset,
+            'photo_url' => $photoUrl
         ]);
     }
 
@@ -259,10 +291,11 @@ class AssetController extends Controller
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:100',
             'code' => 'required|string|max:50|unique:assets,code,' . $asset->id,
-            'description' => 'nullable|string|max:1000',
+            'description' => 'nullable|string|max:500',
             'stock' => 'required|integer|min:0',
             'condition' => 'required|string|max:20',
-            'status' => 'required|in:tersedia,dipinjam,diperbaiki',
+            'status' => 'required|in:tersedia,dipinjam,perlu_perbaikan,tidak_tersedia',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Validasi foto opsional
         ]);
 
         if ($validator->fails()) {
@@ -274,7 +307,32 @@ class AssetController extends Controller
         }
 
         try {
-            $asset->update($request->all());
+            $updateData = $request->except(['_token', '_method', 'photo', 'current_photo']);
+            
+            // Handle photo upload - SIMPAN KE RUSTFS
+            if ($request->hasFile('photo')) {
+                // Hapus foto lama jika ada DAN tersimpan di RustFS
+                if ($asset->photo) {
+                    try {
+                        if (Storage::disk('rustfs')->exists($asset->photo)) {
+                            Storage::disk('rustfs')->delete($asset->photo);
+                        }
+                    } catch (\Exception $e) {
+                        // Ignore error jika foto lama tidak bisa dihapus
+                    }
+                }
+                
+                // Upload foto baru ke RustFS
+                $photo = $request->file('photo');
+                $photoName = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+                $photoPath = $photo->storeAs('assets', $photoName, 'rustfs');
+                
+                if ($photoPath) {
+                    $updateData['photo'] = $photoPath;
+                }
+            }
+            
+            $asset->update($updateData);
             
             session()->flash('success', 'Berhasil mengubah');
             
@@ -354,5 +412,31 @@ class AssetController extends Controller
                 'message' => 'Failed to delete assets: ' . $e->getMessage()
             ], 500);
         }
+    }
+    
+    /**
+     * Test photo URL (for debugging)
+     */
+    public function testPhoto($id)
+    {
+        $asset = Asset::find($id);
+        
+        if (!$asset) {
+            return response()->json(['error' => 'Asset not found'], 404);
+        }
+        
+        $photoUrl = \App\Helpers\AssetHelper::getPhotoUrl($asset->photo);
+        
+        return response()->json([
+            'asset_id' => $asset->id,
+            'asset_name' => $asset->name,
+            'photo_path' => $asset->photo,
+            'photo_url' => $photoUrl,
+            'rustfs_config' => [
+                'endpoint' => config('filesystems.disks.rustfs.endpoint'),
+                'bucket' => config('filesystems.disks.rustfs.bucket'),
+                'url' => config('filesystems.disks.rustfs.url'),
+            ]
+        ]);
     }
 }
