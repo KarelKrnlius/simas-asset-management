@@ -7,15 +7,35 @@ use App\Models\Role;
 
 class RoleController extends Controller
 {
-   public function index(Request $request)
-{
-    $roles = \App\Models\Role::withCount('users')
-        ->orderByRaw("CASE WHEN name = 'Admin' THEN 0 ELSE 1 END")
-        ->orderBy('name')
-        ->paginate(5);
+    // ===============================
+    // INDEX (SEARCH + SORT + PAGINATION)
+    // ===============================
+    public function index(Request $request)
+    {
+        $query = Role::withCount('users');
 
-    return view('roles.index', compact('roles'));
-}
+        // SEARCH
+        if ($request->search) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // SORT
+        if ($request->sort == 'oldest') {
+            $query->orderBy('created_at', 'asc');
+        } else {
+            // default terbaru + admin tetap atas
+            $query->orderByRaw("CASE WHEN name = 'Admin' THEN 0 ELSE 1 END")
+                  ->orderBy('created_at', 'desc');
+        }
+
+        $roles = $query->paginate(5)->withQueryString();
+
+        return view('roles.index', compact('roles'));
+    }
+
+    // ===============================
+    // STORE (TAMBAH ROLE)
+    // ===============================
     public function store(Request $request)
     {
         $request->validate([
@@ -30,6 +50,9 @@ class RoleController extends Controller
         return back()->with('success', 'Role berhasil ditambahkan');
     }
 
+    // ===============================
+    // UPDATE (EDIT ROLE)
+    // ===============================
     public function update(Request $request, $id)
     {
         $role = Role::findOrFail($id);
@@ -46,33 +69,53 @@ class RoleController extends Controller
         return back()->with('success', 'Role berhasil diupdate');
     }
 
+    // ===============================
+    // DELETE 1 DATA
+    // ===============================
     public function destroy($id)
     {
-        Role::findOrFail($id)->delete();
+        $role = Role::findOrFail($id);
+
+        if ($role->name == 'Admin') {
+            return back()->with('error', 'Role Admin tidak bisa dihapus');
+        }
+
+        $role->delete();
+
         return back()->with('success', 'Role berhasil dihapus');
     }
 
-public function deleteAll()
-{
-    Role::where('name', '!=', 'Admin')->delete();
+    // ===============================
+    // DELETE SEMUA (KECUALI ADMIN)
+    // ===============================
+    public function deleteAll()
+    {
+        Role::where('name', '!=', 'Admin')->delete();
 
-    return back()->with('success', 'Semua role berhasil dihapus');
-}
-
-public function bulkDelete(Request $request)
-{
-    $ids = $request->ids;
-
-    if (!$ids) {
-        return back()->with('error', 'Tidak ada data dipilih');
+        return back()->with('success', 'Semua role berhasil dihapus');
     }
 
-    // Jangan hapus Admin
-    Role::whereIn('id', $ids)
-        ->where('name', '!=', 'Admin')
-        ->delete();
+    // ===============================
+    // BULK DELETE (HAPUS TERPILIH)
+    // ===============================
+    public function bulkDelete(Request $request)
+    {
+        $ids = $request->ids;
 
-    return back()->with('success', 'Role berhasil dihapus');
-}
+        if (!$ids || count($ids) == 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada data dipilih'
+            ]);
+        }
 
+        Role::whereIn('id', $ids)
+            ->where('name', '!=', 'Admin')
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Role berhasil dihapus'
+        ]);
+    }
 }

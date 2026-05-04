@@ -22,11 +22,17 @@ class AssetController extends Controller
         // Build query with relationships
         $query = Asset::with('category');
         
-        // Apply search filter
+        // Apply search filter (case-insensitive) - search in code, name, category, condition, status, description
         if ($search) {
             $query->where(function($q) use ($search) {
-                $q->where('code', 'like', '%' . $search . '%')
-                  ->orWhere('name', 'like', '%' . $search . '%');
+                $q->whereRaw('LOWER(code) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereHas('category', function($catQ) use ($search) {
+                      $catQ->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']);
+                  })
+                  ->orWhereRaw('LOWER(condition) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw('LOWER(status) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw('LOWER(description) LIKE ?', ['%' . strtolower($search) . '%']);
             });
         }
         
@@ -157,7 +163,7 @@ class AssetController extends Controller
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:100',
-            'description' => 'nullable|string|max:1000',
+            'description' => 'nullable|string|max:500',
             'stock' => 'required|integer|min:0',
             'condition' => 'required|string|max:20',
             'status' => 'required|in:tersedia,dipinjam,diperbaiki',
@@ -248,10 +254,10 @@ class AssetController extends Controller
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:100',
             'code' => 'required|string|max:50|unique:assets,code,' . $asset->id,
-            'description' => 'nullable|string|max:1000',
+            'description' => 'nullable|string|max:500',
             'stock' => 'required|integer|min:0',
             'condition' => 'required|string|max:20',
-            'status' => 'required|in:tersedia,dipinjam,diperbaiki',
+            'status' => 'required|in:tersedia,dipinjam,perlu_perbaikan,tidak_tersedia',
         ]);
 
         if ($validator->fails()) {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Loan;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -17,25 +18,55 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::with('role');
         
-        // Search functionality
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+        // Search functionality - search by name, email, role, and status
+        if ($request->has('search') && $request->search) {
+            $searchTerm = strtolower($request->search);
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'ILIKE', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'ILIKE', '%' . $searchTerm . '%')
+                  ->orWhereHas('role', function($roleQ) use ($searchTerm) {
+                      $roleQ->where('name', 'ILIKE', '%' . $searchTerm . '%');
+                  })
+                  ->orWhere(function($statusQ) use ($searchTerm) {
+                      if (strpos($searchTerm, 'aktif') !== false) {
+                          $statusQ->where('is_active', true);
+                      }
+                      if (strpos($searchTerm, 'nonaktif') !== false) {
+                          $statusQ->orWhere('is_active', false);
+                      }
+                  });
             });
         }
         
-        // Sort by role
-        if ($request->has('role') && $request->role) {
-            $query->where('role', $request->role);
+        // Sorting functionality
+        $sortBy = $request->get('sort_by');
+        $order = $request->get('order', 'desc');
+        
+        switch ($sortBy) {
+            case 'created_at':
+                $query->orderBy('created_at', $order);
+                break;
+            case 'name':
+                $query->orderBy('name', $order);
+                break;
+            default:
+                if ($sortBy && str_starts_with($sortBy, 'role_')) {
+                    $roleId = str_replace('role_', '', $sortBy);
+                    $query->where('role_id', $roleId);
+                }
+                $query->latest();
+                break;
         }
         
-        $users = $query->latest()->paginate(15);
+        $users = $query->paginate(15);
+        $roles = Role::orderBy('name')->get();
         
-        return view('users.index', compact('users'));
+        // Append search and sort parameters to pagination links
+        $users->appends(request()->only(['search', 'sort_by', 'order']));
+        
+        return view('users.index', compact('users', 'roles'));
     }
 
     /**
@@ -43,7 +74,8 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('users.create');
+        $roles = Role::orderBy('name')->get();
+        return view('users.create', compact('roles'));
     }
 
     /**
@@ -123,9 +155,12 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
+        $user->load('role');
+        $roles = Role::orderBy('name')->get();
         return response()->json([
             'success' => true,
-            'user' => $user
+            'user' => $user,
+            'roles' => $roles
         ]);
     }
 

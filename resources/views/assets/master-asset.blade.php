@@ -55,37 +55,36 @@
                     </span>
                 </div>
                 
-                <!-- Search, Sort and Bulk Actions -->
+                <!-- Sort and Bulk Actions -->
                 <div class="flex flex-col lg:flex-row gap-3">
                     <!-- Search Input -->
                     <div class="flex-1">
-                        <label class="text-sm font-semibold text-slate-700 mb-1 block">Search</label>
-                        <div class="flex gap-2">
-                            <div class="relative flex-1">
-                                <input type="text" 
-                                       id="searchInput" 
-                                       placeholder="Cari kode asset" 
-                                       class="w-full px-4 py-2 pr-10 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent"
-                                       onkeyup="handleSearch(event)">
-                                <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                    <i class="fas fa-search text-slate-400"></i>
-                                </div>
+                        <div class="relative flex-1">
+                            <input type="text"
+                                   id="searchInput"
+                                   placeholder="Cari kode asset..."
+                                   value="{{ request('search') }}"
+                                   class="w-full px-4 py-2 pr-10 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent"
+                                   onkeypress="handleKeyPress(event)">
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" onclick="performSearchFromInput()">
+                                <i class="fas fa-search text-slate-400 hover:text-red-600"></i>
                             </div>
-                            <button onclick="performRefresh()" 
-                                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
-                                <i class="fas fa-sync-alt"></i>
-                                Refresh
-                            </button>
                         </div>
                     </div>
+                    <button onclick="performRefresh()"
+                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                        <i class="fas fa-sync-alt"></i>
+                        Clear
+                    </button>
                     
                     <!-- Sort Dropdown -->
                     <div class="relative">
-                        <label class="text-sm font-semibold text-slate-700 mb-1 block text-center">Sort by</label>
                         <select id="sortSelect" onchange="applySorting()" 
                             class="appearance-none bg-white border border-slate-200 rounded-lg px-4 py-2 pr-8 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent">
                             <option value="latest" {{ request('sort_by') == 'latest' ? 'selected' : '' }}>Terbaru</option>
                             <option value="oldest" {{ request('sort_by') == 'created_at' && request('order') == 'asc' ? 'selected' : '' }}>Terlama</option>
+                            <option value="name_asc" {{ request('sort_by') == 'name' && request('order') == 'asc' ? 'selected' : '' }}>Nama (A-Z)</option>
+                            <option value="name_desc" {{ request('sort_by') == 'name' && request('order') == 'desc' ? 'selected' : '' }}>Nama (Z-A)</option>
                             @if($categories->count() > 0)
                                 <optgroup label="kategori">
                                     @foreach($categories as $category)
@@ -168,7 +167,7 @@
                                 <td class="py-4 px-4">
                                     <span class="inline-block px-3 py-1 rounded-lg text-sm font-semibold
                                         @if($asset->condition == 'baik') bg-green-100 text-green-700
-                                        @elseif($asset->condition == 'cukup') bg-yellow-100 text-yellow-700
+                                        @elseif($asset->condition == 'rusak') bg-yellow-100 text-yellow-700
                                         @else bg-red-100 text-red-700 @endif">
                                         {{ ucfirst($asset->condition) }}
                                     </span>
@@ -177,8 +176,9 @@
                                     <span class="inline-block px-3 py-1 rounded-lg text-sm font-semibold
                                         @if($asset->status == 'tersedia') bg-green-100 text-green-700
                                         @elseif($asset->status == 'dipinjam') bg-blue-100 text-blue-700
-                                        @else bg-orange-100 text-orange-700 @endif">
-                                        {{ ucfirst($asset->status) }}
+                                        @elseif($asset->status == 'perlu_perbaikan') bg-yellow-100 text-yellow-700
+                                        @else bg-red-100 text-red-700 @endif">
+                                        {{ str_replace('_', ' ', ucfirst($asset->status)) }}
                                     </span>
                                 </td>
                                 <td class="py-4 px-4">
@@ -246,19 +246,18 @@
                         @endforeach
                         
                         {{-- Next Button --}}
-                        @if($assets->onLastPage())
-                            <button class="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg font-semibold cursor-not-allowed" disabled>
-                                Selanjutnya<i class="fas fa-chevron-right ml-2"></i>
-                            </button>
-                        @else
+                        @if($assets->hasMorePages())
                             <a href="{{ $assets->nextPageUrl() }}" 
                                class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition-colors">
                                 Selanjutnya<i class="fas fa-chevron-right ml-2"></i>
                             </a>
+                        @else
+                            <button class="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg font-semibold cursor-not-allowed" disabled>
+                                Selanjutnya<i class="fas fa-chevron-right ml-2"></i>
+                            </button>
                         @endif
                     </div>
-                    
-                                    </div>
+                </div>
             @endif
         </div>
     </div>
@@ -324,34 +323,48 @@
 
 {{-- SORTING AND BULK DELETE JAVASCRIPT --}}
 <script>
-// Debounce timer for search
-let searchTimeout;
-
-// Search functionality - Enter key only
-function handleSearch(event) {
-    if (event.key === 'Enter') {
-        const searchTerm = event.target.value.trim();
-        
-        if (searchTerm === '') {
-            // Reset to default view
-            performRefresh();
-        } else {
-            // Submit search to server
-            performSearch(searchTerm);
+// Search functionality - Submit on Enter key
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        // Restore search value from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search');
+        if (searchParam) {
+            searchInput.value = searchParam;
         }
+    }
+});
+
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        performSearchFromInput();
+    }
+}
+
+function performSearchFromInput() {
+    const searchInput = document.getElementById('searchInput');
+    const searchTerm = searchInput.value.trim();
+    
+    if (searchTerm === '') {
+        // Reset to default view
+        performRefresh();
+    } else {
+        // Submit search to server
+        performSearch(searchTerm);
     }
 }
 
 function performSearch(searchTerm) {
     const url = new URL(window.location);
     
-    // Clear page parameter to start from page 1
+    // Remove page parameter to always start from page 1 when searching
     url.searchParams.delete('page');
     
     // Set search parameter
     url.searchParams.set('search', searchTerm);
     
-    // Reload page with search
+    // Navigate to new URL
     window.location.href = url.toString();
 }
 
@@ -380,15 +393,6 @@ function performRefresh() {
     window.location.href = url.toString();
 }
 
-function updateEmptyState() {
-    const visibleRows = document.querySelectorAll('#assetsTable tbody tr:not([style*="display: none"])');
-    const emptyState = document.querySelector('.empty-state');
-    
-    if (emptyState) {
-        emptyState.style.display = visibleRows.length === 0 ? 'block' : 'none';
-    }
-}
-
 // Sorting functionality
 function applySorting() {
     const sortValue = document.getElementById('sortSelect').value;
@@ -404,6 +408,14 @@ function applySorting() {
         case 'oldest':
             sortBy = 'created_at';
             order = 'asc';
+            break;
+        case 'name_asc':
+            sortBy = 'name';
+            order = 'asc';
+            break;
+        case 'name_desc':
+            sortBy = 'name';
+            order = 'desc';
             break;
         default:
             // Handle dynamic category sorting (category_1, category_2, etc.)

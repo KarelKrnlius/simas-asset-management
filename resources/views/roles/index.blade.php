@@ -1,133 +1,167 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="w-full max-w-7xl mx-auto"
-     x-data="{
-        openModal: false,
-        editModal: false,
-        editData: {},
-        search: '',
-        selected: []
+<div class="min-h-screen flex flex-col items-start pt-4 px-6"
+     x-data="{ 
+        selected: [], 
+        openModal: false, 
+        editModal: false, 
+        editData: {} 
      }">
 
 <!-- HEADER -->
-<div class="flex justify-between items-center mb-6">
-    <div>
-        <h1 class="text-2xl font-extrabold text-red-600">Master Role</h1>
-        <p class="text-sm text-slate-400">Manajemen role sistem</p>
-    </div>
-
-    <button @click="openModal = true"
-        class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl text-sm font-bold shadow">
-        + Tambah Role
-    </button>
-</div>
-
-<!-- STATS -->
-<div class="grid grid-cols-2 gap-4 mb-6">
-    <div class="bg-white p-4 rounded-xl shadow">
-        <p class="text-xs text-slate-400">Total Role</p>
-        <h2 class="text-xl font-bold">{{ $roles->count() }}</h2>
-    </div>
-    <div class="bg-white p-4 rounded-xl shadow">
-        <p class="text-xs text-slate-400">Total User</p>
-        <h2 class="text-xl font-bold">{{ $roles->sum('users_count') }}</h2>
-    </div>
-</div>
-
-<!-- SEARCH -->
-<input type="text"
-    x-model="search"
-    placeholder="Cari role..."
-    class="w-full md:w-1/3 border border-slate-200 rounded-xl px-4 py-2 text-sm mb-4 focus:ring-2 focus:ring-red-500 outline-none">
-
-<!-- BUTTON HAPUS TERPILIH -->
-<div class="flex justify-end mb-3">
-    <button 
-        @click="bulkDelete()"
-        :class="selected.length > 0 
-            ? 'bg-red-600 hover:bg-red-700 text-white opacity-100' 
-            : 'bg-red-600 text-white opacity-40 cursor-not-allowed'"
-        class="px-4 py-2 rounded-xl text-sm font-bold shadow transition-all duration-300"
-        :disabled="selected.length === 0">
+<div class="w-full max-w-7xl mx-auto mb-6">
+    <div class="flex justify-between items-center">
+        <div> 
+            <h1 class="text-3xl font-black text-red-600 uppercase tracking-tighter">
+                Master Role
+            </h1>
+            <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider mt-1">
+                Manajemen role sistem
+            </p>
+        </div>
         
-        <i class="fas fa-trash mr-2"></i> Hapus Terpilih
-    </button>
+        <button @click="openModal = true"
+            class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl font-bold text-sm transition">
+            <i class="fas fa-plus mr-2"></i> Tambah Role
+        </button>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="w-full max-w-7xl mx-auto">
+<div class="bg-white rounded-[2rem] shadow-sm p-6">
+
+<!-- CONTROL BAR -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
+
+    <!-- TOTAL -->
+    <div class="flex items-center gap-2">
+        <i class="fas fa-user-shield text-black"></i>
+        <span class="font-bold text-slate-900 text-sm">
+            Total Role: <span class="text-black">{{ $roles->total() }}</span>
+        </span>
+        <span class="text-xs text-slate-500">
+            ({{ $roles->firstItem() }}-{{ $roles->lastItem() }})
+        </span>
+    </div>
+
+    <!-- RIGHT -->
+    <form method="GET" action="{{ route('roles.index') }}" class="flex flex-wrap items-center gap-2">
+
+        <!-- SEARCH -->
+        <div class="relative">
+            <input type="text" name="search"
+                value="{{ request('search') }}"
+                placeholder="Cari role..."
+                class="w-52 px-3 py-2 pr-8 border border-slate-200 rounded-lg text-xs">
+            <i class="fas fa-search absolute right-2 top-2.5 text-slate-400 text-xs"></i>
+        </div>
+
+        <!-- CLEAR -->
+        <a href="{{ route('roles.index') }}"
+            class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-xs rounded-lg flex items-center gap-1">
+            <i class="fas fa-sync-alt text-xs"></i>
+            Clear
+        </a>
+
+        <!-- SORT -->
+        <select name="sort" onchange="this.form.submit()"
+            class="border border-slate-200 rounded-lg px-3 py-2 text-xs">
+            <option value="">Terbaru</option>
+            <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>
+                Terlama
+            </option>
+        </select>
+
+        <!-- HAPUS TERPILIH -->
+        <button type="button"
+            @click="bulkDelete()"
+            :class="selected.length > 0 
+                ? 'bg-red-100 text-red-600 opacity-100' 
+                : 'bg-red-100 text-red-400 opacity-50 cursor-not-allowed'"
+            class="px-3 py-2 rounded-lg text-xs flex items-center gap-1"
+            :disabled="selected.length === 0">
+
+            <i class="fas fa-trash text-xs"></i>
+            Hapus Terpilih
+        </button>
+
+    </form>
 </div>
 
 <!-- TABLE -->
-<div class="bg-white rounded-2xl shadow overflow-hidden">
+<div class="overflow-x-auto">
 <table class="w-full text-sm">
 
-<thead class="bg-slate-50 text-slate-500 uppercase text-xs">
-<tr>
-    <th class="p-4">
+<thead>
+<tr class="border-b border-slate-200">
+    <th class="py-3 px-2 text-center w-[40px]">
         <input type="checkbox"
-            @click="selected = selected.length === {{ $roles->count() }} ? [] : {{ $roles->pluck('id') }}">
+            @click="selected = selected.length === {{ $roles->count() }} ? [] : {{ $roles->pluck('id') }}"
+            class="w-4 h-4">
     </th>
-    <th class="p-4 text-left">No</th>
-    <th class="p-4 text-left">Role</th>
-    <th class="text-center">Total User</th>
-    <th class="text-center">Aksi</th>
+
+    <th class="py-3 px-2 text-center text-xs font-bold w-[50px]">NO</th>
+    <th class="py-3 px-2 text-left text-xs font-bold">ROLE</th>
+    <th class="py-3 px-2 text-center text-xs font-bold">USER</th>
+    <th class="py-3 px-2 text-center text-xs font-bold">AKSI</th>
 </tr>
 </thead>
 
 <tbody>
 @foreach($roles as $index => $role)
-<tr class="border-t hover:bg-slate-50">
+<tr class="border-b hover:bg-slate-50">
 
-    <!-- CHECKBOX -->
-    <td class="p-4">
+    <!-- CHECK -->
+    <td class="py-3 px-2 text-center">
         @if($role->name !== 'Admin')
-            <input type="checkbox" :value="{{ $role->id }}" x-model="selected">
+            <input type="checkbox"
+                :value="{{ $role->id }}"
+                x-model="selected"
+                class="w-4 h-4">
         @endif
     </td>
 
     <!-- NO -->
-    <td class="p-4 text-slate-500 font-semibold">
+    <td class="py-3 px-2 text-center text-slate-600">
         {{ $roles->firstItem() + $index }}
     </td>
 
     <!-- ROLE -->
-    <td class="p-4 font-semibold text-slate-700">
+    <td class="py-3 px-2 font-semibold text-slate-700">
         {{ $role->name }}
     </td>
 
-    <!-- TOTAL USER -->
-    <td class="p-4 text-center">
-        <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">
-            {{ $role->users_count }} User
+    <!-- USER -->
+    <td class="py-3 px-2 text-center">
+        <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs font-bold">
+            {{ $role->users_count }}
         </span>
     </td>
 
-    <!-- ACTION -->
-    <td class="p-4 text-center">
-        <div class="flex justify-center items-center gap-3">
+    <!-- AKSI -->
+    <td class="py-3 px-2 text-center">
+        <div class="flex justify-center gap-2">
 
             <!-- EDIT -->
             <button 
-                @click="
-                    editModal = true;
-                    editData = {
-                        id: {{ $role->id }},
-                        name: '{{ $role->name }}'
-                    }
-                "
-                class="w-10 h-10 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md">
-                <i class="fas fa-edit"></i>
+                @click='editModal = true; editData = @json($role)'
+                class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg">
+                <i class="fas fa-edit text-xs"></i>
             </button>
 
             <!-- DELETE -->
             @if($role->name == 'Admin')
-                <div class="w-10 h-10 flex items-center justify-center bg-gray-300 text-white rounded-xl cursor-not-allowed">
-                    <i class="fas fa-trash"></i>
-                </div>
+                <button class="bg-gray-300 text-white p-2 rounded-lg cursor-not-allowed">
+                    <i class="fas fa-trash text-xs"></i>
+                </button>
             @else
                 <form action="{{ route('roles.destroy', $role->id) }}" method="POST">
                     @csrf
                     @method('DELETE')
-                    <button class="w-10 h-10 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-xl">
-                        <i class="fas fa-trash"></i>
+                    <button class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg">
+                        <i class="fas fa-trash text-xs"></i>
                     </button>
                 </form>
             @endif
@@ -142,5 +176,97 @@
 </table>
 </div>
 
-@endsection
+</div>
+</div>
 
+<!-- SCRIPT -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+function bulkDelete() {
+    let selected = document.querySelectorAll('input[type=checkbox]:checked');
+
+    if (selected.length === 0) {
+        Swal.fire('Pilih dulu!');
+        return;
+    }
+
+    Swal.fire({
+        title: 'Hapus data?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya'
+    }).then((result) => {
+        if (result.isConfirmed) {
+
+            let ids = [];
+            selected.forEach(el => {
+                if(el.value) ids.push(el.value);
+            });
+
+            fetch('/roles/bulk-delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ ids: ids })
+            }).then(() => location.reload());
+        }
+    });
+}
+</script>
+
+<!-- MODAL TAMBAH ROLE -->
+<div x-show="openModal" 
+     x-transition
+     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+    <div class="bg-white p-6 rounded-xl w-96 shadow-lg">
+        <h2 class="font-bold mb-4 text-lg">Tambah Role</h2>
+
+        <form method="POST" action="{{ route('roles.store') }}">
+            @csrf
+
+            <input type="text" name="name" placeholder="Nama Role"
+                class="w-full border p-2 mb-3 rounded-lg text-sm">
+
+            <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm w-full">
+                Simpan
+            </button>
+        </form>
+
+        <button @click="openModal = false"
+            class="mt-3 text-xs text-slate-500 w-full">
+            Tutup
+        </button>
+    </div>
+</div>
+
+<!-- MODAL EDIT ROLE -->
+<div x-show="editModal" x-cloak
+     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+    <div class="bg-white p-6 rounded-xl w-96">
+        <h2 class="font-bold mb-4">Edit Role</h2>
+
+        <form method="POST" :action="`{{ url('roles') }}/${editData.id}`">
+            @csrf
+            @method('PUT')
+
+            <input type="text" name="name" x-model="editData.name"
+                class="w-full border p-2 mb-3 rounded">
+
+            <button class="bg-blue-600 text-white px-4 py-2 rounded w-full">
+                Update
+            </button>
+        </form>
+
+        <button @click="editModal = false"
+            class="mt-2 text-sm text-gray-500 w-full">
+            Tutup
+        </button>
+    </div>
+</div>
+
+@endsection

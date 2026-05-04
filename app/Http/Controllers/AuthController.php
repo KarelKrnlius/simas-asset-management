@@ -43,7 +43,7 @@ class AuthController extends Controller
 
         // Check if user is active
         if (!$user->is_active) {
-            return back()->withErrors(['email' => 'Akun anda nonaktif']);
+            return back()->withErrors(['email' => 'Akun anda dinonaktifkan']);
         }
 
         Auth::login($user);

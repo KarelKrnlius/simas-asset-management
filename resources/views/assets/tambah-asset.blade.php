@@ -1,4 +1,4 @@
-{{-- ADD ASSET MODAL --}}
+{{-- TOMBOL TAMBAH ASSET --}}
 <style>
     .bg-red-primary { background-color: #E11D48 !important; }
     .hover\:bg-red-primary:hover { background-color: #E11D48 !important; opacity: 0.9 !important; }
@@ -21,6 +21,8 @@
         
         <form id="addAssetForm" method="POST">
             @csrf
+            <input type="hidden" name="condition" value="baik">
+            <input type="hidden" name="status" value="tersedia">
             
             {{-- CATEGORY --}}
             <div class="mb-6">
@@ -63,9 +65,10 @@
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
                     Deskripsi
                 </label>
-                <textarea name="description" rows="3"
+                <textarea name="description" rows="3" maxlength="500"
                     class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors"
                     placeholder="Masukkan deskripsi aset (opsional)"></textarea>
+                <p class="text-xs text-slate-500 mt-1">Maksimal 500 karakter</p>
             </div>
             
             {{-- STOCK --}}

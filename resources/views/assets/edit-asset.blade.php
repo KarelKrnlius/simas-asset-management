@@ -1,16 +1,3 @@
-{{-- EDIT ASSET MODAL --}}
-<style>
-    .bg-red-primary { background-color: #E11D48 !important; }
-    .hover\:bg-red-primary:hover { background-color: #E11D48 !important; opacity: 0.9 !important; }
-    .focus\:border-red-primary:focus { border-color: #E11D48 !important; }
-    
-    /* Cursor styles for interactive elements */
-    select:hover { cursor: pointer; }
-    input[type="text"]:hover { cursor: text; }
-    input[type="number"]:hover { cursor: text; }
-    textarea:hover { cursor: text; }
-    button:hover { cursor: pointer; }
-</style>
 <div id="editAssetModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
     <div class="bg-white rounded-[2rem] p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
         <div class="text-center mb-6">
@@ -63,9 +50,10 @@
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
                     Deskripsi
                 </label>
-                <textarea name="description" id="editDescription" rows="3"
+                <textarea name="description" id="editDescription" rows="3" maxlength="500"
                     class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors"
                     placeholder="Masukkan deskripsi aset (opsional)"></textarea>
+                <p class="text-xs text-slate-500 mt-1">Maksimal 500 karakter</p>
             </div>
             
             {{-- STOCK --}}
