@@ -25,7 +25,7 @@
             
             {{-- Camera View --}}
             <div class="relative bg-slate-900 aspect-square">
-                <video id="camera-video" class="w-full h-full object-cover" autoplay playsinline></video>
+                <video id="camera-video" class="w-full h-full object-cover" style="transform: scaleX(-1);" autoplay playsinline></video>
                 
                 {{-- Clean Red Scanner Frame --}}
                 <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -144,14 +144,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Start camera with flash support
     async function startCamera() {
         try {
-            // Request camera stream with torch constraint for flash
+            // First, manually get camera stream for preview
             stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: "environment",
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
                 }
             });
+
+            // Assign stream to video element for live preview
+            const videoElement = document.getElementById('camera-video');
+            if (videoElement) {
+                videoElement.srcObject = stream;
+            }
 
             // Check if torch (flash) is supported
             const videoTracks = stream.getVideoTracks();
@@ -162,17 +168,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Start QR scanning
-            html5QrCode.start(
-                { facingMode: "environment" },
-                config,
-                (decodedText, decodedResult) => {
-                    handleScanSuccess(decodedText);
-                },
-                (errorMessage) => {
-                    // Ignore error messages
-                }
-            );
+            // Wait a bit for video to be ready, then start QR scanning
+            setTimeout(() => {
+                // Start QR scanning using the existing video stream
+                html5QrCode.start(
+                    videoElement,
+                    config,
+                    (decodedText, decodedResult) => {
+                        handleScanSuccess(decodedText);
+                    },
+                    (errorMessage) => {
+                        // Ignore error messages
+                    }
+                );
+            }, 1000);
 
         } catch (err) {
             console.error("Unable to start camera:", err);

@@ -1081,7 +1081,7 @@ function generateQRCode(qrText) {
             text: qrText,
             width: 200,
             height: 200,
-            colorDark: "#dc2626",
+            colorDark: "#000000",
             colorLight: "#ffffff",
             correctLevel: QRCode.CorrectLevel.H
         });

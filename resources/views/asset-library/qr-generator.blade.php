@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 text: qrText,
                 width: 150,
                 height: 150,
-                colorDark: "#dc2626",
+                colorDark: "#000000",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });

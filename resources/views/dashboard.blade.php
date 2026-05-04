@@ -8,18 +8,12 @@
         <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-red-600/10 to-transparent"></div>
         <div class="absolute -bottom-24 -right-24 w-80 h-80 bg-red-600/5 rounded-full blur-3xl group-hover:bg-red-600/10 transition-all duration-700"></div>
         
-        <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-            <div class="text-center md:text-left">
-                <span class="bg-red-600 text-white text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-[0.2em]">Operational Report</span>
-                <h2 class="text-5xl font-black text-slate-900 italic tracking-tighter uppercase mt-6 mb-2">
-                    Selamat Datang, <span class="text-red-600">{{ Auth::user()->name }}</span>
-                </h2>
-                <p class="text-slate-500 font-bold text-xs uppercase tracking-[0.3em]">Sistem pemantauan aset dalam kendali penuh.</p>
-            </div>
-            <div class="hidden lg:block bg-slate-200/50 backdrop-blur-md border border-slate-300 p-6 rounded-3xl">
-                <p class="text-[10px] font-black text-red-600 uppercase italic">{{ Auth::user()->role ? ucfirst(Auth::user()->role->name) : 'User' }} Access</p>
-                <p class="text-xs font-bold text-slate-600 opacity-60">ID: {{ Auth::user()->id }}</p>
-            </div>
+        <div class="relative z-10 text-center md:text-left">
+            <span class="bg-red-600 text-white text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-[0.2em]">Operational Report</span>
+            <h2 class="text-5xl font-black text-slate-900 italic tracking-tighter uppercase mt-6 mb-2">
+                Selamat Datang, <span class="text-red-600">{{ Auth::user()->name }}</span>
+            </h2>
+            <p class="text-slate-500 font-bold text-xs uppercase tracking-[0.3em]">Sistem pemantauan aset dalam kendali penuh.</p>
         </div>
     </div>
 
