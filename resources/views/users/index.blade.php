@@ -3,7 +3,7 @@
 @section('title', 'Master User SIMAS')
 
 @section('content')
-<div class="min-h-screenflex flex-col items-start pt-4 px-6" x-data="{ search: '' }" x-init="$watch('search', () => renumberRows())">
+<div class="min-h-screen flex flex-col items-start pt-4 px-6" x-data="{ selectAll: false }">
     
     {{-- HEADER --}}
     <div class="w-full max-w-7xl mx-auto mb-6">
@@ -42,28 +42,72 @@
 
         <div class="bg-white rounded-[2.5rem] shadow-sm p-8">
             
-            {{-- SEARCH & FILTER BAR --}}
-            <div class="flex flex-col md:flex-row gap-4 mb-6">
-                {{-- Search --}}
-                <div class="flex-1">
-                    <div class="relative">
-                        <input type="text"
-                            x-model="search"
-                            placeholder="Cari user berdasarkan nama atau email..."
-                            class="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-red-500 focus:outline-none transition-colors">
-                        <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                    </div>
+            <!-- Controls Bar -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <!-- Total User Count -->
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-users text-red-primary"></i>
+                    <span class="font-black text-slate-900">
+                        Total User: <span class="text-red-primary">{{ $users->total() }}</span> user
+                    </span>
+                    <span class="text-sm text-slate-500">
+                        (Menampilkan {{ $users->firstItem() }}-{{ $users->lastItem() }})
+                    </span>
                 </div>
                 
-                {{-- Sort By --}}
-                <div class="w-full md:w-64">
-                    <select id="sortSelect" 
-                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-red-500 focus:outline-none transition-colors">
-                        <option value="">Semua Role</option>
-                        @foreach($roles as $role)
-                            <option value="{{ $role->id }}">{{ ucfirst($role->name) }}</option>
-                        @endforeach
-                    </select>
+                <!-- Sort and Bulk Actions -->
+                <div class="flex flex-col lg:flex-row gap-3">
+                    <!-- Search Input -->
+                    <div class="flex-1">
+                        <div class="relative flex-1">
+                            <input type="text"
+                                   id="searchInput"
+                                   placeholder="Cari user berdasarkan nama, email, role, atau status..."
+                                   value="{{ request('search') }}"
+                                   class="w-full px-4 py-2 pr-10 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent"
+                                   onkeypress="handleKeyPress(event)">
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" onclick="performSearchFromInput()">
+                                <i class="fas fa-search text-slate-400 hover:text-red-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="performRefresh()"
+                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                        <i class="fas fa-sync-alt"></i>
+                        Clear
+                    </button>
+                    
+                    <!-- Sort Dropdown -->
+                    <div class="relative">
+                        <select id="sortSelect" onchange="applySorting()" 
+                            class="appearance-none bg-white border border-slate-200 rounded-lg px-4 py-2 pr-8 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent">
+                            <option value="latest" {{ request('sort_by') == 'latest' ? 'selected' : '' }}>Terbaru</option>
+                            <option value="oldest" {{ request('sort_by') == 'created_at' && request('order') == 'asc' ? 'selected' : '' }}>Terlama</option>
+                            <option value="name_asc" {{ request('sort_by') == 'name' && request('order') == 'asc' ? 'selected' : '' }}>Nama (A-Z)</option>
+                            <option value="name_desc" {{ request('sort_by') == 'name' && request('order') == 'desc' ? 'selected' : '' }}>Nama (Z-A)</option>
+                            @if($roles->count() > 0)
+                                <optgroup label="role">
+                                    @foreach($roles as $role)
+                                        <option value="role_{{ $role->id }}" 
+                                            {{ request('sort_by') == 'role_' . $role->id ? 'selected' : '' }}>
+                                            {{ ucfirst($role->name) }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                            @endif
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Bulk Actions -->
+                    <div class="flex gap-2">
+                        <button onclick="showBulkDeleteModal()" id="bulkDeleteBtn" disabled
+                            class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-trash mr-1"></i> Hapus Terpilih
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -72,12 +116,16 @@
                 <table class="w-full table-fixed" id="usersTable">
                     <thead>
                         <tr class="border-b-2 border-slate-200">
-                            <th class="text-left py-4 px-4 font-black text-slate-700 uppercase tracking-wider text-xs" style="width: 60px">No</th>
-                            <th class="text-left py-4 px-4 font-black text-slate-700 uppercase tracking-wider text-xs" style="width: 250px">Nama</th>
-                            <th class="text-left py-4 px-4 font-black text-slate-700 uppercase tracking-wider text-xs" style="width: 280px">Email</th>
-                            <th class="text-center py-4 px-4 font-black text-slate-700 uppercase tracking-wider text-xs" style="width: 100px">Role</th>
-                            <th class="text-center py-4 px-4 font-black text-slate-700 uppercase tracking-wider text-xs" style="width: 120px">Status</th>
-                            <th class="text-center py-4 px-4 font-black text-slate-700 uppercase tracking-wider text-xs" style="width: 200px">Aksi</th>
+                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs" style="width: 50px">
+                                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" 
+                                    class="w-4 h-4 text-red-primary border-slate-300 rounded focus:ring-red-primary focus:ring-2">
+                            </th>
+                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs" style="width: 60px">NO</th>
+                            <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs" style="width: 200px">Nama</th>
+                            <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs" style="width: 250px">Email</th>
+                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs" style="width: 100px">Role</th>
+                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs" style="width: 100px">Status</th>
+                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs" style="width: 120px">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
@@ -86,14 +134,15 @@
                                 $hasLoans = \App\Models\Loan::where('user_id', $user->id)->exists();
                                 $isSelf = $user->id === auth()->id();
                             @endphp
-                            <tr x-show="search === '' || '{{ strtolower($user->name) }}'.includes(search.toLowerCase()) || '{{ strtolower($user->email) }}'.includes(search.toLowerCase())"
-                                class="border-b border-slate-100 hover:bg-slate-50 transition-colors user-row" 
-                                data-name="{{ strtolower($user->name) }}" 
-                                data-email="{{ strtolower($user->email) }}" 
-                                data-role="{{ $user->role_id }}"
-                                data-role-name="{{ strtolower($user->role->name ?? '') }}">
-                                <td class="py-4 px-4 font-semibold text-slate-700 row-number">
-                                    {{ $loop->iteration + ($users->currentPage() - 1) * $users->perPage() }}
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors user-row">
+                                <td class="py-4 px-4 text-center">
+                                    <input type="checkbox" class="user-checkbox" value="{{ $user->id }}" onchange="updateBulkDeleteButton()"
+                                        class="w-4 h-4 text-red-primary border-slate-300 rounded focus:ring-red-primary focus:ring-2">
+                                </td>
+                                <td class="py-4 px-4 text-center">
+                                    <span class="inline-block bg-slate-100 text-slate-700 px-3 py-1 rounded-lg font-bold text-sm">
+                                        {{ ($users->currentPage() - 1) * $users->perPage() + $loop->index + 1 }}
+                                    </span>
                                 </td>
                                 <td class="py-4 px-4">
                                     <div class="flex items-center gap-3">
@@ -592,6 +641,237 @@ function closeHistoryModal() {
     document.getElementById('historyModal').classList.add('hidden');
     document.getElementById('historyModal').classList.remove('flex');
 }
+
+// Master Asset JavaScript Functions - Adapted for Users
+function performSearchFromInput() {
+    const searchValue = document.getElementById('searchInput').value.trim();
+    const currentUrl = new URL(window.location);
+    
+    // Remove page parameter to always start from page 1 when searching
+    currentUrl.searchParams.delete('page');
+    
+    if (searchValue) {
+        currentUrl.searchParams.set('search', searchValue);
+    } else {
+        currentUrl.searchParams.delete('search');
+    }
+    
+    // Preserve other parameters
+    const sortBy = currentUrl.searchParams.get('sort_by');
+    const order = currentUrl.searchParams.get('order');
+    
+    window.location.href = currentUrl.toString();
+}
+
+function performRefresh() {
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.delete('page');
+    currentUrl.searchParams.delete('search');
+    currentUrl.searchParams.delete('sort_by');
+    currentUrl.searchParams.delete('order');
+    window.location.href = currentUrl.toString();
+}
+
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        performSearchFromInput();
+    }
+}
+
+function applySorting() {
+    const sortSelect = document.getElementById('sortSelect');
+    const selectedValue = sortSelect.value;
+    const currentUrl = new URL(window.location);
+    
+    // Clear existing sort parameters
+    currentUrl.searchParams.delete('sort_by');
+    currentUrl.searchParams.delete('order');
+    
+    if (selectedValue) {
+        if (selectedValue === 'latest') {
+            // Default - no parameters needed
+        } else if (selectedValue === 'oldest') {
+            currentUrl.searchParams.set('sort_by', 'created_at');
+            currentUrl.searchParams.set('order', 'asc');
+        } else if (selectedValue.startsWith('name_')) {
+            currentUrl.searchParams.set('sort_by', 'name');
+            currentUrl.searchParams.set('order', selectedValue === 'name_asc' ? 'asc' : 'desc');
+        } else if (selectedValue.startsWith('role_')) {
+            currentUrl.searchParams.set('sort_by', selectedValue);
+        }
+    }
+    
+    window.location.href = currentUrl.toString();
+}
+
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    
+    userCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    
+    updateBulkDeleteButton();
+}
+
+function updateBulkDeleteButton() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    
+    if (selectedCheckboxes.length > 0) {
+        bulkDeleteBtn.disabled = false;
+        bulkDeleteBtn.innerHTML = `<i class="fas fa-trash mr-1"></i> Hapus Terpilih (${selectedCheckboxes.length})`;
+    } else {
+        bulkDeleteBtn.disabled = true;
+        bulkDeleteBtn.innerHTML = '<i class="fas fa-trash mr-1"></i> Hapus Terpilih';
+    }
+}
+
+function showBulkDeleteModal() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+        alert('Pilih minimal satu user untuk dihapus');
+        return;
+    }
+    
+    const userIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+    document.getElementById('bulkDeleteCount').textContent = userIds.length;
+    document.getElementById('bulkDeleteUserIds').value = JSON.stringify(userIds);
+    
+    document.getElementById('bulkDeleteModal').classList.remove('hidden');
+    document.getElementById('bulkDeleteModal').classList.add('flex');
+}
+
+function closeBulkDeleteModal() {
+    document.getElementById('bulkDeleteModal').classList.add('hidden');
+    document.getElementById('bulkDeleteModal').classList.remove('flex');
+}
+
+function confirmBulkDelete() {
+    const userIds = JSON.parse(document.getElementById('bulkDeleteUserIds').value);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    if (!csrfToken) {
+        alert('CSRF token tidak ditemukan');
+        return;
+    }
+    
+    // Store current sorting parameters before deletion
+    const currentUrl = new URL(window.location);
+    sessionStorage.setItem('currentSort', currentUrl.searchParams.toString());
+    
+    // Create form data for bulk delete
+    const formData = new FormData();
+    formData.append('_token', csrfToken);
+    formData.append('user_ids', JSON.stringify(userIds));
+    
+    // Show loading
+    const deleteBtn = event.target;
+    const originalText = deleteBtn.innerHTML;
+    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menghapus...';
+    deleteBtn.disabled = true;
+    
+    // Send bulk delete request
+    fetch('/users/bulk-delete', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Store success message for post-refresh notification
+            sessionStorage.setItem('bulkDeleteSuccess', 'true');
+            sessionStorage.setItem('bulkDeleteMessage', data.message);
+            
+            // Close modal and hard refresh
+            closeBulkDeleteModal();
+            
+            setTimeout(() => {
+                location.reload(true);
+            }, 500);
+        } else {
+            // Restore button
+            deleteBtn.innerHTML = originalText;
+            deleteBtn.disabled = false;
+            
+            alert('Gagal menghapus user: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting users:', error);
+        
+        // Restore button
+        deleteBtn.innerHTML = originalText;
+        deleteBtn.disabled = false;
+        
+        alert('Terjadi kesalahan saat menghapus user: ' + error.message);
+    });
+}
+
+// Check for bulk delete success on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const bulkDeleteSuccess = sessionStorage.getItem('bulkDeleteSuccess');
+    const bulkDeleteMessage = sessionStorage.getItem('bulkDeleteMessage');
+    
+    if (bulkDeleteSuccess === 'true' && bulkDeleteMessage) {
+        // Create and show notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background-color: #10b981;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 9999;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-out;
+        `;
+        
+        notification.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <path d="m22 4-10 10.01L7 9.01"/>
+            </svg>
+            <span class="font-medium">${bulkDeleteMessage}</span>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+        
+        // Clear sessionStorage
+        sessionStorage.removeItem('bulkDeleteSuccess');
+        sessionStorage.removeItem('bulkDeleteMessage');
+    }
+    
+    // Initialize bulk delete button state
+    updateBulkDeleteButton();
+});
 
 // Form validation
 document.getElementById('userForm').addEventListener('submit', function(e) {

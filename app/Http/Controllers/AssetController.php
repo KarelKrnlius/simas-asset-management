@@ -17,9 +17,24 @@ class AssetController extends Controller
         // Get sorting parameters
         $sortBy = request('sort_by'); // No default, let it be null if not provided
         $order = request('order', 'desc'); // Default: desc
+        $search = request('search'); // Search parameter
         
         // Build query with relationships
         $query = Asset::with('category');
+        
+        // Apply search filter (case-insensitive) - search in code, name, category, condition, status, description
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->whereRaw('LOWER(code) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereHas('category', function($catQ) use ($search) {
+                      $catQ->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']);
+                  })
+                  ->orWhereRaw('LOWER(condition) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw('LOWER(status) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw('LOWER(description) LIKE ?', ['%' . strtolower($search) . '%']);
+            });
+        }
         
         // Handle dynamic category sorting from dropdown first
         if ($sortBy && str_starts_with($sortBy, 'category_')) {
@@ -242,7 +257,7 @@ class AssetController extends Controller
             'description' => 'nullable|string|max:500',
             'stock' => 'required|integer|min:0',
             'condition' => 'required|string|max:20',
-            'status' => 'required|in:tersedia,dipinjam,diperbaiki',
+            'status' => 'required|in:tersedia,dipinjam,perlu_perbaikan,tidak_tersedia',
         ]);
 
         if ($validator->fails()) {

@@ -92,9 +92,9 @@
 
             <!-- DELETE -->
             @if($role->name == 'Admin')
-                <div class="w-10 h-10 flex items-center justify-center bg-gray-300 text-white rounded-xl cursor-not-allowed">
-                    <i class="fas fa-trash"></i>
-                </div>
+                    <div class="w-10 h-10 flex items-center justify-center bg-gray-300 text-white rounded-xl cursor-not-allowed">
+                        <i class="fas fa-trash"></i>
+                    </div>
             @else
                 <button onclick="confirmDelete({{ $role->id }})"
                     class="w-10 h-10 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-md transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">

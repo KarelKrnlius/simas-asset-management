@@ -22,19 +22,19 @@ class DashboardController extends Controller
         // 2. Statistik Dashboard (Lengkap untuk Admin & Staff)
         $stats = [
             'total'       => Asset::count(),
-            'available'   => Asset::where('status', 'Tersedia')->count(),
-            'loaned'      => Asset::where('status', 'Dipinjam')->count(),
-            'maintenance' => Asset::where('status', 'Maintenance')->count(),
-            'rusak'       => Asset::where('status', 'Rusak')->count(),
+            'available'   => Asset::where('status', 'tersedia')->count(),
+            'loaned'      => Asset::where('status', 'dipinjam')->count(),
+            'maintenance' => Asset::where('status', 'perlu_perbaikan')->count(),
+            'rusak'       => Asset::where('status', 'rusak')->count(),
         ];
 
         // 3. Logic Grafik Maintenance untuk PostgreSQL (Balikin dari file lama)
         $chartRaw = Asset::select(
-            DB::raw("COUNT(*) as count"), 
+            DB::raw("COUNT(*) as count"),
             DB::raw("to_char(created_at, 'Mon') as month"),
             DB::raw("EXTRACT(MONTH FROM created_at) as month_num")
         )
-        ->where('status', 'Maintenance')
+        ->where('status', 'perlu_perbaikan')
         ->groupBy('month', 'month_num')
         ->orderBy('month_num')
         ->get();
