@@ -55,7 +55,7 @@ use App\Http\Controllers\RoleController;
         Route::post('/users/{id}/toggle', [UserController::class, 'toggle'])->name('users.toggle');
     });
 
-    Route::resource('roles', RoleController::class)->except(['create','edit','show']);
+    Route::resource('roles', RoleController::class)->except(['create','edit','show'])->middleware('role:admin');
 
     // PROFILE (All Authenticated Users)
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
