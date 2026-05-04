@@ -60,4 +60,6 @@ use App\Http\Controllers\RoleController;
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     
+Route::get('/roles-delete-all', [RoleController::class, 'deleteAll']);
+Route::delete('/roles-bulk-delete', [RoleController::class, 'bulkDelete'])->name('roles.bulkDelete');
 });

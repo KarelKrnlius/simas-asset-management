@@ -51,4 +51,28 @@ class RoleController extends Controller
         Role::findOrFail($id)->delete();
         return back()->with('success', 'Role berhasil dihapus');
     }
+
+public function deleteAll()
+{
+    Role::where('name', '!=', 'Admin')->delete();
+
+    return back()->with('success', 'Semua role berhasil dihapus');
+}
+
+public function bulkDelete(Request $request)
+{
+    $ids = $request->ids;
+
+    if (!$ids) {
+        return back()->with('error', 'Tidak ada data dipilih');
+    }
+
+    // Jangan hapus Admin
+    Role::whereIn('id', $ids)
+        ->where('name', '!=', 'Admin')
+        ->delete();
+
+    return back()->with('success', 'Role berhasil dihapus');
+}
+
 }
