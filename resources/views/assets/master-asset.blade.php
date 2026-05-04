@@ -1,4 +1,4 @@
-@extends('layouts.app')
+    @extends('layouts.app')
 
 @section('title', 'Master Asset')
 
@@ -81,12 +81,13 @@
                     <div class="relative">
                         <select id="sortSelect" onchange="applySorting()" 
                             class="appearance-none bg-white border border-slate-200 rounded-lg px-4 py-2 pr-8 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent">
-                            <option value="latest" {{ request('sort_by') == 'latest' ? 'selected' : '' }}>Terbaru</option>
+                            <option value="default" {{ !request('sort_by') || request('sort_by') == 'code' ? 'selected' : '' }}>Default (Urut Kode)</option>
+                            <option value="latest" {{ request('sort_by') == 'latest' || request('sort_by') == 'created_at' && request('order') == 'desc' ? 'selected' : '' }}>Terbaru</option>
                             <option value="oldest" {{ request('sort_by') == 'created_at' && request('order') == 'asc' ? 'selected' : '' }}>Terlama</option>
                             <option value="name_asc" {{ request('sort_by') == 'name' && request('order') == 'asc' ? 'selected' : '' }}>Nama (A-Z)</option>
                             <option value="name_desc" {{ request('sort_by') == 'name' && request('order') == 'desc' ? 'selected' : '' }}>Nama (Z-A)</option>
                             @if($categories->count() > 0)
-                                <optgroup label="kategori">
+                                <optgroup label="Filter Kategori">
                                     @foreach($categories as $category)
                                         <option value="category_{{ $category->id }}" 
                                             {{ request('sort_by') == 'category_' . $category->id ? 'selected' : '' }}>
@@ -123,6 +124,7 @@
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Kode</th>
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Nama</th>
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Kategori</th>
+                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Foto</th>
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Stok</th>
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Kondisi</th>
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Status</th>
@@ -157,6 +159,26 @@
                                         {{ $asset->category->name }}
                                     </span>
                                 </td>
+                                <td class="py-4 px-4 text-center">
+                                    @if($asset->photo)
+                                        @php
+                                            $photoUrl = \App\Helpers\AssetHelper::getPhotoUrl($asset->photo);
+                                        @endphp
+                                        @if($photoUrl)
+                                            <div class="flex justify-center items-center">
+                                                <button onclick="showPhotoModal('{{ $photoUrl }}', '{{ $asset->name }}')" 
+                                                    class="inline-flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-md hover:shadow-lg"
+                                                    title="Lihat Foto">
+                                                    <i class="fas fa-image text-sm"></i>
+                                                </button>
+                                            </div>
+                                        @else
+                                            <span class="text-slate-300">-</span>
+                                        @endif
+                                    @else
+                                        <span class="text-slate-300">-</span>
+                                    @endif
+                                </td>
                                 <td class="py-4 px-4">
                                     <span class="inline-block px-3 py-1 rounded-lg font-bold text-sm
                                         @if($asset->stock == 0) bg-red-100 text-red-700
@@ -184,11 +206,13 @@
                                 <td class="py-4 px-4">
                                     <div class="flex justify-center gap-2">
                                         <button onclick="editAsset({{ $asset->id }})" 
-                                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors">
+                                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors"
+                                            title="Edit Aset">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <button onclick="deleteAsset({{ $asset->id }})" 
-                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors">
+                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors"
+                                            title="Hapus Aset">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -196,7 +220,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-12">
+                                <td colspan="10" class="text-center py-12">
                                     <div class="flex flex-col items-center">
                                         <i class="fas fa-inbox text-4xl text-slate-300 mb-4"></i>
                                         <h3 class="text-lg font-bold text-slate-900 mb-2">Belum Ada Data Aset</h3>
@@ -270,6 +294,7 @@
 @include('assets.edit-kategori')
 @include('assets.edit-asset')
 @include('assets.delete-asset')
+@include('assets.foto-asset')
 
 {{-- DELETE ASSET --}}
 <div id="bulkDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
@@ -401,8 +426,12 @@ function applySorting() {
     // Parse sort value
     let sortBy, order, categoryId;
     switch(sortValue) {
+        case 'default':
+            sortBy = 'code';
+            order = 'asc';
+            break;
         case 'latest':
-            sortBy = 'latest';
+            sortBy = 'created_at';
             order = 'desc';
             break;
         case 'oldest':
@@ -424,8 +453,8 @@ function applySorting() {
                 categoryId = sortValue.replace('category_', '');
                 order = 'desc';
             } else {
-                sortBy = 'latest';
-                order = 'desc';
+                sortBy = 'code';
+                order = 'asc';
             }
             break;
     }
@@ -695,6 +724,8 @@ function editAsset(id) {
         .then(data => {
             if (data.success) {
                 const asset = data.data;
+                const photoUrl = data.photo_url;
+                
                 document.getElementById('editAssetId').value = asset.id;
                 document.getElementById('editCategory').value = asset.category_id;
                 document.getElementById('editName').value = asset.name;
@@ -703,6 +734,30 @@ function editAsset(id) {
                 document.getElementById('editStock').value = asset.stock;
                 document.getElementById('editCondition').value = asset.condition;
                 document.getElementById('editStatus').value = asset.status;
+                
+                // Handle current photo - support both local and RustFS
+                const currentPhotoContainer = document.getElementById('editCurrentPhotoContainer');
+                const currentPhotoPreview = document.getElementById('editCurrentPhotoPreview');
+                const currentPhotoInput = document.getElementById('editCurrentPhoto');
+                const photoButtonText = document.getElementById('editPhotoButtonText');
+                
+                if (photoUrl) {
+                    currentPhotoPreview.src = photoUrl;
+                    currentPhotoContainer.classList.remove('hidden');
+                    currentPhotoInput.value = asset.photo;
+                    photoButtonText.textContent = 'Pilih Foto Baru';
+                } else {
+                    currentPhotoContainer.classList.add('hidden');
+                    currentPhotoPreview.src = '';
+                    currentPhotoInput.value = '';
+                    photoButtonText.textContent = 'Pilih File';
+                }
+                
+                // Reset new photo preview
+                document.getElementById('editPhotoPreviewContainer').classList.add('hidden');
+                document.getElementById('editPhotoPreview').src = '';
+                document.getElementById('editAssetPhoto').value = '';
+                
                 document.getElementById('editAssetModal').style.display = 'flex';
             }
         });

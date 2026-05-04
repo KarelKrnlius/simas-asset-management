@@ -40,6 +40,7 @@ use App\Http\Controllers\RoleController;
     Route::resource('assets', AssetController::class)->middleware('role:admin');
     Route::get('/assets/next-code', [AssetController::class, 'getNextCode'])->middleware('role:admin');
     Route::post('/assets/bulk-delete', [AssetController::class, 'bulkDelete'])->middleware('role:admin');
+    Route::get('/test-photo/{id}', [AssetController::class, 'testPhoto'])->middleware('role:admin');
     
     // Categories Resource Routes (Admin Only)
     Route::resource('categories', CategoryController::class)->middleware('role:admin');

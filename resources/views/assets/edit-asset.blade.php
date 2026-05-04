@@ -5,10 +5,11 @@
             <p class="text-slate-600 text-sm mt-2">Ubah detail aset di bawah ini</p>
         </div>
         
-        <form id="editAssetForm" method="POST">
+        <form id="editAssetForm" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <input type="hidden" name="asset_id" id="editAssetId">
+            <input type="hidden" name="current_photo" id="editCurrentPhoto">
             
             {{-- CATEGORY --}}
             <div class="mb-6">
@@ -66,6 +67,51 @@
                     placeholder="Masukkan jumlah stok">
             </div>
             
+            {{-- PHOTO UPLOAD --}}
+            <div class="mb-6">
+                <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
+                    Foto Aset
+                </label>
+                
+                {{-- CURRENT PHOTO PREVIEW --}}
+                <div id="editCurrentPhotoContainer" class="mb-4 hidden">
+                    <p class="text-xs text-slate-600 mb-2 font-bold">Foto Saat Ini:</p>
+                    <div class="relative inline-block">
+                        <img id="editCurrentPhotoPreview" src="" alt="Current Photo" class="w-full max-w-xs h-48 object-cover rounded-xl border-2 border-slate-200 shadow-md">
+                    </div>
+                </div>
+                
+                {{-- PHOTO BUTTON --}}
+                <button type="button" onclick="document.getElementById('editAssetPhoto').click()" 
+                    class="w-full bg-red-primary hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2">
+                    <i class="fas fa-folder-open"></i>
+                    <span id="editPhotoButtonText">Pilih Foto Baru</span>
+                </button>
+                
+                {{-- HIDDEN FILE INPUT --}}
+                <input type="file" name="photo" id="editAssetPhoto" accept="image/*" class="hidden" onchange="previewEditAssetPhoto(event)">
+                
+                <p class="text-xs text-slate-500 mt-2">
+                    <i class="fas fa-info-circle text-blue-500"></i> 
+                    Format: JPG, PNG, JPEG (Max: 2MB) - Kosongkan jika tidak ingin mengubah foto
+                </p>
+                
+                {{-- NEW PHOTO PREVIEW --}}
+                <div id="editPhotoPreviewContainer" class="mt-4 hidden">
+                    <p class="text-xs text-green-600 mb-2 font-bold">Foto Baru:</p>
+                    <div class="relative inline-block">
+                        <img id="editPhotoPreview" src="" alt="Preview" class="w-full max-w-xs h-48 object-cover rounded-xl border-2 border-green-200 shadow-md">
+                        <button type="button" onclick="removeEditAssetPhoto()" 
+                            class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-green-600 mt-2 font-bold">
+                        <i class="fas fa-check-circle"></i> Foto baru berhasil dipilih
+                    </p>
+                </div>
+            </div>
+            
             {{-- CONDITION --}}
             <div class="mb-6">
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
@@ -109,3 +155,70 @@
         </form>
     </div>
 </div>
+
+<script>
+// Preview foto baru saat upload
+function previewEditAssetPhoto(event) {
+    const file = event.target.files[0];
+    const previewContainer = document.getElementById('editPhotoPreviewContainer');
+    const previewImage = document.getElementById('editPhotoPreview');
+    const buttonText = document.getElementById('editPhotoButtonText');
+    
+    if (file) {
+        // Validasi ukuran file (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Ukuran file terlalu besar! Maksimal 2MB');
+            event.target.value = '';
+            return;
+        }
+        
+        // Validasi tipe file
+        if (!file.type.match('image.*')) {
+            alert('File harus berupa gambar!');
+            event.target.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.classList.remove('hidden');
+            buttonText.textContent = 'Ganti Foto Lain';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Hapus foto baru yang dipilih
+function removeEditAssetPhoto() {
+    const fileInput = document.getElementById('editAssetPhoto');
+    const previewContainer = document.getElementById('editPhotoPreviewContainer');
+    const previewImage = document.getElementById('editPhotoPreview');
+    const buttonText = document.getElementById('editPhotoButtonText');
+    const currentPhotoContainer = document.getElementById('editCurrentPhotoContainer');
+    
+    fileInput.value = '';
+    previewImage.src = '';
+    previewContainer.classList.add('hidden');
+    
+    // Update button text based on current photo
+    if (!currentPhotoContainer.classList.contains('hidden')) {
+        buttonText.textContent = 'Pilih Foto Baru';
+    } else {
+        buttonText.textContent = 'Pilih File';
+    }
+}
+
+// Reset form saat modal ditutup
+function closeEditAssetModal() {
+    document.getElementById('editAssetModal').classList.add('hidden');
+    document.getElementById('editAssetForm').reset();
+    
+    // Reset photo previews
+    document.getElementById('editCurrentPhotoContainer').classList.add('hidden');
+    document.getElementById('editPhotoPreviewContainer').classList.add('hidden');
+    document.getElementById('editCurrentPhotoPreview').src = '';
+    document.getElementById('editPhotoPreview').src = '';
+    document.getElementById('editPhotoButtonText').textContent = 'Pilih File';
+}
+</script>
