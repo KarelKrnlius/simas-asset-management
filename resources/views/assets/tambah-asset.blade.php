@@ -1,4 +1,4 @@
-{{-- ADD ASSET MODAL --}}
+s{{-- ADD ASSET MODAL --}}
 <style>
     .bg-red-primary { background-color: #E11D48 !important; }
     .hover\:bg-red-primary:hover { background-color: #E11D48 !important; opacity: 0.9 !important; }
