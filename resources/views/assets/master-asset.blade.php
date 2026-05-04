@@ -125,6 +125,7 @@
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Stok</th>
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Kondisi</th>
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Status</th>
+                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">QR</th>
                             <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Aksi</th>
                         </tr>
                     </thead>
@@ -178,6 +179,13 @@
                                         @else bg-orange-100 text-orange-700 @endif">
                                         {{ ucfirst($asset->status) }}
                                     </span>
+                                </td>
+                                <td class="py-4 px-4 text-center">
+                                    <button onclick="generateQR('{{ $asset->id }}', '{{ $asset->qr_code ?? $asset->code }}')" 
+                                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors"
+                                            title="Generate QR Code">
+                                        <i class="fas fa-qrcode"></i>
+                                    </button>
                                 </td>
                                 <td class="py-4 px-4">
                                     <div class="flex justify-center gap-2">
@@ -1012,5 +1020,93 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// QR Code Generator Function
+function generateQR(assetId, qrCode) {
+    // Create modal if not exists
+    if (!document.getElementById('qrModal')) {
+        const modal = document.createElement('div');
+        modal.id = 'qrModal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center';
+        modal.innerHTML = `
+            <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-black text-slate-900 uppercase">QR Code Asset</h3>
+                    <button onclick="closeQRModal()" class="text-slate-400 hover:text-slate-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="text-center">
+                    <div id="qrCodeContainer" class="inline-block bg-white p-4 rounded-xl border-2 border-red-600 mb-4"></div>
+                    <div class="mb-4">
+                        <p class="text-sm font-black text-slate-600 mb-1">QR Code:</p>
+                        <p class="text-xs text-slate-400" id="qrCodeText"></p>
+                    </div>
+                    <button onclick="downloadQR()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors duration-200">
+                        <i class="fas fa-download mr-2"></i>Download QR
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Show modal
+    document.getElementById('qrModal').classList.remove('hidden');
+    document.getElementById('qrModal').classList.add('flex');
+    
+    // Generate QR code
+    document.getElementById('qrCodeText').textContent = qrCode;
+    document.getElementById('qrCodeContainer').innerHTML = '';
+    
+    // Load QRCode library if not loaded
+    if (typeof QRCode === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js';
+        script.onload = function() {
+            generateQRCode(qrCode);
+        };
+        document.head.appendChild(script);
+    } else {
+        generateQRCode(qrCode);
+    }
+    
+    // Store current QR code for download
+    window.currentQRCode = qrCode;
+}
+
+function generateQRCode(qrText) {
+    try {
+        new QRCode(document.getElementById('qrCodeContainer'), {
+            text: qrText,
+            width: 200,
+            height: 200,
+            colorDark: "#dc2626",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    } catch (error) {
+        console.error('Error generating QR code:', error);
+        document.getElementById('qrCodeContainer').innerHTML = '<p class="text-red-500">Gagal generate QR code</p>';
+    }
+}
+
+function closeQRModal() {
+    const modal = document.getElementById('qrModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+function downloadQR() {
+    const canvas = document.querySelector('#qrCodeContainer canvas');
+    if (canvas && window.currentQRCode) {
+        const link = document.createElement('a');
+        link.download = `${window.currentQRCode}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+}
 </script>
 @endsection

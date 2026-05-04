@@ -18,6 +18,8 @@ class DashboardController extends Controller
         }
         
         $user = User::with('role')->find(Auth::id());
+        
+        $user = User::with('role')->find(Auth::id());
 
         // 2. Statistik Dashboard (Lengkap untuk Admin & Staff)
         $stats = [
