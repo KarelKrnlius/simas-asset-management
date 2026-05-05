@@ -28,16 +28,11 @@
                                 <span>{{ $category->assets_count ?? 0 }} aset</span>
                             </div>
                         </div>
-                        <div class="flex flex-col gap-2 ml-4">
+                        <div class="flex justify-end">
                             <button onclick="openEditCategoryModal({{ $category->id }}); closeCategoryListModal();" 
                                 class="w-10 h-10 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg flex items-center justify-center transition-colors"
                                 title="Edit Kategori">
                                 <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="openEditCategoryModal({{ $category->id }}); closeCategoryListModal();" 
-                                class="w-10 h-10 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg flex items-center justify-center transition-colors"
-                                title="Hapus Kategori">
-                                <i class="fas fa-trash"></i>
                             </button>
                         </div>
                     </div>

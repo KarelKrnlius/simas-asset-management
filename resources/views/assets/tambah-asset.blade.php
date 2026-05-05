@@ -30,8 +30,7 @@
                     Kategori
                 </label>
                 <select name="category_id" id="addCategory" required
-                    class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors"
-                    onchange="updateCodePreview()">
+                    class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors">
                     <option value="">-- Pilih Kategori --</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}" data-category-name="{{ $category->name }}">{{ $category->name }}</option>
@@ -147,6 +146,40 @@
 </div>
 
 <script>
+// Update kode asset preview saat kategori dipilih
+function updateCodePreview() {
+    const categoryId = document.getElementById('addCategory').value;
+    const codePreview = document.getElementById('assetCodePreview');
+    
+    if (!categoryId) {
+        codePreview.value = 'Pilih kategori untuk melihat kode';
+        codePreview.className = 'w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500';
+        return;
+    }
+    
+    // Show loading
+    codePreview.value = 'Loading...';
+    codePreview.className = 'w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500';
+    
+    // Fetch next code from server
+    fetch(`/assets/next-code?category_id=${categoryId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                codePreview.value = data.code;
+                codePreview.className = 'w-full px-4 py-3 bg-green-50 border-2 border-green-200 rounded-xl font-bold text-green-700';
+            } else {
+                codePreview.value = 'Error: ' + data.message;
+                codePreview.className = 'w-full px-4 py-3 bg-red-50 border-2 border-red-200 rounded-xl font-bold text-red-700';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching code:', error);
+            codePreview.value = 'Error generating code';
+            codePreview.className = 'w-full px-4 py-3 bg-red-50 border-2 border-red-200 rounded-xl font-bold text-red-700';
+        });
+}
+
 // Preview foto saat upload
 function previewAddAssetPhoto(event) {
     const file = event.target.files[0];

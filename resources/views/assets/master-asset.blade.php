@@ -703,8 +703,23 @@ function openAddAssetModal() {
 
 function closeAddAssetModal() {
     document.getElementById('addAssetModal').style.display = 'none';
-    const form = document.getElementById('form-tambah-asset');
-    if (form) form.reset();
+    const form = document.getElementById('addAssetForm');
+    if (form) {
+        form.reset();
+        // Reset submission state
+        form.dataset.isSubmitting = 'false';
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Simpan Aset';
+        }
+        // Reset code preview
+        const codePreview = document.getElementById('assetCodePreview');
+        if (codePreview) {
+            codePreview.value = 'Pilih kategori untuk melihat kode';
+            codePreview.className = 'w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500';
+        }
+    }
 }
 
 function openAddCategoryModal() {
@@ -784,38 +799,38 @@ function closeDeleteModal() {
     document.getElementById('deleteAsset').style.display = 'none';
 }
 
-// Instant Preview Function
+// Global Logic: Generate BRIN-XX-YYYYYY format using AJAX
 function updateCodePreview() {
-    const categorySelect = document.getElementById('addCategory');
-    const stockInput = document.getElementById('addStock');
-    const codeInput = document.getElementById('assetCodePreview');
+    const categoryId = document.getElementById('addCategory').value;
+    const codePreview = document.getElementById('assetCodePreview');
     
-    if (!categorySelect || !stockInput || !codeInput) return;
-    
-    const categoryId = parseInt(categorySelect.value);
-    const stock = parseInt(stockInput.value) || 1;
-    
-    if (!categoryId || stock < 1) {
-        codeInput.value = '';
+    if (!categoryId) {
+        codePreview.value = 'Pilih kategori untuk melihat kode';
+        codePreview.className = 'w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500';
         return;
     }
     
-    // Find category name
-    const category = categories.find(cat => cat.id === categoryId);
-    if (!category) return;
+    // Show loading
+    codePreview.value = 'Loading...';
+    codePreview.className = 'w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500';
     
-    // Generate category prefix (first 4 letters, uppercase)
-    const categoryPrefix = category.name.toUpperCase().substring(0, 4);
-    
-    // Start Number = categoryHighestCodes[selected_id] + 1
-    const startNumber = (categoryHighestCodes[categoryId] || 0) + 1;
-    
-    // Instant Preview Formula
-    if (stock === 1) {
-        codeInput.value = categoryPrefix + startNumber;
-    } else {
-        codeInput.value = categoryPrefix + startNumber + '-' + (startNumber + stock - 1);
-    }
+    // Fetch category_code and global sequence from server
+    fetch(`/assets/next-code?category_id=${categoryId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                codePreview.value = data.code;
+                codePreview.className = 'w-full px-4 py-3 bg-green-50 border-2 border-green-200 rounded-xl font-bold text-green-700';
+            } else {
+                codePreview.value = 'Error: ' + data.message;
+                codePreview.className = 'w-full px-4 py-3 bg-red-50 border-2 border-red-200 rounded-xl font-bold text-red-700';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching code:', error);
+            codePreview.value = 'Error generating code';
+            codePreview.className = 'w-full px-4 py-3 bg-red-50 border-2 border-red-200 rounded-xl font-bold text-red-700';
+        });
 }
 
 // Real-time category name validation
@@ -882,13 +897,25 @@ function showSuccessNotification(message) {
     }, 3000);
 }
 
-// AJAX Submission for #form-tambah-asset
+// AJAX Submission for #form-tambah-asset with strong spam protection
 function handleAssetFormSubmit(e) {
     e.preventDefault();
     
     const form = e.target;
+    const submitButton = form.querySelector('button[type="submit"]');
     const formData = new FormData(form);
     const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    
+    // Strong spam protection - check if already submitting
+    if (form.dataset.isSubmitting === 'true') {
+        console.log('Form already submitting - ignoring spam click');
+        return;
+    }
+    
+    // Mark as submitting immediately
+    form.dataset.isSubmitting = 'true';
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
     
     fetch('/assets', {
         method: 'POST',
@@ -902,13 +929,15 @@ function handleAssetFormSubmit(e) {
     .then(data => {
         if (data.success) {
             // Show success notification
-            showSuccessNotification('Berhasil');
+            showSuccessNotification('Berhasil menambahkan aset!');
             
-            // Close modal
+            // Close modal immediately
             closeAddAssetModal();
             
-            // Instant refresh
-            location.reload();
+            // Fast refresh without delay
+            setTimeout(() => {
+                location.reload();
+            }, 500);
         } else {
             alert('Gagal: ' + (data.message || 'Unknown error'));
         }
@@ -916,6 +945,12 @@ function handleAssetFormSubmit(e) {
     .catch(error => {
         console.error('Error:', error);
         alert('Terjadi kesalahan');
+    })
+    .finally(() => {
+        // Always reset form state
+        form.dataset.isSubmitting = 'false';
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Simpan Aset';
     });
 }
 
@@ -930,8 +965,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Event Delegation Logic - Global event listener for modal inputs
     document.addEventListener('input', function(e) {
-        // Listen for input changes on #addCategory and #addStock
-        if (e.target.id === 'addCategory' || e.target.id === 'addStock') {
+        // Only listen for input changes on #addStock (not #addCategory)
+        if (e.target.id === 'addStock') {
             updateCodePreview();
         }
         
@@ -949,15 +984,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Handle category form submission
+    // Handle category form submission with spam protection
     document.addEventListener('submit', function(e) {
         if (e.target.id === 'addCategoryForm') {
             e.preventDefault();
             
-            const formData = new FormData(e.target);
+            const form = e.target;
+            const submitButton = form.querySelector('button[type="submit"]');
+            const formData = new FormData(form);
             const csrfToken = document.querySelector('meta[name="csrf-token"]');
             const categoryInput = document.getElementById('categoryName');
             const categoryError = document.getElementById('categoryError');
+            
+            // Strong spam protection - check if already submitting
+            if (form.dataset.isSubmitting === 'true') {
+                console.log('Category form already submitting - ignoring spam click');
+                return;
+            }
+            
+            // Mark as submitting immediately
+            form.dataset.isSubmitting = 'true';
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
             
             // Reset error state
             categoryInput.classList.remove('border-red-600');
@@ -975,25 +1023,24 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showSuccessNotification('Berhasil');
+                    showSuccessNotification('Kategori berhasil ditambahkan!');
                     closeAddCategoryModal();
-                    location.reload();
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
                 } else {
-                    // Show error message with SIMAS theme
-                    if (data.message === 'Kategori sudah ada!') {
-                        categoryInput.classList.remove('border-slate-200');
-                        categoryInput.classList.add('border-red-600');
-                        categoryError.textContent = 'Kategori ini sudah terdaftar!';
-                        categoryError.classList.remove('hidden');
-                        categoryInput.focus();
-                    } else {
-                        alert('Gagal: ' + (data.message || 'Unknown error'));
-                    }
+                    alert('Gagal: ' + (data.message || 'Unknown error'));
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Terjadi kesalahan');
+            })
+            .finally(() => {
+                // Always reset form state
+                form.dataset.isSubmitting = 'false';
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Simpan Kategori';
             });
         }
     });

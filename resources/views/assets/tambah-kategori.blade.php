@@ -8,6 +8,22 @@
         <form id="addCategoryForm" method="POST">
             @csrf
             
+            {{-- CATEGORY CODE --}}
+            <div class="mb-6">
+                <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
+                    Kode Kategori
+                </label>
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-black text-slate-700">
+                        <span id="categoryCodeDisplay">Auto-generate</span>
+                    </div>
+                    <div class="text-sm text-slate-500">
+                        <i class="fas fa-info-circle"></i>
+                        Otomatis
+                    </div>
+                </div>
+            </div>
+            
             {{-- NAME --}}
             <div class="mb-6">
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">

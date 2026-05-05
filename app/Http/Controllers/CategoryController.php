@@ -50,10 +50,33 @@ class CategoryController extends Controller
         }
 
         try {
-            $category = Category::create($request->all());
-            
+            // Auto-generate category_code
+            $maxCode = Category::whereNotNull('category_code')
+                ->where('category_code', '!=', '')
+                ->get(['category_code'])
+                ->filter(function ($category) {
+                    return is_numeric($category->category_code);
+                })
+                ->max(function ($category) {
+                    return (int)$category->category_code;
+                });
+
+            if ($maxCode) {
+                $nextCode = $maxCode + 1;
+            } else {
+                $nextCode = 1;
+            }
+
+            $categoryCode = str_pad($nextCode, 2, '0', STR_PAD_LEFT);
+
+            $category = Category::create([
+                'name' => $request->name,
+                'description' => $request->description,
+                'category_code' => $categoryCode,
+            ]);
+
             session()->flash('success', 'Berhasil');
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Category created successfully',
@@ -101,40 +124,9 @@ class CategoryController extends Controller
             $oldName = $category->name;
             $category->update($request->all());
             
-            // If category name changed, update only the prefix of asset codes
-            if ($oldName !== $request->name) {
-                $newPrefix = strtoupper(substr($request->name, 0, 4));
-                
-                // Get all assets in this category
-                $assets = $category->assets()->get();
-                $updatedCount = 0;
-                
-                foreach ($assets as $asset) {
-                    // Extract the number from existing code
-                    $existingCode = $asset->code;
-                    $number = preg_replace('/[^0-9]/', '', $existingCode);
-                    
-                    // Create new code with same number but new prefix
-                    $newCode = $newPrefix . $number;
-                    
-                    // Only update if the code is different
-                    if ($asset->code !== $newCode) {
-                        $asset->update(['code' => $newCode]);
-                        $updatedCount++;
-                    }
-                }
-                
-                $message = $updatedCount > 0 
-                    ? "Kategori berhasil diperbarui. {$updatedCount} kode aset telah diperbarui."
-                    : 'Kategori berhasil diperbarui. Tidak ada perubahan kode aset.';
-                
-                return response()->json([
-                    'success' => true,
-                    'message' => $message,
-                    'data' => $category,
-                    'codes_updated' => $updatedCount
-                ]);
-            }
+            // Category update should NOT change asset codes
+            // Asset codes should remain in BRIN-XX-YYYYYY format
+            $message = 'Kategori berhasil diperbarui.';
             
             return response()->json([
                 'success' => true,

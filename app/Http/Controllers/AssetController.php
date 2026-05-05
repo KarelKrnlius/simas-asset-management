@@ -123,33 +123,38 @@ class AssetController extends Controller
         
         try {
             $category = Category::findOrFail($categoryId);
-            $categoryPrefix = strtoupper(substr($category->name, 0, 4));
             
-            // Get the highest existing asset number for this category
-            $lastAsset = Asset::where('category_id', $categoryId)
-                ->whereRaw("SUBSTRING(code, 5) ~ '^[0-9]+'")
-                ->orderByRaw("NULLIF(REGEXP_REPLACE(SUBSTRING(code, 5), '[^0-9].*', ''), '')::int DESC")
-                ->first();
-            
-            $lastNumber = 0;
-            if ($lastAsset) {
-                // Extract number from code (handle both single and range codes)
-                $codeParts = explode('-', $lastAsset->code);
-                $lastNumber = (int)preg_replace('/[^0-9]/', '', $codeParts[0]);
+            if (!$category->category_code) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kategori belum memiliki category_code'
+                ], 400);
             }
             
-            $startNumber = $lastNumber + 1;
+            $categoryCode = $category->category_code;
             
-            // Generate single code for preview (individual rows will be created)
-            $assetCode = $categoryPrefix . $startNumber;
+            // Reliable Sequence Logic: Get last asset and extract sequence
+            $lastAsset = Asset::orderBy('id', 'desc')->first();
+            $lastNumber = 0;
+            
+            if ($lastAsset && strlen($lastAsset->code) >= 6) {
+                // Extract last 6 digits from BRIN-XX-YYYYYY format
+                $lastNumber = (int) substr($lastAsset->code, -6);
+            }
+            
+            $nextNumber = $lastNumber + 1;
+            $sequence = str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+            
+            // Generate code in BRIN-XX-YYYYYY format with reliable sequence
+            $assetCode = 'BRIN-' . $categoryCode . '-' . $sequence;
             
             return response()->json([
                 'success' => true,
                 'code' => $assetCode,
-                'prefix' => $categoryPrefix,
-                'start_number' => $startNumber,
-                'end_number' => $startNumber + $stock - 1,
-                'message' => "Will create {$stock} individual items: {$assetCode}, {$categoryPrefix}" . ($startNumber + 1) . ($stock > 2 ? ", ..." : "")
+                'category_code' => $categoryCode,
+                'sequence' => $nextNumber,
+                'last_number' => $lastNumber,
+                'message' => "Next asset code: {$assetCode}"
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -202,29 +207,34 @@ class AssetController extends Controller
             }
             
             $category = Category::findOrFail($request->category_id);
-            $categoryPrefix = strtoupper(substr($category->name, 0, 4));
             
-            // Get the highest existing asset number for this category
-            $lastAsset = Asset::where('category_id', $request->category_id)
-                ->whereRaw("SUBSTRING(code, 5) ~ '^[0-9]+'")
-                ->orderByRaw("NULLIF(REGEXP_REPLACE(SUBSTRING(code, 5), '[^0-9].*', ''), '')::int DESC")
-                ->first();
-            
-            $lastNumber = 0;
-            if ($lastAsset) {
-                // Extract number from code (handle both single and range codes)
-                $codeParts = explode('-', $lastAsset->code);
-                $lastNumber = (int)preg_replace('/[^0-9]/', '', $codeParts[0]);
+            if (!$category->category_code) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kategori belum memiliki category_code'
+                ], 400);
             }
             
+            $categoryCode = $category->category_code;
+            
             $stock = (int) $request->stock;
-            $startNumber = $lastNumber + 1;
             
             // Create individual rows for each stock item
             $createdAssets = [];
             for ($i = 0; $i < $stock; $i++) {
-                $currentNumber = $startNumber + $i;
-                $assetCode = $categoryPrefix . $currentNumber;
+                // Atomic Reliable Sequence Logic: Get last asset right before each creation
+                $lastAsset = Asset::orderBy('id', 'desc')->first();
+                $lastNumber = 0;
+                
+                if ($lastAsset && strlen($lastAsset->code) >= 6) {
+                    // Extract last 6 digits from BRIN-XX-YYYYYY format
+                    $lastNumber = (int) substr($lastAsset->code, -6);
+                }
+                
+                $nextNumber = $lastNumber + 1;
+                $sequence = str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+                
+                $assetCode = 'BRIN-' . $categoryCode . '-' . $sequence;
                 
                 $assetData = $request->except(['_token', '_method', 'photo']);
                 $assetData['code'] = $assetCode;

@@ -18,6 +18,22 @@
                         @csrf
                         @method('PUT')
                         
+                        {{-- CATEGORY CODE --}}
+                        <div class="mb-4">
+                            <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
+                                Kode Kategori
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <div class="flex-1 px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-black text-slate-700">
+                                    <span id="editCategoryCode">--</span>
+                                </div>
+                                <div class="text-sm text-slate-500">
+                                    <i class="fas fa-lock"></i>
+                                    Tidak dapat diubah
+                                </div>
+                            </div>
+                        </div>
+                        
                         {{-- NAME --}}
                         <div class="mb-4">
                             <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
@@ -157,6 +173,7 @@ function openEditCategoryModal(categoryId) {
                 const category = data.data;
                 document.getElementById('editCategoryName').value = category.name;
                 document.getElementById('editCategoryDescription').value = category.description || '';
+                document.getElementById('editCategoryCode').textContent = category.category_code || '--';
                 document.getElementById('assetCount').textContent = category.assets_count || 0;
                 
                 // Load assets list
@@ -334,6 +351,21 @@ function deleteCategory() {
             location.reload(true);
         }, 500);
     });
+}
+
+// Scroll to delete section in edit modal
+function scrollToCategoryDelete() {
+    const deleteSection = document.getElementById('categoryDeleteSection');
+    if (deleteSection) {
+        // Add highlight effect
+        deleteSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        deleteSection.classList.add('ring-4', 'ring-red-400', 'ring-opacity-50');
+        
+        // Remove highlight after 2 seconds
+        setTimeout(() => {
+            deleteSection.classList.remove('ring-4', 'ring-red-400', 'ring-opacity-50');
+        }, 2000);
+    }
 }
 
 // Handle form submission
