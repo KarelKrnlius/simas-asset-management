@@ -37,8 +37,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     // RIWAYAT
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
-<<<<<<< HEAD
-    
+
     // Assets Resource Routes (Admin Only)
     Route::resource('assets', AssetController::class)->middleware('role:admin');
     Route::get('/assets/next-code', [AssetController::class, 'getNextCode'])->middleware('role:admin');
@@ -47,12 +46,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     
     // Categories Resource Routes (Admin Only)
     Route::resource('categories', CategoryController::class)->middleware('role:admin');
-=======
->>>>>>> origin/feature/tambah-role-master
 
-    // ===============================
-    // 🔴 ROLE (INI YANG PENTING)
-    // ===============================
     Route::middleware('role:admin')->group(function () {
 
         // CRUD ROLE
@@ -66,18 +60,11 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     });
 
-<<<<<<< HEAD
-    Route::resource('roles', RoleController::class)->except(['create','edit','show'])->middleware('role:admin');
-=======
-    // ===============================
-    // USER
-    // ===============================
     Route::middleware('role:admin')->group(function () {
         Route::resource('users', UserController::class);
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
         Route::post('/users/{id}/toggle', [UserController::class, 'toggle']);
     });
->>>>>>> origin/feature/tambah-role-master
 
     // PROFILE
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');

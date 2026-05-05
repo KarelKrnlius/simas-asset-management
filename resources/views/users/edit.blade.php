@@ -181,7 +181,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Response headers:', response.headers.get('content-type')); // Debug
                 
                 if (!response.ok) {
-                    // Jika response tidak OK, coba dapatkan text untuk melihat error
                     return response.text().then(text => {
                         console.log('Error response text:', text); // Debug
                         throw new Error(`HTTP error! status: ${response.status} - ${text.substring(0, 100)}`);

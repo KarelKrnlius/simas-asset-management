@@ -199,9 +199,7 @@
         };
 
         cancelBtn.onclick = function() {
-            if(confirm('Batalkan perubahan?')) {
-                window.location.reload();
-            }
+            window.location.reload();
         };
 
             });

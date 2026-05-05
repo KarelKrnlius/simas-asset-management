@@ -2,7 +2,7 @@
     <div class="bg-white rounded-[2rem] p-8 max-w-6xl w-full mx-4 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div class="text-center mb-6">
             <h3 class="text-xl font-black text-slate-900">Manajemen Kategori</h3>
-            <p class="text-slate-600 text-sm mt-2">Lihat, edit, atau hapus kategori beserta asetnya</p>
+            <p class="text-slate-600 text-sm mt-2">Lihat, edit, atau hapus kategori beserta Assetnya</p>
         </div>
         
         <!-- Add New Category Button -->
@@ -25,7 +25,7 @@
                             @endif
                             <div class="flex items-center gap-2 text-xs text-slate-500">
                                 <i class="fas fa-boxes"></i>
-                                <span>{{ $category->assets_count ?? 0 }} aset</span>
+                                <span>{{ $category->assets_count ?? 0 }} Asset</span>
                             </div>
                         </div>
                         <div class="flex justify-end">
@@ -40,12 +40,12 @@
                     <!-- Preview Assets (max 3 items) -->
                     @if($category->assets_count > 0)
                         <div class="border-t border-slate-200 pt-3">
-                            <p class="text-xs font-semibold text-slate-700 mb-2">Preview Aset:</p>
+                            <p class="text-xs font-semibold text-slate-700 mb-2">Preview Asset:</p>
                             <div class="space-y-1">
                                 {{-- This would need to be loaded via AJAX for real preview --}}
                                 <div class="text-xs text-slate-500">
                                     <i class="fas fa-info-circle"></i>
-                                    Klik edit untuk melihat detail semua aset
+                                    Klik edit untuk melihat detail semua Asset
                                 </div>
                             </div>
                         </div>
@@ -58,7 +58,7 @@
             <div class="text-center py-12 text-slate-500">
                 <i class="fas fa-folder-open text-5xl mb-4"></i>
                 <h4 class="font-bold text-slate-900 mb-2">Belum Ada Kategori</h4>
-                <p class="text-sm mb-6">Tambah kategori pertama untuk memulai mengelola aset</p>
+                <p class="text-sm mb-6">Tambah kategori pertama untuk memulai mengelola Asset</p>
                 <button onclick="openAddCategoryModal(); closeCategoryListModal();" 
                     class="bg-red-primary hover:bg-red-700 text-white font-black text-sm uppercase tracking-wider px-6 py-3 rounded-xl transition-all duration-300 hover:shadow-xl">
                     <i class="fas fa-plus mr-2"></i> Tambah Kategori Pertama

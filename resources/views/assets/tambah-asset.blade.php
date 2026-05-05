@@ -15,8 +15,8 @@
 <div id="addAssetModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
     <div class="bg-white rounded-[2rem] p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
         <div class="text-center mb-6">
-            <h3 class="text-xl font-black text-slate-900">Tambah Aset Baru</h3>
-            <p class="text-slate-600 text-sm mt-2">Isi detail aset di bawah ini</p>
+            <h3 class="text-xl font-black text-slate-900">Tambah Asset Baru</h3>
+            <p class="text-slate-600 text-sm mt-2">Isi detail Asset di bawah ini</p>
         </div>
         
         <form id="addAssetForm" method="POST" enctype="multipart/form-data">
@@ -41,22 +41,27 @@
             {{-- NAME --}}
             <div class="mb-6">
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Nama Aset
+                    Nama Asset
                 </label>
                 <input type="text" name="name" required
                     class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors"
-                    placeholder="Masukkan nama aset">
+                    placeholder="Masukkan nama Asset">
             </div>
             
             {{-- CODE --}}
             <div class="mb-6">
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Kode Aset (Auto-Generated)
+                    Kode Asset
                 </label>
-                <input type="text" name="code" id="assetCodePreview" readonly
-                    class="w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500"
-                    placeholder="Pilih kategori untuk melihat kode">
-                <p class="text-xs text-slate-500 mt-2">Kode akan otomatis di-generate berdasarkan kategori dan stok</p>
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-black text-slate-700">
+                        <span>Auto-generate</span>
+                    </div>
+                    <div class="text-sm text-slate-500">
+                        <i class="fas fa-info-circle"></i>
+                        Otomatis
+                    </div>
+                </div>
             </div>
                         
             {{-- DESCRIPTION --}}
@@ -66,7 +71,7 @@
                 </label>
                 <textarea name="description" rows="3" maxlength="500"
                     class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors"
-                    placeholder="Masukkan deskripsi aset (opsional)"></textarea>
+                    placeholder="Masukkan deskripsi Asset (opsional)"></textarea>
                 <p class="text-xs text-slate-500 mt-1">Maksimal 500 karakter</p>
             </div>
             
@@ -77,14 +82,13 @@
                 </label>
                 <input type="number" name="stock" id="addStock" required min="0" value="1"
                     class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors"
-                    placeholder="Masukkan jumlah stok"
-                    oninput="updateCodePreview()">
+                    placeholder="Masukkan jumlah stok">
             </div>
             
             {{-- PHOTO UPLOAD --}}
             <div class="mb-6">
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Foto Aset <span class="text-red-500">*</span>
+                    Foto Asset <span class="text-red-500">*</span>
                 </label>
                 
                 {{-- PHOTO BUTTON --}}
@@ -138,7 +142,7 @@
                 </button>
                 <button type="submit" 
                     class="flex-1 bg-red-primary hover:bg-red-700 text-white font-black py-3 rounded-xl transition-all duration-300 hover:shadow-xl">
-                    <i class="fas fa-save mr-2"></i> Simpan Aset
+                    <i class="fas fa-save mr-2"></i> Simpan Asset
                 </button>
             </div>
         </form>
@@ -146,40 +150,6 @@
 </div>
 
 <script>
-// Update kode asset preview saat kategori dipilih
-function updateCodePreview() {
-    const categoryId = document.getElementById('addCategory').value;
-    const codePreview = document.getElementById('assetCodePreview');
-    
-    if (!categoryId) {
-        codePreview.value = 'Pilih kategori untuk melihat kode';
-        codePreview.className = 'w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500';
-        return;
-    }
-    
-    // Show loading
-    codePreview.value = 'Loading...';
-    codePreview.className = 'w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500';
-    
-    // Fetch next code from server
-    fetch(`/assets/next-code?category_id=${categoryId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                codePreview.value = data.code;
-                codePreview.className = 'w-full px-4 py-3 bg-green-50 border-2 border-green-200 rounded-xl font-bold text-green-700';
-            } else {
-                codePreview.value = 'Error: ' + data.message;
-                codePreview.className = 'w-full px-4 py-3 bg-red-50 border-2 border-red-200 rounded-xl font-bold text-red-700';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching code:', error);
-            codePreview.value = 'Error generating code';
-            codePreview.className = 'w-full px-4 py-3 bg-red-50 border-2 border-red-200 rounded-xl font-bold text-red-700';
-        });
-}
-
 // Preview foto saat upload
 function previewAddAssetPhoto(event) {
     const file = event.target.files[0];

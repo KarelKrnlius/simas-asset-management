@@ -13,7 +13,7 @@
                     Master Asset
                 </h2>
                 <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">
-                    Kelola semua aset dalam sistem
+                    Kelola semua Asset dalam sistem
                 </p>
             </div>
 
@@ -21,7 +21,7 @@
             <div class="flex flex-col sm:flex-row gap-4 mb-6">
                 <button onclick="openAddAssetModal()" 
                     class="bg-red-primary hover:bg-red-700 text-white font-black text-sm uppercase tracking-wider px-6 py-3 rounded-xl transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
-                    <i class="fas fa-plus mr-2"></i> Tambah Aset
+                    <i class="fas fa-plus mr-2"></i> Tambah Asset
                 </button>
                                 <button onclick="openCategoryListModal()" 
                     class="bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-wider px-6 py-3 rounded-xl transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
@@ -33,7 +33,7 @@
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
                 <p class="text-sm text-blue-800">
                     <i class="fas fa-info-circle mr-2"></i>
-                    <strong>Catatan:</strong> Gunakan tombol "Edit Kategori" untuk melihat, mengelola, dan menambah kategori baru. Setiap aset baru akan otomatis memiliki status "Tersedia" dan kondisi "Baik".
+                    <strong>Catatan:</strong> Gunakan tombol "Edit Kategori" untuk melihat, mengelola, dan menambah kategori baru. Setiap Asset baru akan otomatis memiliki status "Tersedia" dan kondisi "Baik".
                 </p>
             </div>
 
@@ -48,7 +48,7 @@
                 <div class="flex items-center gap-2">
                     <i class="fas fa-boxes text-red-primary"></i>
                     <span class="font-black text-slate-900">
-                        Total Aset: <span class="text-red-primary">{{ $assets->total() }}</span> item
+                        Total Asset: <span class="text-red-primary">{{ $assets->total() }}</span> item
                     </span>
                     <span class="text-sm text-slate-500">
                         (Menampilkan {{ $assets->firstItem() }}-{{ $assets->lastItem() }})
@@ -207,12 +207,12 @@
                                     <div class="flex justify-center gap-2">
                                         <button onclick="editAsset({{ $asset->id }})" 
                                             class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors"
-                                            title="Edit Aset">
+                                            title="Edit Asset">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <button onclick="deleteAsset({{ $asset->id }})" 
                                             class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors"
-                                            title="Hapus Aset">
+                                            title="Hapus Asset">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -223,8 +223,8 @@
                                 <td colspan="10" class="text-center py-12">
                                     <div class="flex flex-col items-center">
                                         <i class="fas fa-inbox text-4xl text-slate-300 mb-4"></i>
-                                        <h3 class="text-lg font-bold text-slate-900 mb-2">Belum Ada Data Aset</h3>
-                                        <p class="text-sm text-slate-500">Mulai dengan menambah aset pertama Anda</p>
+                                        <h3 class="text-lg font-bold text-slate-900 mb-2">Belum Ada Data Asset</h3>
+                                        <p class="text-sm text-slate-500">Mulai dengan menambah Asset pertama Anda</p>
                                     </div>
                                 </td>
                             </tr>
@@ -237,7 +237,7 @@
             @if($assets->hasPages())
                 <div class="flex justify-between items-center mt-6 pt-6 border-t border-slate-200">
                     <div class="text-sm text-slate-600">
-                        Menampilkan {{ $assets->firstItem() }}-{{ $assets->lastItem() }} dari {{ $assets->total() }} aset
+                        Menampilkan {{ $assets->firstItem() }}-{{ $assets->lastItem() }} dari {{ $assets->total() }} Asset
                     </div>
                     
                     <div class="flex gap-2">
@@ -304,19 +304,19 @@
                 <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
             </div>
             <div>
-                <h3 class="text-xl font-bold text-slate-900">Hapus Aset Terpilih</h3>
+                <h3 class="text-xl font-bold text-slate-900">Hapus Asset Terpilih</h3>
                 <p class="text-sm text-slate-600">Aksi ini tidak dapat dibatalkan</p>
             </div>
         </div>
         
         <div class="mb-6">
             <p class="text-slate-700 mb-2">
-                Apakah Anda yakin ingin menghapus <span id="selectedCount" class="font-bold text-red-600">0</span> aset terpilih?
+                Apakah Anda yakin ingin menghapus <span id="selectedCount" class="font-bold text-red-600">0</span> Asset terpilih?
             </p>
             <div class="bg-red-50 border border-red-200 rounded-lg p-3">
                 <p class="text-sm text-red-800">
                     <i class="fas fa-info-circle mr-2"></i>
-                    Semua aset yang dipilih akan dihapus secara permanen dari sistem.
+                    Semua Asset yang dipilih akan dihapus secara permanen dari sistem.
                 </p>
             </div>
         </div>
@@ -328,7 +328,7 @@
             </button>
             <button onclick="confirmBulkDelete()" 
                 class="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-xl transition-all duration-300 hover:shadow-xl">
-                <i class="fas fa-trash mr-2"></i> Hapus Aset
+                <i class="fas fa-trash mr-2"></i> Hapus Asset
             </button>
         </div>
     </div>
@@ -532,7 +532,7 @@ function confirmBulkDelete() {
     const assetIds = Array.from(checkboxes).map(cb => cb.value);
     
     if (assetIds.length === 0) {
-        alert('Pilih minimal satu aset untuk dihapus');
+        alert('Pilih minimal satu Asset untuk dihapus');
         return;
     }
     
@@ -585,7 +585,7 @@ function confirmBulkDelete() {
             deleteBtn.innerHTML = originalText;
             deleteBtn.disabled = false;
             
-            alert('Gagal menghapus aset: ' + (data.message || 'Unknown error'));
+            alert('Gagal menghapus Asset: ' + (data.message || 'Unknown error'));
         }
     })
     .catch(error => {
@@ -595,7 +595,7 @@ function confirmBulkDelete() {
         deleteBtn.innerHTML = originalText;
         deleteBtn.disabled = false;
         
-        alert('Terjadi kesalahan saat menghapus aset: ' + error.message);
+        alert('Terjadi kesalahan saat menghapus Asset: ' + error.message);
     });
 }
 
@@ -711,7 +711,7 @@ function closeAddAssetModal() {
         const submitButton = form.querySelector('button[type="submit"]');
         if (submitButton) {
             submitButton.disabled = false;
-            submitButton.innerHTML = 'Simpan Aset';
+            submitButton.innerHTML = 'Simpan Asset';
         }
         // Reset code preview
         const codePreview = document.getElementById('assetCodePreview');
@@ -799,40 +799,6 @@ function closeDeleteModal() {
     document.getElementById('deleteAsset').style.display = 'none';
 }
 
-// Global Logic: Generate BRIN-XX-YYYYYY format using AJAX
-function updateCodePreview() {
-    const categoryId = document.getElementById('addCategory').value;
-    const codePreview = document.getElementById('assetCodePreview');
-    
-    if (!categoryId) {
-        codePreview.value = 'Pilih kategori untuk melihat kode';
-        codePreview.className = 'w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500';
-        return;
-    }
-    
-    // Show loading
-    codePreview.value = 'Loading...';
-    codePreview.className = 'w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500';
-    
-    // Fetch category_code and global sequence from server
-    fetch(`/assets/next-code?category_id=${categoryId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                codePreview.value = data.code;
-                codePreview.className = 'w-full px-4 py-3 bg-green-50 border-2 border-green-200 rounded-xl font-bold text-green-700';
-            } else {
-                codePreview.value = 'Error: ' + data.message;
-                codePreview.className = 'w-full px-4 py-3 bg-red-50 border-2 border-red-200 rounded-xl font-bold text-red-700';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching code:', error);
-            codePreview.value = 'Error generating code';
-            codePreview.className = 'w-full px-4 py-3 bg-red-50 border-2 border-red-200 rounded-xl font-bold text-red-700';
-        });
-}
-
 // Real-time category name validation
 function validateCategoryName(categoryName) {
     const categoryInput = document.getElementById('categoryName');
@@ -899,8 +865,6 @@ function showSuccessNotification(message) {
 
 // AJAX Submission for #form-tambah-asset with strong spam protection
 function handleAssetFormSubmit(e) {
-    e.preventDefault();
-    
     const form = e.target;
     const submitButton = form.querySelector('button[type="submit"]');
     const formData = new FormData(form);
@@ -929,7 +893,7 @@ function handleAssetFormSubmit(e) {
     .then(data => {
         if (data.success) {
             // Show success notification
-            showSuccessNotification('Berhasil menambahkan aset!');
+            showSuccessNotification('Berhasil menambahkan Asset!');
             
             // Close modal immediately
             closeAddAssetModal();
@@ -980,6 +944,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('submit', function(e) {
         // Handle form submission for #addAssetForm
         if (e.target.id === 'addAssetForm') {
+            e.preventDefault();
             handleAssetFormSubmit(e);
         }
     });

@@ -2,7 +2,7 @@
     <div class="bg-white rounded-[2rem] p-8 max-w-md w-full mx-4 shadow-2xl">
         <div class="text-center mb-6">
             <h3 class="text-xl font-black text-slate-900">Tambah Kategori Baru</h3>
-            <p class="text-slate-600 text-sm mt-2">Buat kategori baru untuk aset</p>
+            <p class="text-slate-600 text-sm mt-2">Buat kategori baru untuk Asset</p>
         </div>
         
         <form id="addCategoryForm" method="POST">
