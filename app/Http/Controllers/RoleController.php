@@ -20,13 +20,25 @@ class RoleController extends Controller
         }
 
         // SORT
-        if ($request->sort == 'oldest') {
-            $query->orderBy('created_at', 'asc');
-        } else {
-            // default terbaru + admin tetap atas
-            $query->orderByRaw("CASE WHEN name = 'Admin' THEN 0 ELSE 1 END")
-                  ->orderBy('created_at', 'desc');
-        }
+       switch ($request->sort) {
+    case 'oldest':
+        $query->orderBy('created_at', 'asc');
+        break;
+
+    case 'newest':
+        $query->orderBy('created_at', 'desc');
+        break;
+
+    case 'za':
+        $query->orderByRaw('LOWER(name) DESC');
+        break;
+
+    case 'az':
+    default:
+        $query->orderByRaw('LOWER(name) ASC');
+        break;
+}
+        
 
         $roles = $query->paginate(5)->withQueryString();
 
@@ -39,12 +51,20 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|unique:roles,name'
+            'name' => 'required'
         ]);
 
+        // CEK DUPLIKAT (CASE-INSENSITIVE)
+        $exists = Role::whereRaw('LOWER(name) = ?', [strtolower($request->name)])->exists();
+
+        if ($exists) {
+            return back()
+                ->withErrors(['name' => 'Role sudah ada!'])
+                ->withInput();
+        }
+
         Role::create([
-            'name' => $request->name,
-            'description' => $request->description
+            'name' => ucfirst(strtolower($request->name))
         ]);
 
         return back()->with('success', 'Role berhasil ditambahkan');
@@ -58,12 +78,22 @@ class RoleController extends Controller
         $role = Role::findOrFail($id);
 
         $request->validate([
-            'name' => 'required|unique:roles,name,' . $id
+            'name' => 'required'
         ]);
 
+        // CEK DUPLIKAT SAAT EDIT
+        $exists = Role::whereRaw('LOWER(name) = ?', [strtolower($request->name)])
+            ->where('id', '!=', $id)
+            ->exists();
+
+        if ($exists) {
+            return back()
+                ->withErrors(['name' => 'Role sudah ada!'])
+                ->withInput();
+        }
+
         $role->update([
-            'name' => $request->name,
-            'description' => $request->description
+            'name' => ucfirst(strtolower($request->name))
         ]);
 
         return back()->with('success', 'Role berhasil diupdate');
