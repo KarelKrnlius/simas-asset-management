@@ -38,6 +38,10 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // RIWAYAT
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
 
+    // PENGEMBALIAN
+    Route::get('/pengembalian', [AssetReturnController::class, 'index'])->name('pengembalian');
+    Route::post('/pengembalian', [AssetReturnController::class, 'store'])->name('pengembalian.store');
+
     // Assets Resource Routes (Admin Only)
     Route::resource('assets', AssetController::class)->middleware('role:admin');
     Route::get('/assets/next-code', [AssetController::class, 'getNextCode'])->middleware('role:admin');

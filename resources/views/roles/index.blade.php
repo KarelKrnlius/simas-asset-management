@@ -2,12 +2,12 @@
 
 @section('content')
 <div class="min-h-screen flex flex-col items-start pt-4 px-6"
-     x-data="{ 
-        selected: [], 
-        openModal: false, 
-        editModal: false, 
-        editData: {} 
-     }">
+    x-data="{ 
+    selected: [], 
+    openModal: {{ $errors->any() ? 'true' : 'false' }}, 
+    editModal: false, 
+    editData: {} 
+}"
 
 <!-- HEADER -->
 <div class="w-full max-w-7xl mx-auto mb-6">
@@ -30,7 +30,7 @@
 
 <!-- MAIN -->
 <div class="w-full max-w-7xl mx-auto">
-<div class="bg-white rounded-[2rem] shadow-sm p-6">
+<div class="bg-white rounded-[2.5rem] shadow-sm p-8">
 
 <!-- CONTROL BAR -->
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
@@ -66,13 +66,26 @@
         </a>
 
         <!-- SORT -->
-        <select name="sort" onchange="this.form.submit()"
-            class="border border-slate-200 rounded-lg px-3 py-2 text-xs">
-            <option value="">Terbaru</option>
-            <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>
-                Terlama
-            </option>
-        </select>
+       <select name="sort" onchange="this.form.submit()"
+    class="border border-slate-200 rounded-lg px-3 py-2 text-xs">
+
+    <option value="az" {{ request('sort', 'az') == 'az' ? 'selected' : '' }}>
+        A - Z
+    </option>
+
+    <option value="za" {{ request('sort') == 'za' ? 'selected' : '' }}>
+        Z - A
+    </option>
+
+    <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>
+        Terlama
+    </option>
+
+   <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>
+    Terbaru
+</option>
+
+</select>
 
         <!-- HAPUS TERPILIH -->
         <button type="button"
@@ -92,20 +105,20 @@
 
 <!-- TABLE -->
 <div class="overflow-x-auto">
-<table class="w-full text-sm">
+<table <table class="w-full table-fixed">
 
 <thead>
-<tr class="border-b border-slate-200">
+<tr class="border-b-2 border-slate-200">
     <th class="py-3 px-2 text-center w-[40px]">
         <input type="checkbox"
             @click="selected = selected.length === {{ $roles->count() }} ? [] : {{ $roles->pluck('id') }}"
             class="w-4 h-4">
     </th>
 
-    <th class="py-3 px-2 text-center text-xs font-bold w-[50px]">NO</th>
-    <th class="py-3 px-2 text-left text-xs font-bold">ROLE</th>
-    <th class="py-3 px-2 text-center text-xs font-bold">USER</th>
-    <th class="py-3 px-2 text-center text-xs font-bold">AKSI</th>
+    <th class="text-center py-3 px-3 font-black text-xs w-[60px]">NO</th>
+<th class="text-left py-3 px-3 font-black text-xs">ROLE</th>
+<th class="text-center py-3 px-3 font-black text-xs w-[100px]">USER</th>
+<th class="text-center py-3 px-3 font-black text-xs w-[120px]">AKSI</th>
 </tr>
 </thead>
 
@@ -124,24 +137,27 @@
     </td>
 
     <!-- NO -->
-    <td class="py-3 px-2 text-center text-slate-600">
+   <td class="py-3 px-3 text-center align-middle">
         {{ $roles->firstItem() + $index }}
     </td>
 
     <!-- ROLE -->
-    <td class="py-3 px-2 font-semibold text-slate-700">
+    <td class="py-3 px-3 align-middle">
         {{ $role->name }}
     </td>
 
     <!-- USER -->
-    <td class="py-3 px-2 text-center">
-        <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs font-bold">
+    <td class="py-3 px-3 text-center align-middle">
+    <div class="flex justify-center items-center">
+        <span class="bg-blue-100 text-blue-600 px-2.5 py-1 rounded-full text-xs font-bold">
             {{ $role->users_count }}
         </span>
-    </td>
+    </div>
+</td>
 
     <!-- AKSI -->
-    <td class="py-3 px-2 text-center">
+    <td class="py-3 px-3 text-center align-middle">
+    <div class="flex justify-center items-center gap-2">
         <div class="flex justify-center gap-2">
 
             <!-- EDIT -->
@@ -228,8 +244,13 @@ function bulkDelete() {
         <form method="POST" action="{{ route('roles.store') }}">
             @csrf
 
-            <input type="text" name="name" placeholder="Nama Role"
-                class="w-full border p-2 mb-3 rounded-lg text-sm">
+           <input type="text" name="name" placeholder="Nama Role"
+    value="{{ old('name') }}"
+    class="w-full border p-2 mb-1 rounded-lg text-sm">
+
+@error('name')
+    <p class="text-red-500 text-xs mb-2">{{ $message }}</p>
+@enderror
 
             <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm w-full">
                 Simpan
