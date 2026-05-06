@@ -8,29 +8,24 @@
         <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-red-600/10 to-transparent"></div>
         <div class="absolute -bottom-24 -right-24 w-80 h-80 bg-red-600/5 rounded-full blur-3xl group-hover:bg-red-600/10 transition-all duration-700"></div>
         
-        <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-            <div class="text-center md:text-left">
-                <span class="bg-red-600 text-white text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-[0.2em]">Operational Report</span>
-                <h2 class="text-5xl font-black text-slate-900 italic tracking-tighter uppercase mt-6 mb-2">
-                    Selamat Datang, <span class="text-red-600">{{ Auth::user()->name }}</span>
-                </h2>
-                <p class="text-slate-500 font-bold text-xs uppercase tracking-[0.3em]">Sistem pemantauan aset dalam kendali penuh.</p>
-            </div>
-            <div class="hidden lg:block bg-slate-200/50 backdrop-blur-md border border-slate-300 p-6 rounded-3xl">
-                <p class="text-[10px] font-black text-red-600 uppercase italic">{{ Auth::user()->role ? ucfirst(Auth::user()->role->name) : 'User' }} Access</p>
-                <p class="text-xs font-bold text-slate-600 opacity-60">ID: {{ Auth::user()->id }}</p>
-            </div>
+        <div class="relative z-10 text-center md:text-left">
+            <span class="bg-red-600 text-white text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-[0.2em]">Operational Report</span>
+            <h2 class="text-5xl font-black text-slate-900 italic tracking-tighter uppercase mt-6 mb-2">
+                Selamat Datang, <span class="text-red-600">{{ Auth::user()->name }}</span>
+            </h2>
+            <p class="text-slate-500 font-bold text-xs uppercase tracking-[0.3em]">Sistem pemantauan aset dalam kendali penuh.</p>
         </div>
     </div>
 
     @if(Auth::user()->role && Auth::user()->role->isAdmin())
         {{-- BAGIAN ADMIN --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 max-w-7xl mx-auto">
+        <div class="grid grid-cols-5 gap-6 mb-12 max-w-7xl mx-auto">
             @foreach([
-                ['label' => 'Total Aset', 'val' => $stats['total'], 'icon' => 'fa-cubes', 'color' => 'red'],
-                ['label' => 'Aset Tersedia', 'val' => $stats['available'], 'icon' => 'fa-check-double', 'color' => 'slate'],
+                ['label' => 'Total Asset', 'val' => $stats['total'], 'icon' => 'fa-cubes', 'color' => 'red'],
+                ['label' => 'Asset Tersedia', 'val' => $stats['available'], 'icon' => 'fa-check-double', 'color' => 'slate'],
                 ['label' => 'Dalam Peminjaman', 'val' => $stats['loaned'], 'icon' => 'fa-hand-holding-box', 'color' => 'red'],
                 ['label' => 'Perlu Perbaikan', 'val' => $stats['maintenance'], 'icon' => 'fa-screwdriver-wrench', 'color' => 'slate'],
+                ['label' => 'Asset Hilang', 'val' => $stats['missing'] ?? 0, 'icon' => 'fa-exclamation-triangle', 'color' => 'red']
             ] as $item)
             <div class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
                 <div class="relative z-10">
@@ -38,7 +33,9 @@
                         <div class="w-12 h-12 {{ $item['color'] == 'red' ? 'bg-red-600 text-white shadow-red-200 shadow-lg' : 'bg-slate-100 text-slate-900' }} rounded-2xl flex items-center justify-center">
                             <i class="fas {{ $item['icon'] }} text-lg"></i>
                         </div>
-                        <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">Live Status</span>
+                        <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">
+                            <i class="fas fa-circle text-xs mr-2"></i>Live Status
+                        </span>
                     </div>
                     <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ $item['label'] }}</h4>
                     <p class="text-4xl font-black text-slate-900 italic tracking-tighter">{{ $item['val'] }}</p>
@@ -55,7 +52,7 @@
                 </div>
                 <div class="relative w-full h-[350px] overflow-hidden rounded-xl">
     <div id="chartAnalytics" class="w-full h-full"></div>
-</div>
+</div> 
             </div>
 
             <div class="space-y-8">
@@ -150,7 +147,7 @@
                             @forelse($myLoans as $loan)
                             <div class="flex items-center gap-4 border-b border-slate-200 pb-4 last:border-0">
                                 <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-200 shadow-sm">
-                                    <i class="fas fa-clock text-red-600"></i>
+                                    <i class="fas fa-hand-holding-box text-red-600"></i>
                                 </div>
                                 <div>
                                     <p class="text-[11px] font-black text-slate-900 uppercase italic">ID Peminjaman #{{ $loan->id }}</p>
@@ -159,7 +156,8 @@
                             </div>
                             @empty
                             <div class="text-center py-4">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Kamu belum meminjam aset</p>
+                                <i class="fas fa-box-open text-5xl text-slate-200 mb-4"></i>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Belum ada antrean</p>
                             </div>
                             @endforelse
                         </div>

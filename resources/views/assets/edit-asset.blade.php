@@ -16,13 +16,14 @@
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
                     Kategori
                 </label>
-                <select name="category_id" id="editCategory" required
-                    class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors">
+                <select name="category_id" id="editCategory" required disabled
+                    class="w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500 cursor-not-allowed">
                     <option value="">-- Pilih Kategori --</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}">{{ $category->name }}</option>
                     @endforeach
                 </select>
+                <input type="hidden" name="category_id" id="editCategoryHidden">
             </div>
             
             {{-- NAME --}}

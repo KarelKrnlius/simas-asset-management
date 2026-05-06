@@ -173,7 +173,6 @@ class AssetController extends Controller
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:100',
             'description' => 'nullable|string|max:500',
-            'stock' => 'required|integer|min:0',
             'condition' => 'required|string|max:20',
             'status' => 'required|in:tersedia,dipinjam,diperbaiki',
             'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048', // Foto WAJIB
@@ -217,47 +216,41 @@ class AssetController extends Controller
             
             $categoryCode = $category->category_code;
             
-            $stock = (int) $request->stock;
+            // Set stock to 1 automatically
+            $stock = 1;
             
-            // Create individual rows for each stock item
-            $createdAssets = [];
-            for ($i = 0; $i < $stock; $i++) {
-                // Atomic Reliable Sequence Logic: Get last asset right before each creation
-                $lastAsset = Asset::orderBy('id', 'desc')->first();
-                $lastNumber = 0;
-                
-                if ($lastAsset && strlen($lastAsset->code) >= 6) {
-                    // Extract last 6 digits from BRIN-XX-YYYYYY format
-                    $lastNumber = (int) substr($lastAsset->code, -6);
-                }
-                
-                $nextNumber = $lastNumber + 1;
-                $sequence = str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
-                
-                $assetCode = 'BRIN-' . $categoryCode . '-' . $sequence;
-                
-                $assetData = $request->except(['_token', '_method', 'photo']);
-                $assetData['code'] = $assetCode;
-                $assetData['stock'] = 1; // Each individual item has stock of 1
-                $assetData['condition'] = 'baik'; // Auto-set condition
-                $assetData['status'] = 'tersedia'; // Auto-set status
-                $assetData['photo'] = $photoPath; // Add photo path
-                
-                $asset = Asset::create($assetData);
-                $createdAssets[] = $asset;
+            // Create single asset with stock = 1
+            // Atomic Reliable Sequence Logic: Get last asset right before creation
+            $lastAsset = Asset::orderBy('id', 'desc')->first();
+            $lastNumber = 0;
+            
+            if ($lastAsset && strlen($lastAsset->code) >= 6) {
+                // Extract last 6 digits from BRIN-XX-YYYYYY format
+                $lastNumber = (int) substr($lastAsset->code, -6);
             }
             
-            $message = $stock > 1 
-                ? "Berhasil menambahkan {$stock} item individual"
-                : 'Berhasil menambahkan';
+            $nextNumber = $lastNumber + 1;
+            $sequence = str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+            
+            $assetCode = 'BRIN-' . $categoryCode . '-' . $sequence;
+            
+            $assetData = $request->except(['_token', '_method', 'photo']);
+            $assetData['code'] = $assetCode;
+            $assetData['stock'] = 1; // Auto-set stock to 1
+            $assetData['condition'] = 'baik'; // Auto-set condition
+            $assetData['status'] = 'tersedia'; // Auto-set status
+            $assetData['photo'] = $photoPath; // Add photo path
+            
+            $asset = Asset::create($assetData);
+            
+            $message = 'Berhasil menambahkan asset baru';
             
             session()->flash('success', $message);
             
             return response()->json([
                 'success' => true,
-                'message' => "Successfully created {$stock} asset(s)",
-                'data' => $createdAssets,
-                'count' => $stock
+                'message' => 'Asset berhasil ditambahkan',
+                'data' => $asset
             ]);
         } catch (\Exception $e) {
             // Jika ada error, hapus foto yang sudah diupload

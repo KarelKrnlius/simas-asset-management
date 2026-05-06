@@ -75,14 +75,17 @@
                 <p class="text-xs text-slate-500 mt-1">Maksimal 500 karakter</p>
             </div>
             
-            {{-- STOCK --}}
-            <div class="mb-6">
-                <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Stok
-                </label>
-                <input type="number" name="stock" id="addStock" required min="0" value="1"
-                    class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors"
-                    placeholder="Masukkan jumlah stok">
+            {{-- INFO AUTO-SET --}}
+            <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-info-circle text-green-600"></i>
+                    <span class="text-sm font-bold text-green-800">Informasi Otomatis</span>
+                </div>
+                <p class="text-xs text-green-700">
+                    • Status akan otomatis diatur menjadi <span class="font-bold">"Tersedia"</span><br>
+                    • Kondisi akan otomatis diatur menjadi <span class="font-bold">"Baik"</span><br>
+                    • Stok akan otomatis diatur menjadi <span class="font-bold">"1"</span>
+                </p>
             </div>
             
             {{-- PHOTO UPLOAD --}}
@@ -119,18 +122,6 @@
                         <i class="fas fa-check-circle"></i> Foto berhasil dipilih
                     </p>
                 </div>
-            </div>
-            
-            {{-- INFO AUTO-SET --}}
-            <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-                <div class="flex items-center gap-2 mb-2">
-                    <i class="fas fa-info-circle text-green-600"></i>
-                    <span class="text-sm font-bold text-green-800">Informasi Otomatis</span>
-                </div>
-                <p class="text-xs text-green-700">
-                    • Status akan otomatis diatur menjadi <span class="font-bold">"Tersedia"</span><br>
-                    • Kondisi akan otomatis diatur menjadi <span class="font-bold">"Baik"</span><br>
-                </p>
             </div>
             
                         
