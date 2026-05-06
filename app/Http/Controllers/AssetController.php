@@ -423,30 +423,4 @@ class AssetController extends Controller
             ], 500);
         }
     }
-    
-    /**
-     * Test photo URL (for debugging)
-     */
-    public function testPhoto($id)
-    {
-        $asset = Asset::find($id);
-        
-        if (!$asset) {
-            return response()->json(['error' => 'Asset not found'], 404);
-        }
-        
-        $photoUrl = \App\Helpers\AssetHelper::getPhotoUrl($asset->photo);
-        
-        return response()->json([
-            'asset_id' => $asset->id,
-            'asset_name' => $asset->name,
-            'photo_path' => $asset->photo,
-            'photo_url' => $photoUrl,
-            'rustfs_config' => [
-                'endpoint' => config('filesystems.disks.rustfs.endpoint'),
-                'bucket' => config('filesystems.disks.rustfs.bucket'),
-                'url' => config('filesystems.disks.rustfs.url'),
-            ]
-        ]);
-    }
 }

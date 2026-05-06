@@ -931,7 +931,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('input', function(e) {
         // Only listen for input changes on #addStock (not #addCategory)
         if (e.target.id === 'addStock') {
-            updateCodePreview();
+            // Code is now auto-generated, no preview needed
         }
         
         // Real-time validation for category name

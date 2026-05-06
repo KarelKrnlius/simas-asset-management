@@ -46,10 +46,11 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::resource('assets', AssetController::class)->middleware('role:admin');
     Route::get('/assets/next-code', [AssetController::class, 'getNextCode'])->middleware('role:admin');
     Route::post('/assets/bulk-delete', [AssetController::class, 'bulkDelete'])->middleware('role:admin');
-    Route::get('/test-photo/{id}', [AssetController::class, 'testPhoto'])->middleware('role:admin');
     
     // Categories Resource Routes (Admin Only)
+    Route::get('/categories/list', [CategoryController::class, 'list'])->middleware('role:admin');
     Route::resource('categories', CategoryController::class)->middleware('role:admin');
+    Route::post('/categories/bulk-delete', [CategoryController::class, 'bulkDelete'])->middleware('role:admin');
 
     Route::middleware('role:admin')->group(function () {
 

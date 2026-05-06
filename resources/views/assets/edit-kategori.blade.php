@@ -353,20 +353,6 @@ function deleteCategory() {
     });
 }
 
-// Scroll to delete section in edit modal
-function scrollToCategoryDelete() {
-    const deleteSection = document.getElementById('categoryDeleteSection');
-    if (deleteSection) {
-        // Add highlight effect
-        deleteSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        deleteSection.classList.add('ring-4', 'ring-red-400', 'ring-opacity-50');
-        
-        // Remove highlight after 2 seconds
-        setTimeout(() => {
-            deleteSection.classList.remove('ring-4', 'ring-red-400', 'ring-opacity-50');
-        }, 2000);
-    }
-}
 
 // Handle form submission
 document.getElementById('editCategoryForm').addEventListener('submit', function(e) {

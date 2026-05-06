@@ -345,48 +345,4 @@ class UserController extends Controller
             ], 500);
         }
     }
-
-    /**
-     * Get user loan history for history modal.
-     */
-    public function getHistory($id)
-    {
-        $user = User::findOrFail($id);
-        
-        // Get active loans
-        $activeLoans = Loan::with(['assets'])
-            ->where('user_id', $id)
-            ->where('status', 'dipinjam')
-            ->get()
-            ->map(function($loan) {
-                return [
-                    'asset_name' => $loan->assets->first()->name ?? 'Unknown',
-                    'asset_code' => $loan->assets->first()->code ?? 'Unknown',
-                    'borrow_date' => \Carbon\Carbon::parse($loan->borrow_date)->translatedFormat('d M Y'),
-                    'return_date' => $loan->return_date ? \Carbon\Carbon::parse($loan->return_date)->translatedFormat('d M Y') : '-',
-                ];
-            });
-        
-        // Get past history
-        $pastHistory = Loan::with(['assets'])
-            ->where('user_id', $id)
-            ->where('status', '!=', 'dipinjam')
-            ->get()
-            ->map(function($loan) {
-                return [
-                    'asset_name' => $loan->assets->first()->name ?? 'Unknown',
-                    'asset_code' => $loan->assets->first()->code ?? 'Unknown',
-                    'borrow_date' => \Carbon\Carbon::parse($loan->borrow_date)->translatedFormat('d M Y'),
-                    'return_date' => $loan->return_date ? \Carbon\Carbon::parse($loan->return_date)->translatedFormat('d M Y') : '-',
-                ];
-            });
-        
-        return response()->json([
-            'success' => true,
-            'user_name' => $user->name,
-            'active_loans' => $activeLoans,
-            'past_history' => $pastHistory
-       ]);
-       
-    }
 }
