@@ -756,6 +756,7 @@ function editAsset(id) {
                 
                 document.getElementById('editAssetId').value = asset.id;
                 document.getElementById('editCategory').value = asset.category_id;
+                document.getElementById('editCategoryHidden').value = asset.category_id;
                 document.getElementById('editName').value = asset.name;
                 document.getElementById('editCode').value = asset.code;
                 document.getElementById('editDescription').value = asset.description || '';
