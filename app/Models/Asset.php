@@ -29,10 +29,16 @@ class Asset extends Model
     /**
      * Relasi many-to-many ke peminjaman melalui tabel loan_details.
      */
-    public function loans()
+    // Asset.php
+public function loans()
+{
+    return $this->belongsToMany(Loan::class, 'loan_details', 'asset_id', 'loan_id');
+}
+
+    public function histories()
     {
-        return $this->belongsToMany(Loan::class, 'loan_details')
-                    ->withPivot('quantity');
+        return $this->hasMany(Loan::class, 'asset_id');
     }
 }
+
 

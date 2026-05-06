@@ -26,7 +26,7 @@ return new class extends Migration
             // 📌 Status 
             $table->string('status', 20);
 
-            // 👤 Audit trail
+            // 👤 Audit trail 
             $table->foreignId('created_by')
                   ->nullable()
                   ->references('id')
@@ -49,7 +49,7 @@ return new class extends Migration
             $table->timestamps();
 
             // 🗑️ Soft delete 
-            $table->softDeletes();
+            $table->softDeletes(); 
         });
     }
 

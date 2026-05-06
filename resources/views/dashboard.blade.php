@@ -19,12 +19,13 @@
 
     @if(Auth::user()->role && Auth::user()->role->isAdmin())
         {{-- BAGIAN ADMIN --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 max-w-7xl mx-auto">
+        <div class="grid grid-cols-5 gap-6 mb-12 max-w-7xl mx-auto">
             @foreach([
-                ['label' => 'Total Aset', 'val' => $stats['total'], 'icon' => 'fa-cubes', 'color' => 'red'],
-                ['label' => 'Aset Tersedia', 'val' => $stats['available'], 'icon' => 'fa-check-double', 'color' => 'slate'],
+                ['label' => 'Total Asset', 'val' => $stats['total'], 'icon' => 'fa-cubes', 'color' => 'red'],
+                ['label' => 'Asset Tersedia', 'val' => $stats['available'], 'icon' => 'fa-check-double', 'color' => 'slate'],
                 ['label' => 'Dalam Peminjaman', 'val' => $stats['loaned'], 'icon' => 'fa-hand-holding-box', 'color' => 'red'],
                 ['label' => 'Perlu Perbaikan', 'val' => $stats['maintenance'], 'icon' => 'fa-screwdriver-wrench', 'color' => 'slate'],
+                ['label' => 'Asset Hilang', 'val' => $stats['missing'] ?? 0, 'icon' => 'fa-exclamation-triangle', 'color' => 'red']
             ] as $item)
             <div class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
                 <div class="relative z-10">
@@ -32,7 +33,9 @@
                         <div class="w-12 h-12 {{ $item['color'] == 'red' ? 'bg-red-600 text-white shadow-red-200 shadow-lg' : 'bg-slate-100 text-slate-900' }} rounded-2xl flex items-center justify-center">
                             <i class="fas {{ $item['icon'] }} text-lg"></i>
                         </div>
-                        <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">Live Status</span>
+                        <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">
+                            <i class="fas fa-circle text-xs mr-2"></i>Live Status
+                        </span>
                     </div>
                     <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ $item['label'] }}</h4>
                     <p class="text-4xl font-black text-slate-900 italic tracking-tighter">{{ $item['val'] }}</p>
@@ -144,7 +147,7 @@
                             @forelse($myLoans as $loan)
                             <div class="flex items-center gap-4 border-b border-slate-200 pb-4 last:border-0">
                                 <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-200 shadow-sm">
-                                    <i class="fas fa-clock text-red-600"></i>
+                                    <i class="fas fa-hand-holding-box text-red-600"></i>
                                 </div>
                                 <div>
                                     <p class="text-[11px] font-black text-slate-900 uppercase italic">ID Peminjaman #{{ $loan->id }}</p>
@@ -153,7 +156,8 @@
                             </div>
                             @empty
                             <div class="text-center py-4">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Kamu belum meminjam aset</p>
+                                <i class="fas fa-box-open text-5xl text-slate-200 mb-4"></i>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Belum ada antrean</p>
                             </div>
                             @endforelse
                         </div>

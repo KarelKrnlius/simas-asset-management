@@ -27,7 +27,7 @@ class DashboardController extends Controller
             'available'   => Asset::where('status', 'Tersedia')->count(),
             'loaned'      => Asset::where('status', 'Dipinjam')->count(),
             'maintenance' => Asset::where('status', 'Maintenance')->count(),
-            'rusak'       => Asset::where('status', 'Rusak')->count(),
+            'missing'     => Asset::where('status', 'Hilang')->count(),
         ];
 
         // 3. Logic Grafik Maintenance untuk PostgreSQL (Balikin dari file lama)
