@@ -113,19 +113,19 @@
 
             {{-- USERS TABLE --}}
             <div class="overflow-x-auto">
-                <table class="w-full table-fixed" id="usersTable">
+                <table class="w-full table-auto min-w-[800px]" id="usersTable">
                     <thead>
                         <tr class="border-b-2 border-slate-200">
-                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs" style="width: 50px">
+                            <th class="text-center py-3 px-2 font-black text-slate-900 uppercase tracking-wider text-xs" style="min-width: 50px;">
                                 <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" 
                                     class="w-4 h-4 text-red-primary border-slate-300 rounded focus:ring-red-primary focus:ring-2">
                             </th>
-                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs" style="width: 60px">NO</th>
-                            <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs" style="width: 200px">Nama</th>
-                            <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs" style="width: 250px">Email</th>
-                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs" style="width: 100px">Role</th>
-                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs" style="width: 100px">Status</th>
-                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs" style="width: 120px">Aksi</th>
+                            <th class="text-center py-3 px-2 font-black text-slate-900 uppercase tracking-wider text-xs" style="min-width: 60px;">NO</th>
+                            <th class="text-left py-3 px-2 font-black text-slate-900 uppercase tracking-wider text-xs" style="min-width: 180px;">Nama</th>
+                            <th class="text-left py-3 px-2 font-black text-slate-900 uppercase tracking-wider text-xs" style="min-width: 200px;">Email</th>
+                            <th class="text-center py-3 px-2 font-black text-slate-900 uppercase tracking-wider text-xs" style="min-width: 100px;">Role</th>
+                            <th class="text-center py-3 px-2 font-black text-slate-900 uppercase tracking-wider text-xs" style="min-width: 100px;">Status</th>
+                            <th class="text-center py-3 px-2 font-black text-slate-900 uppercase tracking-wider text-xs" style="min-width: 140px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
@@ -135,31 +135,31 @@
                                 $isSelf = $user->id === auth()->id();
                             @endphp
                             <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors user-row">
-                                <td class="py-4 px-4 text-center">
+                                <td class="py-3 px-2 text-center">
                                     <input type="checkbox" class="user-checkbox" value="{{ $user->id }}" onchange="updateBulkDeleteButton()"
                                         class="w-4 h-4 text-red-primary border-slate-300 rounded focus:ring-red-primary focus:ring-2">
                                 </td>
-                                <td class="py-4 px-4 text-center">
-                                    <span class="inline-block bg-slate-100 text-slate-700 px-3 py-1 rounded-lg font-bold text-sm">
+                                <td class="py-3 px-2 text-center">
+                                    <span class="inline-block bg-slate-100 text-slate-700 px-2 py-1 rounded-lg font-bold text-xs">
                                         {{ ($users->currentPage() - 1) * $users->perPage() + $loop->index + 1 }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                                            <span class="text-red-600 font-black text-sm">
+                                <td class="py-3 px-2">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <span class="text-red-600 font-black text-xs">
                                                 {{ strtoupper(substr($user->name, 0, 1)) }}
                                             </span>
                                         </div>
-                                        <div>
-                                            <p class="font-black text-slate-900">{{ $user->name }}</p>
+                                        <div class="min-w-0">
+                                            <p class="font-black text-slate-900 text-sm truncate">{{ $user->name }}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="py-4 px-4">
-                                    <p class="font-semibold text-slate-700">{{ $user->email }}</p>
+                                <td class="py-3 px-2">
+                                    <p class="font-semibold text-slate-700 text-sm truncate">{{ $user->email }}</p>
                                 </td>
-                                <td class="py-4 px-4 text-center">
+                                <td class="py-3 px-2 text-center">
                                     @php
                                         $roleColor = match(strtolower($user->role->name ?? '')) {
                                             'admin' => 'bg-purple-100 text-purple-700',
@@ -167,50 +167,50 @@
                                         };
                                     @endphp
                                     <div class="flex justify-center">
-                                        <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider {{ $roleColor }}">
+                                        <span class="px-2 py-1 rounded-full text-xs font-black uppercase tracking-wider {{ $roleColor }}">
                                             {{ $user->role ? ucfirst($user->role->name) : 'Unknown' }}
                                         </span>
                                     </div>
                                 </td>
-                                <td class="py-4 px-4 text-center">
+                                <td class="py-3 px-2 text-center">
                                     <label class="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" 
                                             {{ $user->is_active ? 'checked' : '' }}
                                             {{ $isSelf ? 'disabled' : '' }}
                                             onchange="toggleUserStatus({{ $user->id }}, this.checked)"
                                             class="sr-only peer">
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500 {{ $isSelf ? 'opacity-50 cursor-not-allowed' : '' }}"></div>
-                                        <span id="status-text-{{ $user->id }}" class="ml-3 text-xs font-semibold {{ $user->is_active ? 'text-green-600' : 'text-red-600' }}">
+                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500 {{ $isSelf ? 'opacity-50 cursor-not-allowed' : '' }}"></div>
+                                        <span id="status-text-{{ $user->id }}" class="ml-2 text-xs font-semibold {{ $user->is_active ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $user->is_active ? 'Aktif' : 'Nonaktif' }}
                                         </span>
                                     </label>
                                 </td>
-                                <td class="py-4 px-4">
-                                    <div class="flex justify-center gap-2">
+                                <td class="py-3 px-2">
+                                    <div class="flex justify-center gap-1 flex-wrap max-w-[120px]">
                                         {{-- Edit --}}
                                         <button onclick="openEditModal({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}', {{ $user->role_id }})" 
-                                            class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors"
+                                            class="bg-blue-500 hover:bg-blue-600 text-white p-1.5 rounded-lg transition-colors"
                                             title="Edit User">
                                             <i class="fas fa-edit text-xs"></i>
                                         </button>
                                         
                                         {{-- History --}}
                                         <button onclick="openHistoryModal({{ $user->id }})" 
-                                            class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition-colors"
+                                            class="bg-green-500 hover:bg-green-600 text-white p-1.5 rounded-lg transition-colors"
                                             title="Riwayat Peminjaman">
                                             <i class="fas fa-history text-xs"></i>
                                         </button>
                                         
                                         {{-- Reset Password --}}
                                         <button onclick="resetPassword({{ $user->id }})" 
-                                            class="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-lg transition-colors"
+                                            class="bg-yellow-500 hover:bg-yellow-600 text-white p-1.5 rounded-lg transition-colors"
                                             title="Reset Password">
                                             <i class="fas fa-key text-xs"></i>
                                         </button>
                                         
                                         {{-- Delete --}}
                                         <button onclick="deleteUser({{ $user->id }}, '{{ $user->name }}', {{ $hasLoans ? 'true' : 'false' }}, {{ $isSelf ? 'true' : 'false' }})" 
-                                            class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors {{ $hasLoans || $isSelf ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                            class="bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-lg transition-colors {{ $hasLoans || $isSelf ? 'opacity-50 cursor-not-allowed' : '' }}"
                                             title="{{ $hasLoans ? 'User memiliki riwayat peminjaman' : ($isSelf ? 'Tidak bisa hapus diri sendiri' : 'Hapus User') }}"
                                             {{ $hasLoans || $isSelf ? 'disabled' : '' }}>
                                             <i class="fas fa-trash text-xs"></i>
@@ -220,17 +220,12 @@
                             </tr>
                         @empty
                             <tr class="h-20">
-                                <td class="py-4 px-4 text-slate-400 text-center align-middle">-</td>
-                                <td class="py-4 px-4 text-slate-400 text-center align-middle">
+                                <td class="py-4 px-2 text-slate-400 text-center align-middle" colspan="7">
                                     <div class="text-slate-400">
                                         <i class="fas fa-users text-2xl mb-2"></i>
                                         <p class="font-bold uppercase tracking-wider">Belum ada data user</p>
                                     </div>
                                 </td>
-                                <td class="py-4 px-4 text-slate-400 text-center align-middle">-</td>
-                                <td class="py-4 px-4 text-slate-400 text-center align-middle">-</td>
-                                <td class="py-4 px-4 text-slate-400 text-center align-middle">-</td>
-                                <td class="py-4 px-4 text-slate-400 text-center align-middle">-</td>
                             </tr>
                         @endforelse
                     </tbody>

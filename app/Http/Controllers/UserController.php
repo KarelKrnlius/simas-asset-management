@@ -24,19 +24,19 @@ class UserController extends Controller
         if ($request->has('search') && $request->search) {
             $searchTerm = strtolower($request->search);
             $query->where(function($q) use ($searchTerm) {
-                $q->where('name', 'ILIKE', '%' . $searchTerm . '%')
-                  ->orWhere('email', 'ILIKE', '%' . $searchTerm . '%')
-                  ->orWhereHas('role', function($roleQ) use ($searchTerm) {
-                      $roleQ->where('name', 'ILIKE', '%' . $searchTerm . '%');
-                  })
-                  ->orWhere(function($statusQ) use ($searchTerm) {
-                      if (strpos($searchTerm, 'aktif') !== false) {
-                          $statusQ->where('is_active', true);
-                      }
-                      if (strpos($searchTerm, 'nonaktif') !== false) {
-                          $statusQ->orWhere('is_active', false);
-                      }
-                  });
+                // Check if searching specifically for status
+                if ($searchTerm === 'aktif') {
+                    $q->where('is_active', true);
+                } elseif ($searchTerm === 'nonaktif') {
+                    $q->where('is_active', false);
+                } else {
+                    // General search by name, email, role
+                    $q->where('name', 'ILIKE', '%' . $searchTerm . '%')
+                      ->orWhere('email', 'ILIKE', '%' . $searchTerm . '%')
+                      ->orWhereHas('role', function($roleQ) use ($searchTerm) {
+                          $roleQ->where('name', 'ILIKE', '%' . $searchTerm . '%');
+                      });
+                }
             });
         }
         

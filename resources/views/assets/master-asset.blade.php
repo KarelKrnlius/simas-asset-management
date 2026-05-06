@@ -25,7 +25,7 @@
                 </button>
                                 <button onclick="openCategoryListModal()" 
                     class="bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-wider px-6 py-3 rounded-xl transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
-                    <i class="fas fa-edit mr-2"></i> Edit Kategori
+                    <i class="fas fa-edit mr-2"></i> Manajemen Kategori
                 </button>
             </div>
 
@@ -33,7 +33,7 @@
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
                 <p class="text-sm text-blue-800">
                     <i class="fas fa-info-circle mr-2"></i>
-                    <strong>Catatan:</strong> Gunakan tombol "Edit Kategori" untuk melihat, mengelola, dan menambah kategori baru. Setiap Asset baru akan otomatis memiliki status "Tersedia" dan kondisi "Baik".
+                    <strong>Catatan:</strong> Gunakan tombol "Manajemen Kategori" untuk melihat, mengelola, dan menambah kategori baru. Setiap Asset baru akan otomatis memiliki status "Tersedia" dan kondisi "Baik".
                 </p>
             </div>
 
@@ -144,7 +144,7 @@
                                     </span>
                                 </td>
                                 <td class="py-4 px-4">
-                                    <span class="inline-block bg-slate-100 text-slate-700 px-3 py-1 rounded-lg font-bold text-sm">
+                                    <span class="inline-block bg-slate-100 text-slate-700 px-3 py-1 rounded-lg font-bold text-sm font-mono">
                                         {{ $asset->code }}
                                     </span>
                                 </td>
@@ -283,6 +283,11 @@
                     </div>
                 </div>
             @endif
+
+            {{-- TOTAL INFO --}}
+            <div class="mt-6 text-center text-sm text-slate-500">
+                Menampilkan {{ $assets->firstItem() }} - {{ $assets->lastItem() }} dari {{ $assets->total() }} Asset
+            </div>
         </div>
     </div>
 </div>
