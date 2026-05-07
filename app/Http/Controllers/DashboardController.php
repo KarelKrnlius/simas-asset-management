@@ -24,10 +24,10 @@ class DashboardController extends Controller
         // 2. Statistik Dashboard (Lengkap untuk Admin & Staff)
         $stats = [
             'total'       => Asset::count(),
-            'available'   => Asset::where('status', 'Tersedia')->count(),
-            'loaned'      => Asset::where('status', 'Dipinjam')->count(),
-            'maintenance' => Asset::where('status', 'Maintenance')->count(),
-            'missing'     => Asset::where('status', 'Hilang')->count(),
+            'available'   => Asset::where('status', 'tersedia')->count(),
+            'loaned'      => Asset::where('status', 'dipinjam')->count(),
+            'maintenance' => Asset::where('status', 'perlu_perbaikan')->count(),
+            'missing'     => Asset::where('status', 'tidak_tersedia')->where('condition', 'hilang')->count(),
         ];
 
         // 3. Logic Grafik Maintenance untuk PostgreSQL (Balikin dari file lama)

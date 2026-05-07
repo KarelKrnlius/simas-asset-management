@@ -23,7 +23,7 @@
             @foreach([
                 ['label' => 'Total Asset', 'val' => $stats['total'], 'icon' => 'fa-cubes', 'color' => 'red'],
                 ['label' => 'Asset Tersedia', 'val' => $stats['available'], 'icon' => 'fa-check-double', 'color' => 'slate'],
-                ['label' => 'Dalam Peminjaman', 'val' => $stats['loaned'], 'icon' => 'fa-hand-holding-box', 'color' => 'red'],
+                ['label' => 'Dalam Peminjaman', 'val' => $stats['loaned'], 'icon' => 'fa-hand-holding', 'color' => 'red'],
                 ['label' => 'Perlu Perbaikan', 'val' => $stats['maintenance'], 'icon' => 'fa-screwdriver-wrench', 'color' => 'slate'],
                 ['label' => 'Asset Hilang', 'val' => $stats['missing'] ?? 0, 'icon' => 'fa-exclamation-triangle', 'color' => 'red']
             ] as $item)
@@ -31,7 +31,7 @@
                 <div class="relative z-10">
                     <div class="flex justify-between items-start mb-8">
                         <div class="w-12 h-12 {{ $item['color'] == 'red' ? 'bg-red-600 text-white shadow-red-200 shadow-lg' : 'bg-slate-100 text-slate-900' }} rounded-2xl flex items-center justify-center">
-                            <i class="fas {{ $item['icon'] }} text-lg"></i>
+                            <i class="fas {{ $item['icon'] }} text-lg flex items-center justify-center"></i>
                         </div>
                         <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">
                             <i class="fas fa-circle text-xs mr-2"></i>Live Status
