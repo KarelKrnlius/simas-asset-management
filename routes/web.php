@@ -12,6 +12,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AssetReturnController;
 use App\Http\Controllers\AssetLibraryController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\LoanCheckController;
 
 // HOME → LOGIN
 Route::get('/', function () { return redirect()->route('login');});
@@ -80,6 +81,11 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     });
 
+    // Loan Check Routes (Admin Only)
+    Route::get('/pengecek-peminjaman', [LoanCheckController::class, 'index'])->middleware('role:admin')->name('pengecek-peminjaman');
+    Route::get('/pengecek-peminjaman/{id}', [LoanCheckController::class, 'show'])->middleware('role:admin')->name('pengecek-peminjaman.show');
+
+    // MASTER USER (Admin Only)
     Route::middleware('role:admin')->group(function () {
         Route::resource('users', UserController::class);
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset');
