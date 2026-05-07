@@ -157,36 +157,54 @@
 </div>
 
 <script>
+// Simpan file yang sudah dipilih
+let currentEditFile = null;
+
 // Preview foto baru saat upload
 function previewEditAssetPhoto(event) {
     const file = event.target.files[0];
+    
+    // Jika user cancel (tidak pilih file), restore file sebelumnya
+    if (!file) {
+        if (currentEditFile) {
+            // Restore file sebelumnya
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(currentEditFile);
+            event.target.files = dataTransfer.files;
+        }
+        return;
+    }
+    
     const previewContainer = document.getElementById('editPhotoPreviewContainer');
     const previewImage = document.getElementById('editPhotoPreview');
     const buttonText = document.getElementById('editPhotoButtonText');
     
-    if (file) {
-        // Validasi ukuran file (max 2MB)
-        if (file.size > 2 * 1024 * 1024) {
-            alert('Ukuran file terlalu besar! Maksimal 2MB');
-            event.target.value = '';
-            return;
-        }
-        
-        // Validasi tipe file
-        if (!file.type.match('image.*')) {
-            alert('File harus berupa gambar!');
-            event.target.value = '';
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImage.src = e.target.result;
-            previewContainer.classList.remove('hidden');
-            buttonText.textContent = 'Ganti Foto Lain';
-        };
-        reader.readAsDataURL(file);
+    // Validasi ukuran file (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        alert('Ukuran file terlalu besar! Maksimal 2MB');
+        event.target.value = '';
+        currentEditFile = null;
+        return;
     }
+    
+    // Validasi tipe file
+    if (!file.type.match('image.*')) {
+        alert('File harus berupa gambar!');
+        event.target.value = '';
+        currentEditFile = null;
+        return;
+    }
+    
+    // Simpan file yang valid
+    currentEditFile = file;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        previewImage.src = e.target.result;
+        previewContainer.classList.remove('hidden');
+        buttonText.textContent = 'Ganti Foto Lain';
+    };
+    reader.readAsDataURL(file);
 }
 
 // Hapus foto baru yang dipilih
@@ -200,6 +218,7 @@ function removeEditAssetPhoto() {
     fileInput.value = '';
     previewImage.src = '';
     previewContainer.classList.add('hidden');
+    currentEditFile = null;
     
     // Update button text based on current photo
     if (!currentPhotoContainer.classList.contains('hidden')) {
@@ -220,5 +239,6 @@ function closeEditAssetModal() {
     document.getElementById('editCurrentPhotoPreview').src = '';
     document.getElementById('editPhotoPreview').src = '';
     document.getElementById('editPhotoButtonText').textContent = 'Pilih File';
+    currentEditFile = null;
 }
 </script>

@@ -11,6 +11,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AssetReturnController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\LoanCheckController;
 
     // HOME → LOGIN
     Route::get('/', function () { return redirect()->route('login');});
@@ -48,6 +49,10 @@ use App\Http\Controllers\RoleController;
     // Asset Return Routes (Admin Only)
     Route::get('/pengembalian', [AssetReturnController::class, 'index'])->middleware('role:admin')->name('pengembalian');
     Route::post('/pengembalian', [AssetReturnController::class, 'store'])->middleware('role:admin')->name('pengembalian.store');
+
+    // Loan Check Routes (Admin Only)
+    Route::get('/pengecek-peminjaman', [LoanCheckController::class, 'index'])->middleware('role:admin')->name('pengecek-peminjaman');
+    Route::get('/pengecek-peminjaman/{id}', [LoanCheckController::class, 'show'])->middleware('role:admin')->name('pengecek-peminjaman.show');
 
     // MASTER USER (Admin Only)
     Route::middleware('role:admin')->group(function () {

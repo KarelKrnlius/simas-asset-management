@@ -96,7 +96,7 @@
                 </button>
                 
                 {{-- HIDDEN FILE INPUT --}}
-                <input type="file" name="photo" id="addAssetPhoto" accept="image/*" required class="hidden" onchange="previewAddAssetPhoto(event)">
+                <input type="file" name="photo" id="addAssetPhoto" accept="image/*" class="hidden" onchange="previewAddAssetPhoto(event)">
                 
                 <p class="text-xs text-slate-500 mt-2">
                     <i class="fas fa-exclamation-circle text-red-500"></i> 
@@ -147,34 +147,63 @@
 </div>
 
 <script>
+// Simpan file dan preview state
+let currentAddFile = null;
+let hasValidPhoto = false;
+
 // Preview foto saat upload
 function previewAddAssetPhoto(event) {
     const file = event.target.files[0];
+    const fileInput = document.getElementById('addAssetPhoto');
+    
+    // Jika user cancel, cek apakah sudah ada foto sebelumnya
+    if (!file) {
+        // Jika sudah ada foto valid sebelumnya, pertahankan state
+        if (hasValidPhoto && currentAddFile) {
+            // Coba restore file
+            try {
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(currentAddFile);
+                fileInput.files = dataTransfer.files;
+            } catch (e) {
+                // Jika gagal, tetap tandai sebagai valid
+                console.log('DataTransfer not supported, but photo is still valid');
+            }
+        }
+        return;
+    }
+    
     const previewContainer = document.getElementById('addPhotoPreviewContainer');
     const previewImage = document.getElementById('addPhotoPreview');
     
-    if (file) {
-        // Validasi ukuran file (max 2MB)
-        if (file.size > 2 * 1024 * 1024) {
-            alert('Ukuran file terlalu besar! Maksimal 2MB');
-            event.target.value = '';
-            return;
-        }
-        
-        // Validasi tipe file
-        if (!file.type.match('image.*')) {
-            alert('File harus berupa gambar!');
-            event.target.value = '';
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImage.src = e.target.result;
-            previewContainer.classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
+    // Validasi ukuran file (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        alert('Ukuran file terlalu besar! Maksimal 2MB');
+        event.target.value = '';
+        currentAddFile = null;
+        hasValidPhoto = false;
+        return;
     }
+    
+    // Validasi tipe file
+    if (!file.type.match('image.*')) {
+        alert('File harus berupa gambar!');
+        event.target.value = '';
+        currentAddFile = null;
+        hasValidPhoto = false;
+        return;
+    }
+    
+    // Simpan file yang valid
+    currentAddFile = file;
+    hasValidPhoto = true;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        previewImage.src = e.target.result;
+        previewContainer.classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
 }
 
 // Hapus foto yang dipilih
@@ -186,6 +215,8 @@ function removeAddAssetPhoto() {
     fileInput.value = '';
     previewImage.src = '';
     previewContainer.classList.add('hidden');
+    currentAddFile = null;
+    hasValidPhoto = false;
 }
 
 // Reset form saat modal ditutup
@@ -194,4 +225,34 @@ function closeAddAssetModal() {
     document.getElementById('addAssetForm').reset();
     removeAddAssetPhoto();
 }
+
+// Validasi form sebelum submit
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('addAssetForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('addAssetPhoto');
+            
+            // Cek apakah ada file atau ada foto valid yang sudah dipilih
+            if (!fileInput.files.length && !hasValidPhoto) {
+                e.preventDefault();
+                alert('Foto wajib diisi!');
+                return false;
+            }
+            
+            // Jika ada foto valid tapi input kosong, coba restore
+            if (!fileInput.files.length && hasValidPhoto && currentAddFile) {
+                try {
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(currentAddFile);
+                    fileInput.files = dataTransfer.files;
+                } catch (err) {
+                    e.preventDefault();
+                    alert('Silakan pilih foto lagi');
+                    return false;
+                }
+            }
+        });
+    }
+});
 </script>
