@@ -3,7 +3,6 @@
 @section('content')
 <div class="container mx-auto px-4 lg:px-8">
     
-    {{-- BANNER SELAMAT DATANG (Warna Abu-abu Terang bg-slate-100) --}}
     <div class="relative bg-slate-100 rounded-[3rem] p-12 overflow-hidden mb-12 shadow-sm border border-slate-200 group">
         <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-red-600/10 to-transparent"></div>
         <div class="absolute -bottom-24 -right-24 w-80 h-80 bg-red-600/5 rounded-full blur-3xl group-hover:bg-red-600/10 transition-all duration-700"></div>
@@ -97,7 +96,10 @@
                             <h3 class="text-4xl font-black text-slate-900 uppercase italic tracking-tighter">Katalog Aset <span class="text-red-600">Tersedia</span></h3>
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Pilih aset yang ingin dipinjam hari ini.</p>
                         </div>
-                        <a href="/peminjaman" class="text-[10px] font-black text-red-600 uppercase tracking-widest border-b-2 border-red-600 pb-1">Lihat Semua Aset</a>
+                        <div class="flex gap-4">
+                            <a href="/peminjaman" class="text-[10px] font-black text-red-600 uppercase tracking-widest border-b-2 border-red-600 pb-1">Lihat Semua Aset</a>
+                            <a href="/asset-library" class="text-[10px] font-black text-slate-600 uppercase tracking-widest border-b-2 border-slate-600 pb-1">Asset Library</a>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-10">

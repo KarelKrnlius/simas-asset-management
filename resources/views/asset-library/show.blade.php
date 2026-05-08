@@ -13,7 +13,7 @@
 
             <a href="/asset-library/scan"
                class="bg-slate-900 text-white px-6 py-2.5 rounded-xl hover:bg-slate-800 hover:scale-105 hover:shadow-lg active:scale-95 active:bg-slate-700 transition-all duration-200 transform cursor-pointer">
-                <i class="fas fa-qrcode mr-2"></i>Scan Lagi
+                <i class="fas fa-qrcode mr-2"></i>Scan 
             </a>
         </div>
 
@@ -130,8 +130,14 @@
                             </div>
 
                             <p class="text-sm text-gray-500 mt-2">
-                                {{ $loan->borrow_date }} - {{ $loan->return_date ?? 'Sekarang' }}
+                                {{ \Carbon\Carbon::parse($loan->borrow_date)->format('d M Y') }} - {{ $loan->return_date ? \Carbon\Carbon::parse($loan->return_date)->format('d M Y') : 'Sekarang' }}
                             </p>
+
+                            @if($loan->borrow_date && $loan->return_date)
+                            <p class="text-xs text-gray-400 mt-1">
+                                Durasi: {{ \Carbon\Carbon::parse($loan->borrow_date)->diffInDays(\Carbon\Carbon::parse($loan->return_date)) }} hari
+                            </p>
+                            @endif
 
                         </div>
 

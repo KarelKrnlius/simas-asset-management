@@ -46,16 +46,16 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/pengembalian', [AssetReturnController::class, 'index'])->name('pengembalian');
     Route::post('/pengembalian', [AssetReturnController::class, 'store'])->name('pengembalian.store');
     
-    // ASSET LIBRARY ROUTES (Admin Only)
-    Route::middleware('role:admin')->group(function () {
+    // ASSET LIBRARY (All Users)
     Route::get('/asset-library', [AssetLibraryController::class, 'index'])->name('asset-library.index');
     Route::get('/asset-library/scan', [AssetLibraryController::class, 'scan'])->name('asset-library.scan');
     Route::get('/asset-library/qr-generator', [AssetLibraryController::class, 'qrGenerator'])->name('asset-library.qr-generator');
     Route::get('/asset-library/search', [AssetLibraryController::class, 'searchByQrCode'])->name('asset-library.search');
-        
-    //constraint
-    Route::get('/asset-library/{code}', [AssetLibraryController::class, 'showAsset'])
-        ->name('asset-library.show');
+    Route::get('/asset-library/{code}', [AssetLibraryController::class, 'showAsset'])->name('asset-library.show');
+    
+    // ASSET LIBRARY ROUTES (Admin Only - Additional Features)
+    Route::middleware('role:admin')->group(function () {
+        // Admin-specific asset library features can go here
     });
     
     // Assets Resource Routes (Admin Only)

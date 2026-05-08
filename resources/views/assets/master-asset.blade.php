@@ -1182,3 +1182,4 @@ function downloadQR() {
 }
 </script>
 @endsection
+            

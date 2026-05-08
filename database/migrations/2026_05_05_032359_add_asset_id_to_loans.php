@@ -10,14 +10,16 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::table('loans', function (Blueprint $table) {
-        $table->foreignId('asset_id')
-              ->after('user_id')
-              ->constrained('assets')
-              ->cascadeOnDelete();
-    });
-}
+    {
+        Schema::table('loans', function (Blueprint $table) {
+            // Tambahkan kolom asset_id untuk melacak asset yang dipinjam
+            $table->foreignId('asset_id')
+                  ->after('user_id')
+                  ->constrained('assets')
+                  ->cascadeOnDelete()
+                  ->comment('ID dari asset yang dipinjam');
+        });
+    }
 
     /**
      * Reverse the migrations.
@@ -25,7 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('loans', function (Blueprint $table) {
-            //
+            $table->dropForeign(['asset_id']);
         });
     }
 };
