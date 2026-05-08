@@ -77,6 +77,13 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset');
     });
 
+    // MASTER ROLE (Admin Only)
+    Route::resource('roles', RoleController::class)->middleware('role:admin')->except(['create','edit','show']);
+
+    // LOAN CHECK / PENGECEK PEMINJAMAN (Admin Only)
+    Route::get('/pengecek-peminjaman', [LoanCheckController::class, 'index'])->middleware('role:admin')->name('pengecek-peminjaman');
+    Route::get('/pengecek-peminjaman/{id}', [LoanCheckController::class, 'show'])->middleware('role:admin')->name('pengecek-peminjaman.show');
+
     // PROFILE
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');

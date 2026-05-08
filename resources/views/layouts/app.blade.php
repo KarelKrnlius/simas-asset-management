@@ -61,7 +61,7 @@
                 </a>
 
                 <a href="/pengecek-peminjaman" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('pengecek-peminjaman*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
-                    <div class="min-w-[20px] text-center"><i class="fas fa-clipboard-check"></i></div>
+                    <div class="min-w-[20px] text-center"><i class="fas fa-boxes"></i></div>
                     <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Pengecek Peminjaman</span>
                 </a>
             </div>
