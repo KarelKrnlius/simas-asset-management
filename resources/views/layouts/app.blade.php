@@ -47,14 +47,14 @@
                     <div class="min-w-[20px] text-center"><i class="fas fa-boxes"></i></div>
                     <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Master Asset</span>
                 </a>
-
                 <a href="/roles" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('roles*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
-   
-
                     <div class="min-w-[20px] text-center"><i class="fas fa-user-shield"></i></div>
-    <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Master Role</span>
-</a>
-
+                    <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Master Role</span>
+                </a>
+                <a href="/asset-library/scan" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('asset-library*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
+                    <div class="min-w-[20px] text-center"><i class="fas fa-qrcode"></i></div>
+                    <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Asset Library</span>
+                </a>
                 <a href="/pengembalian" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('pengembalian*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
                     <div class="min-w-[20px] text-center"><i class="fas fa-undo"></i></div>
                     <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Pengembalian</span>
@@ -126,10 +126,10 @@
 
             <div class="flex items-center gap-3">
                 <div class="text-right hidden sm:block leading-tight">
-                    <p class="text-[10px] font-black uppercase text-slate-900">{{ Auth::user()->name }}</p>
-                    <p class="text-[9px] font-bold text-red-500 uppercase">{{ Auth::user()->role ? ucfirst(Auth::user()->role->name) : 'Unknown' }}</p>
+                    <p class="text-sm font-black uppercase text-slate-900">{{ Auth::user()->name }}</p>
+                    <p class="text-xs font-bold text-red-500 uppercase">Admin</p>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-700 border border-slate-200 uppercase">
+                <div class="w-14 h-14 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-700 border border-slate-200 uppercase text-lg">
                     {{ substr(Auth::user()->name, 0, 1) }}
                 </div>
             </div>

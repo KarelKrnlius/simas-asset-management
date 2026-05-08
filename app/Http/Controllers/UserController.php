@@ -24,19 +24,19 @@ class UserController extends Controller
         if ($request->has('search') && $request->search) {
             $searchTerm = strtolower($request->search);
             $query->where(function($q) use ($searchTerm) {
-                $q->where('name', 'ILIKE', '%' . $searchTerm . '%')
-                  ->orWhere('email', 'ILIKE', '%' . $searchTerm . '%')
-                  ->orWhereHas('role', function($roleQ) use ($searchTerm) {
-                      $roleQ->where('name', 'ILIKE', '%' . $searchTerm . '%');
-                  })
-                  ->orWhere(function($statusQ) use ($searchTerm) {
-                      if (strpos($searchTerm, 'aktif') !== false) {
-                          $statusQ->where('is_active', true);
-                      }
-                      if (strpos($searchTerm, 'nonaktif') !== false) {
-                          $statusQ->orWhere('is_active', false);
-                      }
-                  });
+                // Check if searching specifically for status
+                if ($searchTerm === 'aktif') {
+                    $q->where('is_active', true);
+                } elseif ($searchTerm === 'nonaktif') {
+                    $q->where('is_active', false);
+                } else {
+                    // General search by name, email, role
+                    $q->where('name', 'ILIKE', '%' . $searchTerm . '%')
+                      ->orWhere('email', 'ILIKE', '%' . $searchTerm . '%')
+                      ->orWhereHas('role', function($roleQ) use ($searchTerm) {
+                          $roleQ->where('name', 'ILIKE', '%' . $searchTerm . '%');
+                      });
+                }
             });
         }
         
@@ -344,49 +344,5 @@ class UserController extends Controller
                 'message' => 'Terjadi kesalahan saat mengubah status user'
             ], 500);
         }
-    }
-
-    /**
-     * Get user loan history for history modal.
-     */
-    public function getHistory($id)
-    {
-        $user = User::findOrFail($id);
-        
-        // Get active loans
-        $activeLoans = Loan::with(['assets'])
-            ->where('user_id', $id)
-            ->where('status', 'dipinjam')
-            ->get()
-            ->map(function($loan) {
-                return [
-                    'asset_name' => $loan->assets->first()->name ?? 'Unknown',
-                    'asset_code' => $loan->assets->first()->code ?? 'Unknown',
-                    'borrow_date' => \Carbon\Carbon::parse($loan->borrow_date)->translatedFormat('d M Y'),
-                    'return_date' => $loan->return_date ? \Carbon\Carbon::parse($loan->return_date)->translatedFormat('d M Y') : '-',
-                ];
-            });
-        
-        // Get past history
-        $pastHistory = Loan::with(['assets'])
-            ->where('user_id', $id)
-            ->where('status', '!=', 'dipinjam')
-            ->get()
-            ->map(function($loan) {
-                return [
-                    'asset_name' => $loan->assets->first()->name ?? 'Unknown',
-                    'asset_code' => $loan->assets->first()->code ?? 'Unknown',
-                    'borrow_date' => \Carbon\Carbon::parse($loan->borrow_date)->translatedFormat('d M Y'),
-                    'return_date' => $loan->return_date ? \Carbon\Carbon::parse($loan->return_date)->translatedFormat('d M Y') : '-',
-                ];
-            });
-        
-        return response()->json([
-            'success' => true,
-            'user_name' => $user->name,
-            'active_loans' => $activeLoans,
-            'past_history' => $pastHistory
-       ]);
-       
     }
 }

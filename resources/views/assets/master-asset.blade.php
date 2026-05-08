@@ -13,7 +13,7 @@
                     Master Asset
                 </h2>
                 <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">
-                    Kelola semua aset dalam sistem
+                    Kelola semua Asset dalam sistem
                 </p>
             </div>
 
@@ -21,11 +21,11 @@
             <div class="flex flex-col sm:flex-row gap-4 mb-6">
                 <button onclick="openAddAssetModal()" 
                     class="bg-red-primary hover:bg-red-700 text-white font-black text-sm uppercase tracking-wider px-6 py-3 rounded-xl transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
-                    <i class="fas fa-plus mr-2"></i> Tambah Aset
+                    <i class="fas fa-plus mr-2"></i> Tambah Asset
                 </button>
                                 <button onclick="openCategoryListModal()" 
                     class="bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-wider px-6 py-3 rounded-xl transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
-                    <i class="fas fa-edit mr-2"></i> Edit Kategori
+                    <i class="fas fa-edit mr-2"></i> Manajemen Kategori
                 </button>
             </div>
 
@@ -33,7 +33,7 @@
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
                 <p class="text-sm text-blue-800">
                     <i class="fas fa-info-circle mr-2"></i>
-                    <strong>Catatan:</strong> Gunakan tombol "Edit Kategori" untuk melihat, mengelola, dan menambah kategori baru. Setiap aset baru akan otomatis memiliki status "Tersedia" dan kondisi "Baik".
+                    <strong>Catatan:</strong> Gunakan tombol "Manajemen Kategori" untuk melihat, mengelola, dan menambah kategori baru. Setiap Asset baru akan otomatis memiliki status "Tersedia" dan kondisi "Baik".
                 </p>
             </div>
 
@@ -48,7 +48,7 @@
                 <div class="flex items-center gap-2">
                     <i class="fas fa-boxes text-red-primary"></i>
                     <span class="font-black text-slate-900">
-                        Total Aset: <span class="text-red-primary">{{ $assets->total() }}</span> item
+                        Total Asset: <span class="text-red-primary">{{ $assets->total() }}</span> item
                     </span>
                     <span class="text-sm text-slate-500">
                         (Menampilkan {{ $assets->firstItem() }}-{{ $assets->lastItem() }})
@@ -128,6 +128,7 @@
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Stok</th>
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Kondisi</th>
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Status</th>
+                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">QR</th>
                             <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Aksi</th>
                         </tr>
                     </thead>
@@ -144,7 +145,7 @@
                                     </span>
                                 </td>
                                 <td class="py-4 px-4">
-                                    <span class="inline-block bg-slate-100 text-slate-700 px-3 py-1 rounded-lg font-bold text-sm">
+                                    <span class="inline-block bg-slate-100 text-slate-700 px-3 py-1 rounded-lg font-bold text-sm font-mono">
                                         {{ $asset->code }}
                                     </span>
                                 </td>
@@ -167,10 +168,9 @@
                                         @if($photoUrl)
                                             <div class="flex justify-center items-center">
                                                 <button onclick="showPhotoModal('{{ $photoUrl }}', '{{ $asset->name }}')" 
-                                                    class="inline-flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-md hover:shadow-lg mt-1"
-                                                    style="padding: 0; line-height: 1;"
+                                                    class="inline-flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-md hover:shadow-lg"
                                                     title="Lihat Foto">
-                                                    <span style="display: flex; align-items: center; justify-content: center; font-size: 1.25rem; line-height: 1;">📷</span>
+                                                    <i class="fas fa-image text-sm"></i>
                                                 </button>
                                             </div>
                                         @else
@@ -204,14 +204,23 @@
                                         {{ str_replace('_', ' ', ucfirst($asset->status)) }}
                                     </span>
                                 </td>
+                                <td class="py-4 px-4 text-center">
+                                    <button onclick="generateQR('{{ $asset->id }}', '{{ $asset->qr_code ?? $asset->code }}')" 
+                                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors"
+                                            title="Generate QR Code">
+                                        <i class="fas fa-qrcode"></i>
+                                    </button>
+                                </td>
                                 <td class="py-4 px-4">
                                     <div class="flex justify-center gap-2">
                                         <button onclick="editAsset({{ $asset->id }})" 
-                                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors">
+                                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors"
+                                            title="Edit Asset">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <button onclick="deleteAsset({{ $asset->id }})" 
-                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors">
+                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors"
+                                            title="Hapus Asset">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -222,8 +231,8 @@
                                 <td colspan="10" class="text-center py-12">
                                     <div class="flex flex-col items-center">
                                         <i class="fas fa-inbox text-4xl text-slate-300 mb-4"></i>
-                                        <h3 class="text-lg font-bold text-slate-900 mb-2">Belum Ada Data Aset</h3>
-                                        <p class="text-sm text-slate-500">Mulai dengan menambah aset pertama Anda</p>
+                                        <h3 class="text-lg font-bold text-slate-900 mb-2">Belum Ada Data Asset</h3>
+                                        <p class="text-sm text-slate-500">Mulai dengan menambah Asset pertama Anda</p>
                                     </div>
                                 </td>
                             </tr>
@@ -236,7 +245,7 @@
             @if($assets->hasPages())
                 <div class="flex justify-between items-center mt-6 pt-6 border-t border-slate-200">
                     <div class="text-sm text-slate-600">
-                        Menampilkan {{ $assets->firstItem() }}-{{ $assets->lastItem() }} dari {{ $assets->total() }} aset
+                        Menampilkan {{ $assets->firstItem() }}-{{ $assets->lastItem() }} dari {{ $assets->total() }} Asset
                     </div>
                     
                     <div class="flex gap-2">
@@ -282,6 +291,11 @@
                     </div>
                 </div>
             @endif
+
+            {{-- TOTAL INFO --}}
+            <div class="mt-6 text-center text-sm text-slate-500">
+                Menampilkan {{ $assets->firstItem() }} - {{ $assets->lastItem() }} dari {{ $assets->total() }} Asset
+            </div>
         </div>
     </div>
 </div>
@@ -303,19 +317,19 @@
                 <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
             </div>
             <div>
-                <h3 class="text-xl font-bold text-slate-900">Hapus Aset Terpilih</h3>
+                <h3 class="text-xl font-bold text-slate-900">Hapus Asset Terpilih</h3>
                 <p class="text-sm text-slate-600">Aksi ini tidak dapat dibatalkan</p>
             </div>
         </div>
         
         <div class="mb-6">
             <p class="text-slate-700 mb-2">
-                Apakah Anda yakin ingin menghapus <span id="selectedCount" class="font-bold text-red-600">0</span> aset terpilih?
+                Apakah Anda yakin ingin menghapus <span id="selectedCount" class="font-bold text-red-600">0</span> Asset terpilih?
             </p>
             <div class="bg-red-50 border border-red-200 rounded-lg p-3">
                 <p class="text-sm text-red-800">
                     <i class="fas fa-info-circle mr-2"></i>
-                    Semua aset yang dipilih akan dihapus secara permanen dari sistem.
+                    Semua Asset yang dipilih akan dihapus secara permanen dari sistem.
                 </p>
             </div>
         </div>
@@ -327,7 +341,7 @@
             </button>
             <button onclick="confirmBulkDelete()" 
                 class="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-xl transition-all duration-300 hover:shadow-xl">
-                <i class="fas fa-trash mr-2"></i> Hapus Aset
+                <i class="fas fa-trash mr-2"></i> Hapus Asset
             </button>
         </div>
     </div>
@@ -531,7 +545,7 @@ function confirmBulkDelete() {
     const assetIds = Array.from(checkboxes).map(cb => cb.value);
     
     if (assetIds.length === 0) {
-        alert('Pilih minimal satu aset untuk dihapus');
+        alert('Pilih minimal satu Asset untuk dihapus');
         return;
     }
     
@@ -584,7 +598,7 @@ function confirmBulkDelete() {
             deleteBtn.innerHTML = originalText;
             deleteBtn.disabled = false;
             
-            alert('Gagal menghapus aset: ' + (data.message || 'Unknown error'));
+            alert('Gagal menghapus Asset: ' + (data.message || 'Unknown error'));
         }
     })
     .catch(error => {
@@ -594,7 +608,7 @@ function confirmBulkDelete() {
         deleteBtn.innerHTML = originalText;
         deleteBtn.disabled = false;
         
-        alert('Terjadi kesalahan saat menghapus aset: ' + error.message);
+        alert('Terjadi kesalahan saat menghapus Asset: ' + error.message);
     });
 }
 
@@ -702,8 +716,23 @@ function openAddAssetModal() {
 
 function closeAddAssetModal() {
     document.getElementById('addAssetModal').style.display = 'none';
-    const form = document.getElementById('form-tambah-asset');
-    if (form) form.reset();
+    const form = document.getElementById('addAssetForm');
+    if (form) {
+        form.reset();
+        // Reset submission state
+        form.dataset.isSubmitting = 'false';
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Simpan Asset';
+        }
+        // Reset code preview
+        const codePreview = document.getElementById('assetCodePreview');
+        if (codePreview) {
+            codePreview.value = 'Pilih kategori untuk melihat kode';
+            codePreview.className = 'w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500';
+        }
+    }
 }
 
 function openAddCategoryModal() {
@@ -727,6 +756,7 @@ function editAsset(id) {
                 
                 document.getElementById('editAssetId').value = asset.id;
                 document.getElementById('editCategory').value = asset.category_id;
+                document.getElementById('editCategoryHidden').value = asset.category_id;
                 document.getElementById('editName').value = asset.name;
                 document.getElementById('editCode').value = asset.code;
                 document.getElementById('editDescription').value = asset.description || '';
@@ -781,40 +811,6 @@ function deleteAsset(id) {
 
 function closeDeleteModal() {
     document.getElementById('deleteAsset').style.display = 'none';
-}
-
-// Instant Preview Function
-function updateCodePreview() {
-    const categorySelect = document.getElementById('addCategory');
-    const stockInput = document.getElementById('addStock');
-    const codeInput = document.getElementById('assetCodePreview');
-    
-    if (!categorySelect || !stockInput || !codeInput) return;
-    
-    const categoryId = parseInt(categorySelect.value);
-    const stock = parseInt(stockInput.value) || 1;
-    
-    if (!categoryId || stock < 1) {
-        codeInput.value = '';
-        return;
-    }
-    
-    // Find category name
-    const category = categories.find(cat => cat.id === categoryId);
-    if (!category) return;
-    
-    // Generate category prefix (first 4 letters, uppercase)
-    const categoryPrefix = category.name.toUpperCase().substring(0, 4);
-    
-    // Start Number = categoryHighestCodes[selected_id] + 1
-    const startNumber = (categoryHighestCodes[categoryId] || 0) + 1;
-    
-    // Instant Preview Formula
-    if (stock === 1) {
-        codeInput.value = categoryPrefix + startNumber;
-    } else {
-        codeInput.value = categoryPrefix + startNumber + '-' + (startNumber + stock - 1);
-    }
 }
 
 // Real-time category name validation
@@ -881,13 +877,23 @@ function showSuccessNotification(message) {
     }, 3000);
 }
 
-// AJAX Submission for #form-tambah-asset
+// AJAX Submission for #form-tambah-asset with strong spam protection
 function handleAssetFormSubmit(e) {
-    e.preventDefault();
-    
     const form = e.target;
+    const submitButton = form.querySelector('button[type="submit"]');
     const formData = new FormData(form);
     const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    
+    // Strong spam protection - check if already submitting
+    if (form.dataset.isSubmitting === 'true') {
+        console.log('Form already submitting - ignoring spam click');
+        return;
+    }
+    
+    // Mark as submitting immediately
+    form.dataset.isSubmitting = 'true';
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
     
     fetch('/assets', {
         method: 'POST',
@@ -901,13 +907,15 @@ function handleAssetFormSubmit(e) {
     .then(data => {
         if (data.success) {
             // Show success notification
-            showSuccessNotification('Berhasil');
+            showSuccessNotification('Berhasil menambahkan Asset!');
             
-            // Close modal
+            // Close modal immediately
             closeAddAssetModal();
             
-            // Instant refresh
-            location.reload();
+            // Fast refresh without delay
+            setTimeout(() => {
+                location.reload();
+            }, 500);
         } else {
             alert('Gagal: ' + (data.message || 'Unknown error'));
         }
@@ -915,6 +923,12 @@ function handleAssetFormSubmit(e) {
     .catch(error => {
         console.error('Error:', error);
         alert('Terjadi kesalahan');
+    })
+    .finally(() => {
+        // Always reset form state
+        form.dataset.isSubmitting = 'false';
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Simpan Aset';
     });
 }
 
@@ -929,9 +943,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Event Delegation Logic - Global event listener for modal inputs
     document.addEventListener('input', function(e) {
-        // Listen for input changes on #addCategory and #addStock
-        if (e.target.id === 'addCategory' || e.target.id === 'addStock') {
-            updateCodePreview();
+        // Only listen for input changes on #addStock (not #addCategory)
+        if (e.target.id === 'addStock') {
+            // Code is now auto-generated, no preview needed
         }
         
         // Real-time validation for category name
@@ -944,19 +958,33 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('submit', function(e) {
         // Handle form submission for #addAssetForm
         if (e.target.id === 'addAssetForm') {
+            e.preventDefault();
             handleAssetFormSubmit(e);
         }
     });
     
-    // Handle category form submission
+    // Handle category form submission with spam protection
     document.addEventListener('submit', function(e) {
         if (e.target.id === 'addCategoryForm') {
             e.preventDefault();
             
-            const formData = new FormData(e.target);
+            const form = e.target;
+            const submitButton = form.querySelector('button[type="submit"]');
+            const formData = new FormData(form);
             const csrfToken = document.querySelector('meta[name="csrf-token"]');
             const categoryInput = document.getElementById('categoryName');
             const categoryError = document.getElementById('categoryError');
+            
+            // Strong spam protection - check if already submitting
+            if (form.dataset.isSubmitting === 'true') {
+                console.log('Category form already submitting - ignoring spam click');
+                return;
+            }
+            
+            // Mark as submitting immediately
+            form.dataset.isSubmitting = 'true';
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
             
             // Reset error state
             categoryInput.classList.remove('border-red-600');
@@ -974,25 +1002,24 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showSuccessNotification('Berhasil');
+                    showSuccessNotification('Kategori berhasil ditambahkan!');
                     closeAddCategoryModal();
-                    location.reload();
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
                 } else {
-                    // Show error message with SIMAS theme
-                    if (data.message === 'Kategori sudah ada!') {
-                        categoryInput.classList.remove('border-slate-200');
-                        categoryInput.classList.add('border-red-600');
-                        categoryError.textContent = 'Kategori ini sudah terdaftar!';
-                        categoryError.classList.remove('hidden');
-                        categoryInput.focus();
-                    } else {
-                        alert('Gagal: ' + (data.message || 'Unknown error'));
-                    }
+                    alert('Gagal: ' + (data.message || 'Unknown error'));
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Terjadi kesalahan');
+            })
+            .finally(() => {
+                // Always reset form state
+                form.dataset.isSubmitting = 'false';
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Simpan Kategori';
             });
         }
     });
@@ -1065,5 +1092,93 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// QR Code Generator Function
+function generateQR(assetId, qrCode) {
+    // Create modal if not exists
+    if (!document.getElementById('qrModal')) {
+        const modal = document.createElement('div');
+        modal.id = 'qrModal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center';
+        modal.innerHTML = `
+            <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-black text-slate-900 uppercase">QR Code Asset</h3>
+                    <button onclick="closeQRModal()" class="text-slate-400 hover:text-slate-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="text-center">
+                    <div id="qrCodeContainer" class="inline-block bg-white p-4 rounded-xl border-2 border-red-600 mb-4"></div>
+                    <div class="mb-4">
+                        <p class="text-sm font-black text-slate-600 mb-1">QR Code:</p>
+                        <p class="text-xs text-slate-400" id="qrCodeText"></p>
+                    </div>
+                    <button onclick="downloadQR()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors duration-200">
+                        <i class="fas fa-download mr-2"></i>Download QR
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Show modal
+    document.getElementById('qrModal').classList.remove('hidden');
+    document.getElementById('qrModal').classList.add('flex');
+    
+    // Generate QR code
+    document.getElementById('qrCodeText').textContent = qrCode;
+    document.getElementById('qrCodeContainer').innerHTML = '';
+    
+    // Load QRCode library if not loaded
+    if (typeof QRCode === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js';
+        script.onload = function() {
+            generateQRCode(qrCode);
+        };
+        document.head.appendChild(script);
+    } else {
+        generateQRCode(qrCode);
+    }
+    
+    // Store current QR code for download
+    window.currentQRCode = qrCode;
+}
+
+function generateQRCode(qrText) {
+    try {
+        new QRCode(document.getElementById('qrCodeContainer'), {
+            text: qrText,
+            width: 200,
+            height: 200,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    } catch (error) {
+        console.error('Error generating QR code:', error);
+        document.getElementById('qrCodeContainer').innerHTML = '<p class="text-red-500">Gagal generate QR code</p>';
+    }
+}
+
+function closeQRModal() {
+    const modal = document.getElementById('qrModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+function downloadQR() {
+    const canvas = document.querySelector('#qrCodeContainer canvas');
+    if (canvas && window.currentQRCode) {
+        const link = document.createElement('a');
+        link.download = `${window.currentQRCode}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+}
 </script>
 @endsection

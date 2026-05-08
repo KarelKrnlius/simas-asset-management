@@ -27,6 +27,7 @@ class RoleSeeder extends Seeder
             ],
         ];
 
+        DB::table('roles')->delete(); // Clear existing data
         DB::table('roles')->insert($roles);
     }
 }

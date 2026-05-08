@@ -2,7 +2,7 @@
     <div class="bg-white rounded-[2rem] p-8 max-w-4xl w-full mx-4 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div class="text-center mb-6">
             <h3 class="text-xl font-black text-slate-900">Edit Kategori</h3>
-            <p class="text-slate-600 text-sm mt-2">Lihat dan edit detail kategori beserta asetnya</p>
+            <p class="text-slate-600 text-sm mt-2">Lihat dan edit detail kategori beserta Assetnya</p>
         </div>
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -17,6 +17,22 @@
                     <form id="editCategoryForm" method="POST">
                         @csrf
                         @method('PUT')
+                        
+                        {{-- CATEGORY CODE --}}
+                        <div class="mb-4">
+                            <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
+                                Kode Kategori
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <div class="flex-1 px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-black text-slate-700">
+                                    <span id="editCategoryCode">--</span>
+                                </div>
+                                <div class="text-sm text-slate-500">
+                                    <i class="fas fa-lock"></i>
+                                    Tidak dapat diubah
+                                </div>
+                            </div>
+                        </div>
                         
                         {{-- NAME --}}
                         <div class="mb-4">
@@ -43,7 +59,7 @@
                                 <div class="flex items-center gap-2">
                                     <i class="fas fa-boxes text-blue-600"></i>
                                     <span class="text-sm font-bold text-blue-800">
-                                        Total Aset: <span id="assetCount">0</span> item
+                                        Total Asset: <span id="assetCount">0</span> item
                                     </span>
                                 </div>
                             </div>
@@ -55,7 +71,7 @@
                                 <div class="flex items-center gap-2">
                                     <i class="fas fa-sync text-yellow-600"></i>
                                     <span class="text-sm font-bold text-yellow-800">
-                                        Perubahan nama kategori akan memperbarui kode semua aset
+                                        Perubahan nama kategori akan memperbarui kode semua Asset
                                     </span>
                                 </div>
                             </div>
@@ -80,13 +96,13 @@
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-exclamation-triangle text-orange-600 text-sm"></i>
                                 <span class="text-xs font-bold text-orange-800">
-                                    Peringatan: Menghapus kategori akan menghapus semua asetnya!
+                                    Peringatan: Menghapus kategori akan menghapus semua Assetnya!
                                 </span>
                             </div>
                         </div>
                         <button type="button" onclick="confirmDeleteCategory()" 
                             class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-colors">
-                            <i class="fas fa-trash-alt mr-2"></i> Hapus Kategori dan Semua Aset
+                            <i class="fas fa-trash-alt mr-2"></i> Hapus Kategori dan Semua Asset
                         </button>
                     </div>
                 </div>
@@ -97,14 +113,14 @@
                 <div class="bg-slate-50 rounded-xl p-6">
                     <h4 class="font-black text-slate-900 mb-4 flex items-center gap-2">
                         <i class="fas fa-list text-red-primary"></i>
-                        Daftar Aset dalam Kategori
+                        Daftar Asset dalam Kategori
                     </h4>
                     
                     <div id="assetsList" class="space-y-2 max-h-96 overflow-y-auto">
                         <!-- Assets will be loaded here -->
                         <div class="text-center py-8 text-slate-500">
                             <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
-                            <p class="text-sm">Memuat data aset...</p>
+                            <p class="text-sm">Memuat data Asset...</p>
                         </div>
                     </div>
                 </div>
@@ -122,7 +138,7 @@
             </div>
             <h3 class="text-xl font-black text-slate-900 mb-2">Hapus Kategori?</h3>
             <p class="text-sm text-slate-500">
-                Apakah Anda yakin ingin menghapus kategori ini dan semua asetnya? 
+                Apakah Anda yakin ingin menghapus kategori ini dan semua Assetnya? 
                 <span class="font-bold text-red-600">Tindakan ini tidak dapat dibatalkan!</span>
             </p>
         </div>
@@ -157,6 +173,7 @@ function openEditCategoryModal(categoryId) {
                 const category = data.data;
                 document.getElementById('editCategoryName').value = category.name;
                 document.getElementById('editCategoryDescription').value = category.description || '';
+                document.getElementById('editCategoryCode').textContent = category.category_code || '--';
                 document.getElementById('assetCount').textContent = category.assets_count || 0;
                 
                 // Load assets list
@@ -214,7 +231,7 @@ function loadAssetsList(categoryId) {
                 assetsList.innerHTML = `
                     <div class="text-center py-8 text-slate-500">
                         <i class="fas fa-inbox text-2xl mb-2"></i>
-                        <p class="text-sm">Belum ada aset dalam kategori ini</p>
+                        <p class="text-sm">Belum ada Asset dalam kategori ini</p>
                     </div>
                 `;
             } else {
@@ -252,7 +269,7 @@ function loadAssetsList(categoryId) {
         assetsList.innerHTML = `
             <div class="text-center py-8 text-red-500">
                 <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
-                <p class="text-sm">Gagal memuat data aset: ${error.message}</p>
+                <p class="text-sm">Gagal memuat data Asset: ${error.message}</p>
             </div>
         `;
         
@@ -311,7 +328,7 @@ function deleteCategory() {
         
         // Store delete success in sessionStorage for post-refresh notification
         sessionStorage.setItem('deleteSuccess', 'true');
-        sessionStorage.setItem('deleteMessage', 'Kategori dan semua asetnya berhasil dihapus');
+        sessionStorage.setItem('deleteMessage', 'Kategori dan semua Assetnya berhasil dihapus');
         
         closeEditCategoryModal();
         
@@ -325,7 +342,7 @@ function deleteCategory() {
         
         // Even on error, try to refresh (delete likely succeeded)
         sessionStorage.setItem('deleteSuccess', 'true');
-        sessionStorage.setItem('deleteMessage', 'Kategori dan semua asetnya berhasil dihapus');
+        sessionStorage.setItem('deleteMessage', 'Kategori dan semua Assetnya berhasil dihapus');
         
         closeEditCategoryModal();
         
@@ -335,6 +352,7 @@ function deleteCategory() {
         }, 500);
     });
 }
+
 
 // Handle form submission
 document.getElementById('editCategoryForm').addEventListener('submit', function(e) {

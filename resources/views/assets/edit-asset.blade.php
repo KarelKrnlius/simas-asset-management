@@ -1,8 +1,8 @@
 <div id="editAssetModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
     <div class="bg-white rounded-[2rem] p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
         <div class="text-center mb-6">
-            <h3 class="text-xl font-black text-slate-900">Edit Aset</h3>
-            <p class="text-slate-600 text-sm mt-2">Ubah detail aset di bawah ini</p>
+            <h3 class="text-xl font-black text-slate-900">Edit Asset</h3>
+            <p class="text-slate-600 text-sm mt-2">Ubah detail Asset di bawah ini</p>
         </div>
         
         <form id="editAssetForm" method="POST" enctype="multipart/form-data">
@@ -16,34 +16,35 @@
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
                     Kategori
                 </label>
-                <select name="category_id" id="editCategory" required
-                    class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors">
+                <select name="category_id" id="editCategory" required disabled
+                    class="w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500 cursor-not-allowed">
                     <option value="">-- Pilih Kategori --</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}">{{ $category->name }}</option>
                     @endforeach
                 </select>
+                <input type="hidden" name="category_id" id="editCategoryHidden">
             </div>
             
             {{-- NAME --}}
             <div class="mb-6">
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Nama Aset
+                    Nama Asset
                 </label>
                 <input type="text" name="name" id="editName" required
                     class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors"
-                    placeholder="Masukkan nama aset">
+                    placeholder="Masukkan nama Asset">
             </div>
             
             {{-- CODE --}}
             <div class="mb-6">
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Kode Aset (Auto-Generated)
+                    Kode Asset 
                 </label>
                 <input type="text" name="code" id="editCode" readonly
                     class="w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500"
                     placeholder="Kode akan otomatis di-generate">
-                <p class="text-xs text-slate-500 mt-2">Kode asset di-generate otomatis berdasarkan kategori</p>
+                <p class="text-xs text-slate-500 mt-2">Kode asset digenerate otomatis</p>
             </div>
             
             {{-- DESCRIPTION --}}
@@ -53,7 +54,7 @@
                 </label>
                 <textarea name="description" id="editDescription" rows="3" maxlength="500"
                     class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors"
-                    placeholder="Masukkan deskripsi aset (opsional)"></textarea>
+                    placeholder="Masukkan deskripsi Asset (opsional)"></textarea>
                 <p class="text-xs text-slate-500 mt-1">Maksimal 500 karakter</p>
             </div>
             
@@ -70,7 +71,7 @@
             {{-- PHOTO UPLOAD --}}
             <div class="mb-6">
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Foto Aset
+                    Foto Asset
                 </label>
                 
                 {{-- CURRENT PHOTO PREVIEW --}}
@@ -149,7 +150,7 @@
                 </button>
                 <button type="submit" 
                     class="flex-1 bg-red-primary hover:bg-red-primary text-white font-black py-3 rounded-xl transition-all duration-300 hover:shadow-xl">
-                    <i class="fas fa-save mr-2"></i> Update Aset
+                    <i class="fas fa-save mr-2"></i> Update Asset
                 </button>
             </div>
         </form>

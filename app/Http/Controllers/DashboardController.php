@@ -18,6 +18,8 @@ class DashboardController extends Controller
         }
         
         $user = User::with('role')->find(Auth::id());
+        
+        $user = User::with('role')->find(Auth::id());
 
         // 2. Statistik Dashboard (Lengkap untuk Admin & Staff)
         $stats = [
@@ -25,7 +27,7 @@ class DashboardController extends Controller
             'available'   => Asset::where('status', 'tersedia')->count(),
             'loaned'      => Asset::where('status', 'dipinjam')->count(),
             'maintenance' => Asset::where('status', 'perlu_perbaikan')->count(),
-            'rusak'       => Asset::where('status', 'rusak')->count(),
+            'missing'     => Asset::where('status', 'tidak_tersedia')->where('condition', 'hilang')->count(),
         ];
 
         // 3. Logic Grafik Maintenance untuk PostgreSQL (Balikin dari file lama)
@@ -38,18 +40,28 @@ class DashboardController extends Controller
         ->groupBy('month', 'month_num')
         ->orderBy('month_num')
         ->get();
+        // 3. Logic Grafik Maintenance untuk PostgreSQL (Balikin dari file lama)
+        // $chartRaw = Asset::select(
+        //     DB::raw("COUNT(*) as count"), 
+        //     DB::raw("to_char(created_at, 'Mon') as month"),
+        //     DB::raw("EXTRACT(MONTH FROM created_at) as month_num")
+        // )
+        // ->where('status', 'Maintenance')
+        // ->groupBy('month', 'month_num')
+        // ->orderBy('month_num')
+        // ->get(); 
 
-        $chartData = [
-            'labels' => $chartRaw->pluck('month')->toArray(),
-            'values' => $chartRaw->pluck('count')->toArray(),
-        ];
+        // $chartData = [
+        //     'labels' => $chartRaw->pluck('month')->toArray(),
+        //     'values' => $chartRaw->pluck('count')->toArray(),
+        // ];
 
         // 4. Ambil Data Aset (Buat List Gallery Staff & Recent Activity Admin)
         // Ambil 6 data biar grid-nya penuh dan elegan
         $recentAssets = Asset::latest()->take(6)->get();
 
         // 5. Kirim semua data ke SATU view utama
-        return view('dashboard', compact('user', 'stats', 'chartData', 'recentAssets'));
+        return view('dashboard', compact('user', 'stats','recentAssets'));
     }
 
     // Placeholder route agar tidak error saat navigasi diklik

@@ -123,33 +123,38 @@ class AssetController extends Controller
         
         try {
             $category = Category::findOrFail($categoryId);
-            $categoryPrefix = strtoupper(substr($category->name, 0, 4));
             
-            // Get the highest existing asset number for this category
-            $lastAsset = Asset::where('category_id', $categoryId)
-                ->whereRaw("SUBSTRING(code, 5) ~ '^[0-9]+'")
-                ->orderByRaw("NULLIF(REGEXP_REPLACE(SUBSTRING(code, 5), '[^0-9].*', ''), '')::int DESC")
-                ->first();
-            
-            $lastNumber = 0;
-            if ($lastAsset) {
-                // Extract number from code (handle both single and range codes)
-                $codeParts = explode('-', $lastAsset->code);
-                $lastNumber = (int)preg_replace('/[^0-9]/', '', $codeParts[0]);
+            if (!$category->category_code) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kategori belum memiliki category_code'
+                ], 400);
             }
             
-            $startNumber = $lastNumber + 1;
+            $categoryCode = $category->category_code;
             
-            // Generate single code for preview (individual rows will be created)
-            $assetCode = $categoryPrefix . $startNumber;
+            // Reliable Sequence Logic: Get last asset and extract sequence
+            $lastAsset = Asset::orderBy('id', 'desc')->first();
+            $lastNumber = 0;
+            
+            if ($lastAsset && strlen($lastAsset->code) >= 6) {
+                // Extract last 6 digits from BRIN-XX-YYYYYY format
+                $lastNumber = (int) substr($lastAsset->code, -6);
+            }
+            
+            $nextNumber = $lastNumber + 1;
+            $sequence = str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+            
+            // Generate code in BRIN-XX-YYYYYY format with reliable sequence
+            $assetCode = 'BRIN-' . $categoryCode . '-' . $sequence;
             
             return response()->json([
                 'success' => true,
                 'code' => $assetCode,
-                'prefix' => $categoryPrefix,
-                'start_number' => $startNumber,
-                'end_number' => $startNumber + $stock - 1,
-                'message' => "Will create {$stock} individual items: {$assetCode}, {$categoryPrefix}" . ($startNumber + 1) . ($stock > 2 ? ", ..." : "")
+                'category_code' => $categoryCode,
+                'sequence' => $nextNumber,
+                'last_number' => $lastNumber,
+                'message' => "Next asset code: {$assetCode}"
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -168,7 +173,6 @@ class AssetController extends Controller
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:100',
             'description' => 'nullable|string|max:500',
-            'stock' => 'required|integer|min:0',
             'condition' => 'required|string|max:20',
             'status' => 'required|in:tersedia,dipinjam,diperbaiki',
             'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048', // Foto WAJIB
@@ -202,52 +206,51 @@ class AssetController extends Controller
             }
             
             $category = Category::findOrFail($request->category_id);
-            $categoryPrefix = strtoupper(substr($category->name, 0, 4));
             
-            // Get the highest existing asset number for this category
-            $lastAsset = Asset::where('category_id', $request->category_id)
-                ->whereRaw("SUBSTRING(code, 5) ~ '^[0-9]+'")
-                ->orderByRaw("NULLIF(REGEXP_REPLACE(SUBSTRING(code, 5), '[^0-9].*', ''), '')::int DESC")
-                ->first();
+            if (!$category->category_code) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kategori belum memiliki category_code'
+                ], 400);
+            }
             
+            $categoryCode = $category->category_code;
+            
+            // Set stock to 1 automatically
+            $stock = 1;
+            
+            // Create single asset with stock = 1
+            // Atomic Reliable Sequence Logic: Get last asset right before creation
+            $lastAsset = Asset::orderBy('id', 'desc')->first();
             $lastNumber = 0;
-            if ($lastAsset) {
-                // Extract number from code (handle both single and range codes)
-                $codeParts = explode('-', $lastAsset->code);
-                $lastNumber = (int)preg_replace('/[^0-9]/', '', $codeParts[0]);
+            
+            if ($lastAsset && strlen($lastAsset->code) >= 6) {
+                // Extract last 6 digits from BRIN-XX-YYYYYY format
+                $lastNumber = (int) substr($lastAsset->code, -6);
             }
             
-            $stock = (int) $request->stock;
-            $startNumber = $lastNumber + 1;
+            $nextNumber = $lastNumber + 1;
+            $sequence = str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
             
-            // Create individual rows for each stock item
-            $createdAssets = [];
-            for ($i = 0; $i < $stock; $i++) {
-                $currentNumber = $startNumber + $i;
-                $assetCode = $categoryPrefix . $currentNumber;
-                
-                $assetData = $request->except(['_token', '_method', 'photo']);
-                $assetData['code'] = $assetCode;
-                $assetData['stock'] = 1; // Each individual item has stock of 1
-                $assetData['condition'] = 'baik'; // Auto-set condition
-                $assetData['status'] = 'tersedia'; // Auto-set status
-                $assetData['photo'] = $photoPath; // Add photo path
-                
-                $asset = Asset::create($assetData);
-                $createdAssets[] = $asset;
-            }
+            $assetCode = 'BRIN-' . $categoryCode . '-' . $sequence;
             
-            $message = $stock > 1 
-                ? "Berhasil menambahkan {$stock} item individual"
-                : 'Berhasil menambahkan';
+            $assetData = $request->except(['_token', '_method', 'photo']);
+            $assetData['code'] = $assetCode;
+            $assetData['stock'] = 1; // Auto-set stock to 1
+            $assetData['condition'] = 'baik'; // Auto-set condition
+            $assetData['status'] = 'tersedia'; // Auto-set status
+            $assetData['photo'] = $photoPath; // Add photo path
+            
+            $asset = Asset::create($assetData);
+            
+            $message = 'Berhasil menambahkan asset baru';
             
             session()->flash('success', $message);
             
             return response()->json([
                 'success' => true,
-                'message' => "Successfully created {$stock} asset(s)",
-                'data' => $createdAssets,
-                'count' => $stock
+                'message' => 'Asset berhasil ditambahkan',
+                'data' => $asset
             ]);
         } catch (\Exception $e) {
             // Jika ada error, hapus foto yang sudah diupload
@@ -412,31 +415,5 @@ class AssetController extends Controller
                 'message' => 'Failed to delete assets: ' . $e->getMessage()
             ], 500);
         }
-    }
-    
-    /**
-     * Test photo URL (for debugging)
-     */
-    public function testPhoto($id)
-    {
-        $asset = Asset::find($id);
-        
-        if (!$asset) {
-            return response()->json(['error' => 'Asset not found'], 404);
-        }
-        
-        $photoUrl = \App\Helpers\AssetHelper::getPhotoUrl($asset->photo);
-        
-        return response()->json([
-            'asset_id' => $asset->id,
-            'asset_name' => $asset->name,
-            'photo_path' => $asset->photo,
-            'photo_url' => $photoUrl,
-            'rustfs_config' => [
-                'endpoint' => config('filesystems.disks.rustfs.endpoint'),
-                'bucket' => config('filesystems.disks.rustfs.bucket'),
-                'url' => config('filesystems.disks.rustfs.url'),
-            ]
-        ]);
     }
 }

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+ @extends('layouts.app')
 
 @section('title', 'Tambah User - SIMAS')
 
@@ -8,7 +8,7 @@
     {{-- HEADER --}}
     <div class="w-full max-w-7xl mx-auto mb-6">
         <div>
-            <h1 class="text-3xl font-black uppercase tracking-tighter">
+<h1 class="text-3xl font-black uppercase tracking-tighter">
                 Tambah User Baru
             </h1>
             <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider mt-1">
