@@ -26,7 +26,7 @@ Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // AUTH AREA
+// AUTH AREA
 Route::middleware(['auth', 'nocache'])->group(function () {
 
     // DASHBOARD
@@ -46,17 +46,12 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/pengembalian', [AssetReturnController::class, 'index'])->name('pengembalian');
     Route::post('/pengembalian', [AssetReturnController::class, 'store'])->name('pengembalian.store');
     
-    // ASSET LIBRARY ROUTES (Admin Only)
-    Route::middleware('role:admin')->group(function () {
+    // ASSET LIBRARY (All Users)
     Route::get('/asset-library', [AssetLibraryController::class, 'index'])->name('asset-library.index');
     Route::get('/asset-library/scan', [AssetLibraryController::class, 'scan'])->name('asset-library.scan');
     Route::get('/asset-library/qr-generator', [AssetLibraryController::class, 'qrGenerator'])->name('asset-library.qr-generator');
     Route::get('/asset-library/search', [AssetLibraryController::class, 'searchByQrCode'])->name('asset-library.search');
-        
-    //constraint
-    Route::get('/asset-library/{code}', [AssetLibraryController::class, 'showAsset'])
-        ->name('asset-library.show');
-    });
+    Route::get('/asset-library/{code}', [AssetLibraryController::class, 'showAsset'])->name('asset-library.show');
     
     // Assets Resource Routes (Admin Only)
     Route::resource('assets', AssetController::class)->middleware('role:admin');
@@ -67,10 +62,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/categories/list', [CategoryController::class, 'list'])->middleware('role:admin');
     Route::resource('categories', CategoryController::class)->middleware('role:admin');
 
-    // Asset Return Routes (Admin Only)
-    Route::get('/pengembalian', [AssetReturnController::class, 'index'])->middleware('role:admin')->name('pengembalian');
-    Route::post('/pengembalian', [AssetReturnController::class, 'store'])->middleware('role:admin')->name('pengembalian.store');
-
     // MASTER USER (Admin Only)
     Route::middleware('role:admin')->group(function () {
         Route::resource('users', UserController::class);
@@ -78,7 +69,11 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
     // MASTER ROLE (Admin Only)
-    Route::resource('roles', RoleController::class)->middleware('role:admin')->except(['create','edit','show']);
+    Route::middleware('role:admin')->group(function () {
+        Route::resource('roles', RoleController::class)->except(['create','edit','show']);
+        Route::post('/roles/bulk-delete', [RoleController::class, 'bulkDelete'])->name('roles.bulkDelete');
+        Route::get('/roles-delete-all', [RoleController::class, 'deleteAll'])->name('roles.deleteAll');
+    });
 
     // LOAN CHECK / PENGECEK PEMINJAMAN (Admin Only)
     Route::get('/pengecek-peminjaman', [LoanCheckController::class, 'index'])->middleware('role:admin')->name('pengecek-peminjaman');

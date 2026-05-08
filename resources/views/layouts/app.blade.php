@@ -51,15 +51,10 @@
                     <div class="min-w-[20px] text-center"><i class="fas fa-user-shield"></i></div>
                     <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Master Role</span>
                 </a>
-                <a href="/asset-library/scan" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('asset-library*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
-                    <div class="min-w-[20px] text-center"><i class="fas fa-qrcode"></i></div>
-                    <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Asset Library</span>
+                <a href="/categories" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('categories*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
+                    <div class="min-w-[20px] text-center"><i class="fas fa-tags"></i></div>
+                    <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Master Kategori</span>
                 </a>
-                <a href="/pengembalian" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('pengembalian*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
-                    <div class="min-w-[20px] text-center"><i class="fas fa-undo"></i></div>
-                    <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Pengembalian</span>
-                </a>
-
                 <a href="/pengecek-peminjaman" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('pengecek-peminjaman*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
                     <div class="min-w-[20px] text-center"><i class="fas fa-boxes"></i></div>
                     <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Pengecek Peminjaman</span>
@@ -76,6 +71,10 @@
                 <a href="/riwayat" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('riwayat*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
                     <div class="min-w-[20px] text-center"><i class="fas fa-history"></i></div>
                     <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Riwayat Asset</span>
+                </a>
+                <a href="/asset-library" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('asset-library*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
+                    <div class="min-w-[20px] text-center"><i class="fas fa-qrcode"></i></div>
+                    <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Asset Library</span>
                 </a>
             </div>
         </nav>

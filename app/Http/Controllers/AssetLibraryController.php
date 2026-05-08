@@ -26,6 +26,10 @@ class AssetLibraryController extends Controller
  public function showAsset($code)
 {
     $asset = Asset::where('code', $code)->firstOrFail();
+    
+    // Load relasi loans dengan user untuk riwayat penggunaan
+    $asset->load(['loans.user']);
+    
     return view('asset-library.show', compact('asset'));
 }
 

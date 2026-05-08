@@ -4,7 +4,6 @@
 
 @section('content')
 <style>
-    /* Definisi warna utama agar konsisten */
     .bg-red-primary { background-color: #E11D48 !important; }
     .text-red-primary { color: #E11D48 !important; }
     .border-red-primary { border-color: #E11D48 !important; }
@@ -218,7 +217,6 @@
     }
 
     function showNotification(message, type = 'error') {
-        // Remove existing notification
         const existing = document.querySelector('.notification-popup');
         if (existing) {
             existing.remove();

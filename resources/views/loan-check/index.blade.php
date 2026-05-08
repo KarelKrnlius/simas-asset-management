@@ -114,9 +114,9 @@
                             <tr>
                                 <td colspan="4" class="text-center py-12">
                                     <div class="flex flex-col items-center">
-                                        <i class="fas fa-check-circle text-4xl text-green-300 mb-4"></i>
-                                        <h3 class="text-lg font-bold text-slate-900 mb-2">Tidak Ada Peminjaman Aktif</h3>
-                                        <p class="text-sm text-slate-500">Semua peminjaman sudah dikembalikan atau belum ada transaksi peminjaman</p>
+                                        <i class="fas fa-inbox text-4xl text-slate-300 mb-4"></i>
+                                        <h3 class="text-lg font-bold text-slate-900 mb-2">Belum Ada Peminjaman Aktif</h3>
+                                        <p class="text-sm text-slate-500">Tidak ada peminjaman yang sedang berjalan</p>
                                     </div>
                                 </td>
                             </tr>

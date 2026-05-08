@@ -27,17 +27,17 @@ class LoanController extends Controller
             'return_date' => 'required|date|after_or_equal:borrow_date',
         ]);
 
-        // ✅ CEK DUPLIKAT
+        // CEK DUPLIKAT
         if (count(array_unique($request->asset_id)) != count($request->asset_id)) {
             return back()->with('error', 'Asset tidak boleh sama!');
         }
 
-        // ✅ MAX 5
+        // MAX 5
         if (count($request->asset_id) > 5) {
             return back()->with('error', 'Maksimal 5 asset!');
         }
 
-        // ✅ CEK KETERSEDIAAN
+        //  CEK KETERSEDIAAN
         foreach ($request->asset_id as $id) {
             $asset = Asset::find($id);
 
@@ -49,6 +49,7 @@ class LoanController extends Controller
         // ✅ SIMPAN LOAN
         $loan = Loan::create([
             'user_id' => Auth::id(),
+            'asset_id' => $request->asset_id[0], // Set asset_id dari asset pertama
             'borrow_date' => $request->borrow_date,
             'return_date' => $request->return_date,
             'status' => 'dipinjam',
