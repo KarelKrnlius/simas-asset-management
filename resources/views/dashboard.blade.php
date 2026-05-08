@@ -32,9 +32,6 @@
                         <div class="w-12 h-12 {{ $item['color'] == 'red' ? 'bg-red-600 text-white shadow-red-200 shadow-lg' : 'bg-slate-100 text-slate-900' }} rounded-2xl flex items-center justify-center">
                             <i class="fas {{ $item['icon'] }} text-lg flex items-center justify-center"></i>
                         </div>
-                        <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">
-                            <i class="fas fa-circle text-xs mr-2"></i>Live Status
-                        </span>
                     </div>
                     <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ $item['label'] }}</h4>
                     <p class="text-4xl font-black text-slate-900 italic tracking-tighter">{{ $item['val'] }}</p>
