@@ -310,17 +310,17 @@ class UserController extends Controller
      */
     public function toggle(Request $request, $id)
     {
-        $user = User::findOrFail($id);
-        
-        // Prevent deactivating self
-        if ($user->id === Auth::id()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tidak bisa menonaktifkan akun sendiri'
-            ], 403);
-        }
-
         try {
+            $user = User::findOrFail($id);
+            
+            // Prevent deactivating self
+            if ($user->id === Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak bisa menonaktifkan akun sendiri'
+                ], 403);
+            }
+
             DB::beginTransaction();
             
             $newStatus = !$user->is_active;
@@ -339,9 +339,13 @@ class UserController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
+            // Log the actual error for debugging
+            \Log::error('Toggle user status error: ' . $e->getMessage());
+            \Log::error('Error details: ' . $e->getTraceAsString());
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat mengubah status user'
+                'message' => 'Terjadi kesalahan saat mengubah status user: ' . $e->getMessage()
             ], 500);
         }
     }

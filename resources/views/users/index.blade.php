@@ -3,29 +3,31 @@
 @section('title', 'Master User SIMAS')
 
 @section('content')
-<div class="min-h-screen flex flex-col items-start pt-4 px-6" x-data="{ selectAll: false }">
-    
-    {{-- HEADER --}}
-    <div class="w-full max-w-7xl mx-auto mb-6">
-        <div class="flex justify-between items-center">
-            <div> 
-                <h1 class="text-3xl font-black text-red-600 uppercase tracking-tighter">
+<div class="min-h-screen pt-1 items-start">
+    <div class="container mx-auto px-4 py-8">
+        {{-- HEADER, BUTTONS, AND CATATAN CONTAINER --}}
+        <div class="bg-white rounded-[2rem] shadow-xl p-8 mb-8">
+            {{-- HEADER --}}
+            <div class="mb-6">
+                <h2 class="text-3xl font-black text-red-600 uppercase tracking-tighter mb-2">
                     Master User 
-                </h1>
-                <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider mt-1">
+                </h2>
+                <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">
                     Kelola pengguna sistem SIMAS
                 </p>
             </div>
-            
-            <a href="{{ route('users.create') }}" 
-                class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 inline-block">
-                <i class="fas fa-plus mr-2"></i> Tambah User
-            </a>
+
+            {{-- ACTION BUTTONS --}}
+            <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                <a href="{{ route('users.create') }}" 
+                    class="bg-red-600 hover:bg-red-700 text-white font-black text-sm uppercase tracking-wider px-6 py-3 rounded-xl transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
+                    <i class="fas fa-plus mr-2"></i> Tambah User
+                </a>
+            </div>
         </div>
-    </div>
 
     {{-- MAIN CONTAINER --}}
-    <div class="w-full max-w-7xl mx-auto">
+    <div class="container mx-auto px-4">
         
         {{-- ERROR MESSAGE --}}
         @if(session('error'))
@@ -180,7 +182,7 @@
                                             onchange="toggleUserStatus({{ $user->id }}, this.checked)"
                                             class="sr-only peer">
                                         <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500 {{ $isSelf ? 'opacity-50 cursor-not-allowed' : '' }}"></div>
-                                        <span id="status-text-{{ $user->id }}" class="ml-2 text-xs font-semibold {{ $user->is_active ? 'text-green-600' : 'text-red-600' }}">
+                                        <span id="status-text-{{ $user->id }}" class="ml-3 text-xs font-semibold {{ $user->is_active ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $user->is_active ? 'Aktif' : 'Nonaktif' }}
                                         </span>
                                     </label>
