@@ -110,7 +110,7 @@ function addAsset() {
                 onkeyup="filterAssetList(this)"
                 class="w-full border p-2 rounded-xl">
 
-            <div class="asset-list absolute w-full bg-white border mt-1 rounded-xl shadow max-h-60 overflow-auto hidden z-10"></div>
+            <div class="asset-list absolute w-full bg-white border mt-1 rounded-xl shadow max-h-36 overflow-y-auto hidden z-10"></div>
         </div>
 
         <input type="hidden" name="asset_id[]">
@@ -174,7 +174,7 @@ function loadAssetsByCategory(select) {
         return;
     }
 
-    // sorting: asset tersedia di atas
+    // sorting: asset tersedia di atas, lalu berurutan berdasarkan kode asset
     filtered.sort((a, b) => {
         // prioritas status: tersedia > dipinjam > perlu_perbaikan > tidak_tersedia
         const statusPriority = {
@@ -192,8 +192,16 @@ function loadAssetsByCategory(select) {
             return priorityA - priorityB;
         }
         
-        // jika prioritas sama, urutkan berdasarkan nama
-        return a.name.localeCompare(b.name);
+        // jika prioritas sama, extract angka terakhir dari kode untuk sorting
+        const extractNumber = (code) => {
+            const match = code.match(/\d+$/);
+            return match ? parseInt(match[0]) : 0;
+        };
+        
+        const numA = extractNumber(a.code);
+        const numB = extractNumber(b.code);
+        
+        return numA - numB;
     });
 
     // tampilkan semua asset dari kategori

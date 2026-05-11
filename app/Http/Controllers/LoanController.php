@@ -12,7 +12,19 @@ class LoanController extends Controller
     public function index()
     {
         $peminjaman = Loan::with(['assets', 'user'])->latest()->get();
-        $assets = Asset::with('category')->get();
+        
+        // Ambil semua assets dan sort berdasarkan kode asset (angka di kode)
+        $assets = Asset::with('category')->get()->sort(function($a, $b) {
+            // Extract angka dari kode untuk sorting (misal: BRIN-01-000003 -> 3)
+            preg_match('/\d+$/', $a->code, $matchesA);
+            preg_match('/\d+$/', $b->code, $matchesB);
+            
+            $numberA = isset($matchesA[0]) ? (int)$matchesA[0] : 0;
+            $numberB = isset($matchesB[0]) ? (int)$matchesB[0] : 0;
+            
+            return $numberA - $numberB;
+        })->values();
+            
         $categories = \App\Models\Category::all();
 
         return view('assets.loan', compact('peminjaman', 'assets', 'categories'));
