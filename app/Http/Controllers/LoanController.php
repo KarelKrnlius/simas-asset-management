@@ -32,9 +32,30 @@ class LoanController extends Controller
             return back()->with('error', 'Asset tidak boleh sama!');
         }
 
-        // MAX 5
-        if (count($request->asset_id) > 5) {
-            return back()->with('error', 'Maksimal 5 asset!');
+        // DYNAMIC BORROWING LIMIT - CEK JUMLAH PINJAMAN AKTIF SAAT INI
+        $currentUserId = Auth::id();
+        $activeLoansCount = Loan::where('user_id', $currentUserId)
+            ->where('status', 'dipinjam')
+            ->withCount('assets')
+            ->get()
+            ->sum('assets_count');
+        
+        $requestedItems = count($request->asset_id);
+        $totalAfterBorrow = $activeLoansCount + $requestedItems;
+        
+        // CEK BATAS MAKSIMAL 5
+        if ($totalAfterBorrow > 5) {
+            $availableSlots = 5 - $activeLoansCount;
+            if ($availableSlots <= 0) {
+                return back()->with('error', 'Anda sudah mencapai batas maksimal 5 peminjaman. Kembalikan minimal 1 barang untuk bisa meminjam lagi.');
+            } else {
+                return back()->with('error', "Anda sedang meminjam {$activeLoansCount} barang. Maksimal bisa tambah {$availableSlots} barang lagi.");
+            }
+        }
+        
+        // VALIDASI STATIS - TIDAK BOLEH LEBIH DARI 5 SEKALIGAN
+        if ($requestedItems > 5) {
+            return back()->with('error', 'Maksimal 5 asset per peminjaman!');
         }
 
         //  CEK KETERSEDIAAN

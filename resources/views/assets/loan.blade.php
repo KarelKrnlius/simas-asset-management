@@ -15,7 +15,7 @@
     </p>
 </div>
 
-<form action="{{ route('peminjaman.store') }}" method="POST" onsubmit="return validateForm()">
+<form method="POST" action="{{ route('peminjaman.store') }}" onsubmit="return validateForm()" id="loanForm">
     @csrf
 
     {{-- NAMA --}}
@@ -66,8 +66,12 @@
         </div>
     </div>
 
-    <button class="w-full bg-red-600 text-white py-3 rounded-xl font-bold">
-        KIRIM
+    <button type="submit" id="submitBtn" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold flex items-center justify-center">
+        <span id="submitText">KIRIM</span>
+        <svg id="loadingSpinner" class="animate-spin h-5 w-5 ml-2 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
     </button>
 
 </form>
@@ -333,7 +337,8 @@ function searchAsset(input) {
         `;
 
         if (!isAvailable || isBorrowed || isRepair || isNotAvailable || isSelected) {
-            item.classList.add('opacity-50');
+            item.classList.add('opacity-50', 'cursor-pointer');
+            item.onclick = () => showAssetUnavailableNotification(a);
         } else {
             item.classList.add('cursor-pointer', 'hover:bg-slate-100');
             item.onclick = () => selectAsset(parent, input, a);
@@ -369,7 +374,7 @@ document.addEventListener('click', function(e) {
     });
 });
 
-// validate form
+// validate form with loading state
 function validateForm() {
     const selectedAssets = document.querySelectorAll('input[name="asset_id[]"]');
     let hasSelectedAsset = false;
@@ -385,7 +390,98 @@ function validateForm() {
         return false;
     }
     
+    // Show loading state
+    showLoading();
+    
     return true;
+}
+
+// show loading state
+function showLoading() {
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    
+    // Disable button and show loading
+    submitBtn.disabled = true;
+    submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+    submitText.textContent = 'MENGIRIM...';
+    loadingSpinner.classList.remove('hidden');
+}
+
+// reset loading state (untuk error handling)
+function resetLoading() {
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    
+    // Enable button and hide loading
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+    submitText.textContent = 'KIRIM';
+    loadingSpinner.classList.add('hidden');
+}
+
+// show notification for unavailable assets
+function showAssetUnavailableNotification(asset) {
+    let message = '';
+    let icon = '';
+    
+    if (asset.status === 'dipinjam') {
+        message = `Asset "${asset.name}" sedang dipinjam oleh user lain. Silakan pilih asset lain yang tersedia.`;
+        icon = '🔴';
+    } else if (asset.status === 'perlu_perbaikan') {
+        message = `Asset "${asset.name}" sedang dalam perbaikan. Tidak dapat dipinjam saat ini.`;
+        icon = '🟡';
+    } else if (asset.status === 'tidak_tersedia') {
+        message = `Asset "${asset.name}" tidak tersedia untuk dipinjam.`;
+        icon = '⚫';
+    } else {
+        // Sudah dipilih di form ini
+        message = `Asset "${asset.name}" sudah ditambahkan dalam daftar peminjaman ini.`;
+        icon = '📋';
+    }
+    
+    // Tampilkan notifikasi
+    showNotification(icon, message);
+}
+
+// show notification function
+function showNotification(icon, message) {
+    // Cek apakah sudah ada notifikasi
+    let existingNotif = document.getElementById('assetNotification');
+    if (existingNotif) {
+        existingNotif.remove();
+    }
+    
+    // Buat notifikasi baru
+    const notification = document.createElement('div');
+    notification.id = 'assetNotification';
+    notification.className = 'fixed top-4 right-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg shadow-lg z-50 max-w-md';
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <span class="text-2xl mr-3">${icon}</span>
+            <div>
+                <p class="text-sm font-medium text-red-800">Asset Tidak Tersedia</p>
+                <p class="text-sm text-red-600 mt-1">${message}</p>
+            </div>
+            <button onclick="this.closest('#assetNotification').remove()" class="ml-auto text-red-400 hover:text-red-600">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+    `;
+    
+    // Tambahkan ke body
+    document.body.appendChild(notification);
+    
+    // Auto remove setelah 5 detik
+    setTimeout(() => {
+        if (document.getElementById('assetNotification')) {
+            document.getElementById('assetNotification').remove();
+        }
+    }, 5000);
 }
 
 // auto first
