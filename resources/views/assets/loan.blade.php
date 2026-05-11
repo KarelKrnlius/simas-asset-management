@@ -52,8 +52,18 @@
 
     {{-- TANGGAL --}}
     <div class="grid grid-cols-2 gap-4 mb-6">
-        <input type="date" name="borrow_date" required class="border p-3 rounded-xl">
-        <input type="date" name="return_date" required class="border p-3 rounded-xl">
+        <div>
+            <label class="block text-xs font-black text-slate-600 mb-2">
+                Tanggal Peminjaman
+            </label>
+            <input type="date" name="borrow_date" required class="w-full border p-3 rounded-xl">
+        </div>
+        <div>
+            <label class="block text-xs font-black text-slate-600 mb-2">
+                Tanggal Pengembalian
+            </label>
+            <input type="date" name="return_date" required class="w-full border p-3 rounded-xl">
+        </div>
     </div>
 
     <button class="w-full bg-red-600 text-white py-3 rounded-xl font-bold">
@@ -89,17 +99,18 @@ function addAsset() {
     div.className = "p-3 border rounded-xl space-y-2";
 
     div.innerHTML = `
-        <select onchange="resetRow(this)" class="w-full border p-2 rounded-xl">
+        <select onchange="loadAssetsByCategory(this)" class="w-full border p-2 rounded-xl">
             <option value="">Pilih Kategori</option>
             ${categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
         </select>
 
         <div class="relative">
-            <input type="text" placeholder="Cari asset..."
-                onkeyup="searchAsset(this)"
+            <input type="text" placeholder="Pilih asset dari list..."
+                onfocus="showAssetList(this)"
+                onkeyup="filterAssetList(this)"
                 class="w-full border p-2 rounded-xl">
 
-            <div class="asset-list absolute w-full bg-white border mt-1 rounded-xl shadow max-h-40 overflow-auto hidden"></div>
+            <div class="asset-list absolute w-full bg-white border mt-1 rounded-xl shadow max-h-60 overflow-auto hidden z-10"></div>
         </div>
 
         <input type="hidden" name="asset_id[]">
@@ -129,10 +140,156 @@ function removeRow(btn) {
 function resetRow(select) {
     let parent = select.parentElement;
     parent.querySelector('.asset-list').innerHTML = '';
+    parent.querySelector('.asset-list').classList.add('hidden');
     parent.querySelector('input[type="text"]').value = '';
+    parent.querySelector('input[name="asset_id[]"]').value = '';
+    parent.querySelector('#asset-code-display').textContent = '-';
 }
 
-// search
+// load assets saat kategori dipilih
+function loadAssetsByCategory(select) {
+    let categoryId = select.value;
+    let parent = select.parentElement;
+    let list = parent.querySelector('.asset-list');
+    let input = parent.querySelector('input[type="text"]');
+
+    // reset dulu
+    list.innerHTML = '';
+    input.value = '';
+    parent.querySelector('input[name="asset_id[]"]').value = '';
+    parent.querySelector('#asset-code-display').textContent = '-';
+
+    if (!categoryId) {
+        list.classList.add('hidden');
+        return;
+    }
+
+    // filter asset berdasarkan kategori
+    let selected = getSelectedAssets();
+    let filtered = assets.filter(a => a.category_id == categoryId);
+
+    if (filtered.length === 0) {
+        list.innerHTML = `<div class="p-2 text-slate-500 text-sm">Tidak ada asset di kategori ini</div>`;
+        list.classList.remove('hidden');
+        return;
+    }
+
+    // sorting: asset tersedia di atas
+    filtered.sort((a, b) => {
+        // prioritas status: tersedia > dipinjam > perlu_perbaikan > tidak_tersedia
+        const statusPriority = {
+            'tersedia': 1,
+            'dipinjam': 2,
+            'perlu_perbaikan': 3,
+            'tidak_tersedia': 4
+        };
+        
+        const priorityA = statusPriority[a.status] || 5;
+        const priorityB = statusPriority[b.status] || 5;
+        
+        // jika prioritas berbeda, urutkan berdasarkan prioritas
+        if (priorityA !== priorityB) {
+            return priorityA - priorityB;
+        }
+        
+        // jika prioritas sama, urutkan berdasarkan nama
+        return a.name.localeCompare(b.name);
+    });
+
+    // tampilkan semua asset dari kategori
+    filtered.forEach(a => {
+        let statusIcon = '';
+        let statusClass = '';
+        let isClickable = false;
+
+        if (a.status === 'tersedia') {
+            statusIcon = '🟢';
+            statusClass = 'text-green-600';
+            isClickable = true;
+        } else if (a.status === 'dipinjam') {
+            statusIcon = '🔴';
+            statusClass = 'text-red-600';
+        } else if (a.status === 'perlu_perbaikan') {
+            statusIcon = '🟡';
+            statusClass = 'text-yellow-600';
+        } else if (a.status === 'tidak_tersedia') {
+            statusIcon = '⚫';
+            statusClass = 'text-slate-600';
+        } else {
+            // fallback untuk status lain
+            statusIcon = '⚫';
+            statusClass = 'text-slate-600';
+        }
+
+        let isSelected = selected.includes(a.id.toString());
+
+        let item = document.createElement('div');
+        item.className = "p-2 flex justify-between items-center border-b last:border-b-0";
+
+        item.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span class="text-lg">${statusIcon}</span>
+                <span class="text-sm ${statusClass}">${a.name}</span>
+            </div>
+            <span class="text-xs text-slate-500">${a.code}</span>
+        `;
+
+        if (!isClickable || isSelected) {
+            item.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            item.classList.add('cursor-pointer', 'hover:bg-slate-100');
+            item.onclick = () => selectAsset(parent, input, a);
+        }
+
+        list.appendChild(item);
+    });
+
+    list.classList.remove('hidden');
+}
+
+// show list saat input di-focus
+function showAssetList(input) {
+    let parent = input.closest('.p-3');
+    let categoryId = parent.querySelector('select').value;
+    let list = parent.querySelector('.asset-list');
+
+    if (!categoryId) {
+        list.innerHTML = `<div class="p-2 text-red-500 text-sm">Pilih kategori terlebih dahulu</div>`;
+        list.classList.remove('hidden');
+        return;
+    }
+
+    // jika list kosong, load ulang
+    if (list.children.length === 0) {
+        loadAssetsByCategory(parent.querySelector('select'));
+    } else {
+        list.classList.remove('hidden');
+    }
+}
+
+// filter list saat mengetik
+function filterAssetList(input) {
+    let keyword = input.value.toLowerCase();
+    let parent = input.closest('.p-3');
+    let list = parent.querySelector('.asset-list');
+    let items = list.querySelectorAll('.p-2');
+
+    if (!keyword) {
+        items.forEach(item => item.style.display = 'flex');
+        return;
+    }
+
+    items.forEach(item => {
+        let text = item.textContent.toLowerCase();
+        if (text.includes(keyword)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// search (fungsi lama - tidak dipakai lagi)
 function searchAsset(input) {
     let keyword = input.value.toLowerCase();
     let parent = input.closest('.p-3');
@@ -196,21 +353,17 @@ function selectAsset(parent, input, asset) {
     input.value = asset.name;
     codeDisplay.textContent = asset.code;
 
-    list.innerHTML = `
-        <div class="bg-green-100 p-2 rounded flex justify-between">
-            <span>✔ ${asset.name}</span>
-            <span>${asset.code}</span>
-        </div>
-    `;
-
     parent.querySelector('input[name="asset_id[]"]').value = asset.id;
-    list.classList.remove('hidden');
+    
+    // tutup list setelah dipilih
+    list.classList.add('hidden');
 }
 
 // klik luar close
 document.addEventListener('click', function(e) {
     document.querySelectorAll('.asset-list').forEach(list => {
-        if (!list.contains(e.target)) {
+        let parent = list.closest('.p-3');
+        if (parent && !parent.contains(e.target)) {
             list.classList.add('hidden');
         }
     });
