@@ -15,7 +15,7 @@
     </p>
 </div>
 
-<form method="POST" action="{{ route('peminjaman.store') }}" onsubmit="return validateForm()" id="loanForm">
+<form method="POST" action="{{ route('peminjaman.store') }}" onsubmit="return validateForm()" id="loanForm" data-submitted="false">
     @csrf
 
     {{-- NAMA --}}
@@ -86,6 +86,7 @@ let count = 0;
 
 const assets = @json($assets);
 const categories = @json($categories);
+const activeLoansCount = {{ $activeLoansCount ?? 0 }};
 
 // ambil asset yg sudah dipilih
 function getSelectedAssets() {
@@ -93,14 +94,28 @@ function getSelectedAssets() {
         .map(i => i.value);
 }
 
-// tambah row
+// tambah row dengan validasi dinamis
 function addAsset() {
-    if (count >= maxAsset) return alert("Max 5!");
+    // Hitung asset yang sudah dipilih di form ini
+    let currentFormAssets = document.querySelectorAll('.asset-row').length;
+    
+    // Hitung total asset yang sudah dipinjam (form + aktif dari sesi sebelumnya)
+    let totalAssets = currentFormAssets + activeLoansCount;
+    
+    // Debug: tampilkan jumlah asset
+    console.log('Form assets:', currentFormAssets, 'Active loans:', activeLoansCount, 'Total:', totalAssets, 'Max assets:', maxAsset);
+    
+    // Cek batas maksimal (5)
+    if (totalAssets >= maxAsset) {
+        console.log('Showing limit notification');
+        showAssetLimitNotification();
+        return;
+    }
 
     let wrapper = document.getElementById('asset-wrapper');
 
     let div = document.createElement('div');
-    div.className = "p-3 border rounded-xl space-y-2";
+    div.className = "p-3 border rounded-xl space-y-2 asset-row";
 
     div.innerHTML = `
         <select onchange="loadAssetsByCategory(this)" class="w-full border p-2 rounded-xl">
@@ -114,7 +129,7 @@ function addAsset() {
                 onkeyup="filterAssetList(this)"
                 class="w-full border p-2 rounded-xl">
 
-            <div class="asset-list absolute w-full bg-white border mt-1 rounded-xl shadow max-h-60 overflow-auto hidden z-10"></div>
+            <div class="asset-list absolute w-full bg-white border mt-1 rounded-xl shadow max-h-36 overflow-y-auto hidden z-10"></div>
         </div>
 
         <input type="hidden" name="asset_id[]">
@@ -178,7 +193,7 @@ function loadAssetsByCategory(select) {
         return;
     }
 
-    // sorting: asset tersedia di atas
+    // sorting: asset tersedia di atas, lalu berurutan berdasarkan kode asset
     filtered.sort((a, b) => {
         // prioritas status: tersedia > dipinjam > perlu_perbaikan > tidak_tersedia
         const statusPriority = {
@@ -196,8 +211,16 @@ function loadAssetsByCategory(select) {
             return priorityA - priorityB;
         }
         
-        // jika prioritas sama, urutkan berdasarkan nama
-        return a.name.localeCompare(b.name);
+        // jika prioritas sama, extract angka terakhir dari kode untuk sorting
+        const extractNumber = (code) => {
+            const match = code.match(/\d+$/);
+            return match ? parseInt(match[0]) : 0;
+        };
+        
+        const numA = extractNumber(a.code);
+        const numB = extractNumber(b.code);
+        
+        return numA - numB;
     });
 
     // tampilkan semua asset dari kategori
@@ -376,6 +399,14 @@ document.addEventListener('click', function(e) {
 
 // validate form with loading state
 function validateForm() {
+    const form = document.getElementById('loanForm');
+    
+    // Cek apakah form sudah disubmit
+    if (form.dataset.submitted === 'true') {
+        showFormNotification('error', 'Form sedang diproses. Mohon tunggu...');
+        return false;
+    }
+    
     const selectedAssets = document.querySelectorAll('input[name="asset_id[]"]');
     let hasSelectedAsset = false;
     
@@ -386,12 +417,15 @@ function validateForm() {
     });
     
     if (!hasSelectedAsset) {
-        alert('Silakan pilih minimal satu asset terlebih dahulu!');
+        showFormNotification('error', 'Silakan pilih minimal satu asset terlebih dahulu!');
         return false;
     }
     
-    // Show loading state
+    // Show loading state and prevent double submit
     showLoading();
+    
+    // Add form submitted flag
+    form.dataset.submitted = 'true';
     
     return true;
 }
@@ -420,6 +454,84 @@ function resetLoading() {
     submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
     submitText.textContent = 'KIRIM';
     loadingSpinner.classList.add('hidden');
+    
+    // Reset form submitted flag
+    document.getElementById('loanForm').dataset.submitted = 'false';
+}
+
+// show form notification
+function showFormNotification(type, message) {
+    // Hapus notifikasi lama
+    const oldNotif = document.getElementById('formNotification');
+    if (oldNotif) {
+        oldNotif.remove();
+    }
+    
+    // Buat notifikasi baru
+    const notification = document.createElement('div');
+    notification.id = 'formNotification';
+    
+    if (type === 'error') {
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 9999;
+            max-width: 400px;
+        `;
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center;">
+                <span style="font-size: 24px; margin-right: 12px;">❌</span>
+                <div>
+                    <p style="font-size: 14px; font-weight: 600; color: #991b1b; margin: 0;">Error</p>
+                    <p style="font-size: 14px; color: #b91c1c; margin: 4px 0 0 0;">${message}</p>
+                </div>
+                <button onclick="document.getElementById('formNotification').remove()" style="margin-left: auto; color: #ef4444; background: none; border: none; cursor: pointer;">
+                    ✕
+                </button>
+            </div>
+        `;
+    } else if (type === 'success') {
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 9999;
+            max-width: 400px;
+        `;
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center;">
+                <span style="font-size: 24px; margin-right: 12px;">✅</span>
+                <div>
+                    <p style="font-size: 14px; font-weight: 600; color: #166534; margin: 0;">Berhasil</p>
+                    <p style="font-size: 14px; color: #16a34a; margin: 4px 0 0 0;">${message}</p>
+                </div>
+                <button onclick="document.getElementById('formNotification').remove()" style="margin-left: auto; color: #22c55e; background: none; border: none; cursor: pointer;">
+                    ✕
+                </button>
+            </div>
+        `;
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove setelah 3 detik
+    setTimeout(() => {
+        const notif = document.getElementById('formNotification');
+        if (notif) {
+            notif.remove();
+        }
+    }, 3000);
 }
 
 // show notification for unavailable assets
@@ -484,8 +596,70 @@ function showNotification(icon, message) {
     }, 5000);
 }
 
-// auto first
-window.onload = addAsset;
+// show asset limit notification
+function showAssetLimitNotification() {
+    // Hapus notifikasi lama jika ada
+    const oldNotif = document.getElementById('assetLimitNotification');
+    if (oldNotif) {
+        oldNotif.remove();
+    }
+    
+    // Buat notifikasi baru
+    const notification = document.createElement('div');
+    notification.id = 'assetLimitNotification';
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #fef2f2;
+        border-left: 4px solid #ef4444;
+        padding: 16px;
+        border-radius: 8px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        z-index: 9999;
+        max-width: 400px;
+    `;
+    
+    // Buat pesan yang lebih spesifik
+    let message = '';
+    if (activeLoansCount > 0) {
+        message = `Anda sudah meminjam ${activeLoansCount} asset dari sesi sebelumnya. Kembalikan minimal 1 asset untuk bisa menambahkan lagi.`;
+    } else {
+        message = `Maksimal 5 asset per peminjaman. Anda sudah meminjam ${currentFormAssets} asset di form ini.`;
+    }
+    
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center;">
+            <span style="font-size: 24px; margin-right: 12px;">⚠️</span>
+            <div>
+                <p style="font-size: 14px; font-weight: 600; color: #991b1b; margin: 0;">Sudah Melebihi Batas Peminjaman</p>
+                <p style="font-size: 14px; color: #b91c1c; margin: 4px 0 0 0;">${message}</p>
+            </div>
+            <button onclick="document.getElementById('assetLimitNotification').remove()" style="margin-left: auto; color: #ef4444; background: none; border: none; cursor: pointer;">
+                ✕
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Debug log
+    console.log('Asset limit notification added');
+    
+    // Auto remove setelah 4 detik
+    setTimeout(() => {
+        const notif = document.getElementById('assetLimitNotification');
+        if (notif) {
+            notif.remove();
+        }
+    }, 4000);
+}
+
+// tidak auto addAsset saat halaman dimuat
+window.onload = function() {
+    // Tidak lakukan apa-apa saat halaman dimuat
+    console.log('Halaman peminjaman dimuat');
+};
 </script>
 
 @endsection
