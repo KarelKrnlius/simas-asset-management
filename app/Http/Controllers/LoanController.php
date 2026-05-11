@@ -49,7 +49,6 @@ class LoanController extends Controller
         // ✅ SIMPAN LOAN
         $loan = Loan::create([
             'user_id' => Auth::id(),
-            'asset_id' => $request->asset_id[0], // Set asset_id dari asset pertama
             'borrow_date' => $request->borrow_date,
             'return_date' => $request->return_date,
             'status' => 'dipinjam',
@@ -63,10 +62,17 @@ class LoanController extends Controller
 
         $loan->assets()->attach($attachData);
 
-        // update status asset
-        Asset::whereIn('id', array_keys($attachData))->update([
-            'status' => 'dipinjam'
-        ]);
+        // update status asset and decrease stock
+        foreach (array_keys($attachData) as $assetId) {
+            $asset = Asset::find($assetId);
+            if ($asset) {
+                $newStock = max(0, $asset->stock - 1);
+                $asset->update([
+                    'status' => 'dipinjam',
+                    'stock' => $newStock
+                ]);
+            }
+        }
 
         return back()->with('success', 'Peminjaman berhasil!');
     }
@@ -76,10 +82,17 @@ class LoanController extends Controller
         // ambil asset id
         $assetIds =$loan->assets()->pluck('assets.id');
 
-        // balikin status asset
-        Asset::whereIn('id', $assetIds)->update([
-            'status' => 'tersedia'
-        ]);
+        // balikin status asset and increase stock
+        foreach ($assetIds as $assetId) {
+            $asset = Asset::find($assetId);
+            if ($asset) {
+                $newStock = $asset->stock + 1;
+                $asset->update([
+                    'status' => 'tersedia',
+                    'stock' => $newStock
+                ]);
+            }
+        }
 
         // detach & delete
         $loan->assets()->detach();

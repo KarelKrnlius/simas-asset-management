@@ -57,11 +57,28 @@ class AssetReturnController extends Controller
                     $qtyDipinjam = $pivot ? $pivot->pivot->quantity : 0;
 
                     if ($returnItem['condition'] === 'baik') {
-                        $asset->update(['status' => 'tersedia', 'condition' => 'baik']);
+                        // Increase stock when returned in good condition
+                        $newStock = $asset->stock + 1;
+                        $asset->update([
+                            'status' => 'tersedia', 
+                            'condition' => 'baik',
+                            'stock' => $newStock
+                        ]);
                     } elseif ($returnItem['condition'] === 'rusak') {
-                        $asset->update(['status' => 'perlu_perbaikan', 'condition' => 'rusak']);
+                        // Increase stock even when returned damaged
+                        $newStock = $asset->stock + 1;
+                        $asset->update([
+                            'status' => 'perlu_perbaikan', 
+                            'condition' => 'rusak',
+                            'stock' => $newStock
+                        ]);
                     } elseif ($returnItem['condition'] === 'hilang') {
-                        $asset->update(['status' => 'tidak_tersedia', 'stock' => 0, 'condition' => 'hilang']);
+                        // Keep stock at 0 when lost
+                        $asset->update([
+                            'status' => 'tidak_tersedia', 
+                            'stock' => 0, 
+                            'condition' => 'hilang'
+                        ]);
                     }
 
                     $loan->assets()->detach($returnItem['asset_id']);
