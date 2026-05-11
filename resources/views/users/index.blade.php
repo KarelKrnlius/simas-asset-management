@@ -175,17 +175,18 @@
                                     </div>
                                 </td>
                                 <td class="py-3 px-2 text-center">
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" 
-                                            {{ $user->is_active ? 'checked' : '' }}
-                                            {{ $isSelf ? 'disabled' : '' }}
-                                            onchange="toggleUserStatus({{ $user->id }}, this.checked)"
-                                            class="sr-only peer">
-                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500 {{ $isSelf ? 'opacity-50 cursor-not-allowed' : '' }}"></div>
-                                        <span id="status-text-{{ $user->id }}" class="ml-3 text-xs font-semibold {{ $user->is_active ? 'text-green-600' : 'text-red-600' }}">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <span class="text-xs font-semibold {{ $user->is_active ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $user->is_active ? 'Aktif' : 'Nonaktif' }}
                                         </span>
-                                    </label>
+                                        @if (!$isSelf)
+                                            <button onclick="changeUserStatus({{ $user->id }}, '{{ $user->is_active ? 'nonaktif' : 'aktif' }}')" 
+                                                    class="px-2 py-1 text-xs rounded {{ $user->is_active ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600' }} text-white transition-colors"
+                                                    title="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
+                                                {{ $user->is_active ? 'Nonaktif' : 'Aktif' }}
+                                            </button>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="py-3 px-2">
                                     <div class="flex justify-center gap-1 flex-wrap max-w-[120px]">
@@ -397,58 +398,61 @@ function togglePassword(inputId, toggleId) {
 }
 
 // User actions
-function toggleUserStatus(userId, isActive) {
-    fetch(`/users/${userId}/toggle`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({})
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Update UI to reflect new status
-            const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
-            const checkbox = Array.from(allCheckboxes).find(cb => cb.getAttribute('onchange') && cb.getAttribute('onchange').includes(`toggleUserStatus(${userId}`));
-            if (checkbox) {
-                checkbox.checked = data.is_active;
-            }
-            
-            // Update status text display
-            const statusText = document.querySelector(`#status-text-${userId}`);
-            if (statusText) {
-                if (data.is_active) {
-                    statusText.textContent = 'Aktif';
-                    statusText.className = 'ml-3 text-xs font-semibold text-green-600';
+function changeUserStatus(userId, newStatus) {
+    const action = newStatus === 'aktif' ? 'mengaktifkan' : 'menonaktifkan';
+    
+    Swal.fire({
+        title: `Konfirmasi ${action} user?`,
+        text: `Apakah Anda yakin ingin ${action} user ini?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#10B981',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Lanjutkan',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/users/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ 
+                    _method: 'PUT',
+                    status: newStatus 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success notification
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: data.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        // Reload page after notification
+                        window.location.reload();
+                    });
                 } else {
-                    statusText.textContent = 'Nonaktif';
-                    statusText.className = 'ml-3 text-xs font-semibold text-red-600';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message
+                    });
                 }
-            }
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil',
-                text: data.message,
-                timer: 1500,
-                showConfirmButton: false
-            });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Terjadi kesalahan server'
+                });
             });
         }
-    })
-    .catch(error => {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Terjadi kesalahan server'
-        });
     });
 }
 
