@@ -125,7 +125,7 @@ class LoanController extends Controller
             }
         }
 
-        return back()->with('success', 'Peminjaman berhasil!');
+        return redirect()->route('riwayat-peminjaman', ['loan_id' => $loan->id])->with('success', 'Peminjaman berhasil!');
     }
 
     public function destroy(Loan $loan)

@@ -314,6 +314,24 @@
 
 {{-- JAVASCRIPT --}}
 <script>
+// Auto-open modal if loan_id parameter exists
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const loanId = urlParams.get('loan_id');
+    
+    if (loanId) {
+        // Auto-open modal for the newly created loan
+        setTimeout(() => {
+            showLoanDetail(loanId);
+        }, 500);
+        
+        // Remove loan_id from URL without reloading
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.delete('loan_id');
+        window.history.replaceState({}, '', newUrl);
+    }
+});
+
 // Search functionality - Submit on Enter key
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
