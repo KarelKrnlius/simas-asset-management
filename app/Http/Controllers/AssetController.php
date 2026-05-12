@@ -60,8 +60,8 @@ class AssetController extends Controller
                     }
                     break;
                 case 'code':
-                    // Extract numeric part for proper numeric sorting and ignore invalid blank codes
-                    $query->orderByRaw("NULLIF(REGEXP_REPLACE(SUBSTRING(code, 5), '[^0-9].*', ''), '')::int {$order}");
+                    // Sort berdasarkan angka terakhir di kode (BRIN-01-000001, BRIN-01-000002, dst)
+                    $query->orderByRaw("(SUBSTRING(code FROM '\\d{6}$'))::INTEGER {$order}");
                     break;
                 case 'name':
                     $query->orderBy('name', $order);

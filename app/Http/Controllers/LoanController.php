@@ -12,10 +12,29 @@ class LoanController extends Controller
     public function index()
     {
         $peminjaman = Loan::with(['assets', 'user'])->latest()->get();
-        $assets = Asset::with('category')->get();
+        
+        // Ambil semua assets dan sort berdasarkan kode asset (angka di kode)
+        $assets = Asset::with('category')->get()->sort(function($a, $b) {
+            // Extract angka dari kode untuk sorting (misal: BRIN-01-000003 -> 3)
+            preg_match('/\d+$/', $a->code, $matchesA);
+            preg_match('/\d+$/', $b->code, $matchesB);
+            
+            $numberA = isset($matchesA[0]) ? (int)$matchesA[0] : 0;
+            $numberB = isset($matchesB[0]) ? (int)$matchesB[0] : 0;
+            
+            return $numberA - $numberB;
+        })->values();
+            
         $categories = \App\Models\Category::all();
+        
+        // Ambil jumlah pinjaman aktif user saat ini
+        $activeLoansCount = Loan::where('user_id', auth()->id())
+            ->where('status', 'dipinjam')
+            ->withCount('assets')
+            ->get()
+            ->sum('assets_count');
 
-        return view('assets.loan', compact('peminjaman', 'assets', 'categories'));
+        return view('assets.loan', compact('peminjaman', 'assets', 'categories', 'activeLoansCount'));
     }
 
     public function store(Request $request)
@@ -32,9 +51,30 @@ class LoanController extends Controller
             return back()->with('error', 'Asset tidak boleh sama!');
         }
 
-        // MAX 5
-        if (count($request->asset_id) > 5) {
-            return back()->with('error', 'Maksimal 5 asset!');
+        // DYNAMIC BORROWING LIMIT - CEK JUMLAH PINJAMAN AKTIF SAAT INI
+        $currentUserId = Auth::id();
+        $activeLoansCount = Loan::where('user_id', $currentUserId)
+            ->where('status', 'dipinjam')
+            ->withCount('assets')
+            ->get()
+            ->sum('assets_count');
+        
+        $requestedItems = count($request->asset_id);
+        $totalAfterBorrow = $activeLoansCount + $requestedItems;
+        
+        // CEK BATAS MAKSIMAL 5
+        if ($totalAfterBorrow > 5) {
+            $availableSlots = 5 - $activeLoansCount;
+            if ($availableSlots <= 0) {
+                return back()->with('error', 'Anda sudah mencapai batas maksimal 5 peminjaman. Kembalikan minimal 1 barang untuk bisa meminjam lagi.');
+            } else {
+                return back()->with('error', "Anda sedang meminjam {$activeLoansCount} barang. Maksimal bisa tambah {$availableSlots} barang lagi.");
+            }
+        }
+        
+        // VALIDASI STATIS - TIDAK BOLEH LEBIH DARI 5 SEKALIGAN
+        if ($requestedItems > 5) {
+            return back()->with('error', 'Maksimal 5 asset per peminjaman!');
         }
 
         //  CEK KETERSEDIAAN
@@ -49,7 +89,7 @@ class LoanController extends Controller
         // ✅ SIMPAN LOAN
         $loan = Loan::create([
             'user_id' => Auth::id(),
-            'asset_id' => $request->asset_id[0], // Set asset_id dari asset pertama
+            'asset_id' => $request->asset_id[0], // Ambil asset pertama sebagai primary asset
             'borrow_date' => $request->borrow_date,
             'return_date' => $request->return_date,
             'status' => 'dipinjam',
@@ -63,10 +103,17 @@ class LoanController extends Controller
 
         $loan->assets()->attach($attachData);
 
-        // update status asset
-        Asset::whereIn('id', array_keys($attachData))->update([
-            'status' => 'dipinjam'
-        ]);
+        // update status asset and decrease stock
+        foreach (array_keys($attachData) as $assetId) {
+            $asset = Asset::find($assetId);
+            if ($asset) {
+                $newStock = max(0, $asset->stock - 1);
+                $asset->update([
+                    'status' => 'dipinjam',
+                    'stock' => $newStock
+                ]);
+            }
+        }
 
         return back()->with('success', 'Peminjaman berhasil!');
     }
@@ -76,10 +123,17 @@ class LoanController extends Controller
         // ambil asset id
         $assetIds =$loan->assets()->pluck('assets.id');
 
-        // balikin status asset
-        Asset::whereIn('id', $assetIds)->update([
-            'status' => 'tersedia'
-        ]);
+        // balikin status asset and increase stock
+        foreach ($assetIds as $assetId) {
+            $asset = Asset::find($assetId);
+            if ($asset) {
+                $newStock = $asset->stock + 1;
+                $asset->update([
+                    'status' => 'tersedia',
+                    'stock' => $newStock
+                ]);
+            }
+        }
 
         // detach & delete
         $loan->assets()->detach();

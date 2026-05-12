@@ -62,7 +62,7 @@ class Loan extends Model
     public function assets()
     {
         return $this->belongsToMany(Asset::class, 'loan_details', 'loan_id', 'asset_id')
-                    ->withPivot('quantity');
+                    ->withPivot('quantity', 'condition');
     }
     public function createdBy()
     {
@@ -77,5 +77,28 @@ class Loan extends Model
     public function deletedBy()
     {
         return $this->belongsTo(User::class, 'deleted_by');
+    }
+
+    /**
+     * Generate kode peminjaman unik
+     * Format: PIN-000001 (flexible digit)
+     * ID 1-9: PIN-000001
+     * ID 10-99: PIN-000010  
+     * ID 100-999: PIN-000100
+     * ID 1000-9999: PIN-001000
+     * ID 10000-99999: PIN-010000
+     * ID 100000-999999: PIN-100000
+     * ID 1000000-9999999: PIN-1000000
+     * ... dst otomatis menyesuaikan
+     */
+    public function getLoanCodeAttribute()
+    {
+        // Hitung jumlah digit ID
+        $idLength = strlen((string)$this->id);
+        
+        // Minimal 6 digit, maksimal sesuai kebutuhan
+        $totalDigits = max(6, $idLength);
+        
+        return 'PIN-' . str_pad($this->id, $totalDigits, '0', STR_PAD_LEFT);
     }
 }

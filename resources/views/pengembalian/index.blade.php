@@ -91,13 +91,16 @@
     const selectedAssetQty = document.getElementById('selected_asset_qty');
 
     function renderUserResults(matches) {
-        if (!matches.length) {
+        // Handle both array of users and array of objects with matches property
+        const users = matches.length > 0 && matches[0].matches !== undefined ? matches : matches;
+        
+        if (!users.length) {
             userResults.innerHTML = '<div class="px-4 py-3 text-sm text-slate-500">Nama tidak ditemukan.</div>';
             userResults.classList.remove('hidden');
             return;
         }
 
-        userResults.innerHTML = matches.map(user => {
+        userResults.innerHTML = users.map(user => {
             return `
                 <button type="button" data-user-id="${user.id}" class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-all">
                     <span class="font-semibold text-slate-900">${user.name}</span>
@@ -121,6 +124,13 @@
 
     userSearch.addEventListener('input', function() {
         filterUsers(this.value);
+    });
+
+    // Show all users when input is clicked
+    userSearch.addEventListener('click', function() {
+        if (this.value.trim() === '') {
+            renderUserResults(users);
+        }
     });
 
     userResults.addEventListener('click', function(event) {

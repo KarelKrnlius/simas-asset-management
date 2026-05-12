@@ -13,8 +13,9 @@ use App\Http\Controllers\AssetReturnController;
 use App\Http\Controllers\AssetLibraryController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\LoanCheckController;
+use App\Http\Controllers\LoanHistoryController;
 
-// HOME → LOGIN
+// HOME ? LOGIN
 Route::get('/', function () { return redirect()->route('login');});
 
 // PUBLIC ASSET DETAIL (Accessible without login for QR scanning)
@@ -40,7 +41,7 @@ Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // AUTH AREA
+// AUTH AREA
 Route::middleware(['auth', 'nocache'])->group(function () {
 
     // DASHBOARD
@@ -56,6 +57,10 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // RIWAYAT
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
     
+    // RIWAYAT PEMINJAMAN (All Roles)
+    Route::get('/riwayat-peminjaman', [LoanHistoryController::class, 'index'])->name('riwayat-peminjaman');
+    Route::get('/riwayat-peminjaman/{id}', [LoanHistoryController::class, 'show'])->name('riwayat-peminjaman.show');
+    
     // PENGEMBALIAN
     Route::get('/pengembalian', [AssetReturnController::class, 'index'])->name('pengembalian');
     Route::post('/pengembalian', [AssetReturnController::class, 'store'])->name('pengembalian.store');
@@ -66,11 +71,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/asset-library/qr-generator', [AssetLibraryController::class, 'qrGenerator'])->name('asset-library.qr-generator');
     Route::get('/asset-library/{code}', [AssetLibraryController::class, 'showAsset'])->name('asset-library.show');
     
-    // ASSET LIBRARY ROUTES (Admin Only - Additional Features)
-    Route::middleware('role:admin')->group(function () {
-        // Admin-specific asset library features can go here
-    });
-    
     // Assets Resource Routes (Admin Only)
     Route::resource('assets', AssetController::class)->middleware('role:admin');
     Route::get('/assets/next-code', [AssetController::class, 'getNextCode'])->middleware('role:admin');
@@ -79,30 +79,23 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // Categories Resource Routes (Admin Only)
     Route::get('/categories/list', [CategoryController::class, 'list'])->middleware('role:admin');
     Route::resource('categories', CategoryController::class)->middleware('role:admin');
-    Route::post('/categories/bulk-delete', [CategoryController::class, 'bulkDelete'])->middleware('role:admin');
-
-    Route::middleware('role:admin')->group(function () {
-
-        // CRUD ROLE
-        Route::resource('roles', RoleController::class)->except(['create','edit','show']);
-
-        // BULK DELETE
-        Route::post('/roles/bulk-delete', [RoleController::class, 'bulkDelete'])->name('roles.bulkDelete');
-
-        // DELETE ALL
-        Route::get('/roles-delete-all', [RoleController::class, 'deleteAll'])->name('roles.deleteAll');
-
-    });
-
-    // Loan Check Routes (Admin Only)
-    Route::get('/pengecek-peminjaman', [LoanCheckController::class, 'index'])->middleware('role:admin')->name('pengecek-peminjaman');
-    Route::get('/pengecek-peminjaman/{id}', [LoanCheckController::class, 'show'])->middleware('role:admin')->name('pengecek-peminjaman.show');
 
     // MASTER USER (Admin Only)
     Route::middleware('role:admin')->group(function () {
         Route::resource('users', UserController::class);
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset');
     });
+
+    // MASTER ROLE (Admin Only)
+    Route::middleware('role:admin')->group(function () {
+        Route::resource('roles', RoleController::class)->except(['create','edit','show']);
+        Route::post('/roles/bulk-delete', [RoleController::class, 'bulkDelete'])->name('roles.bulkDelete');
+        Route::get('/roles-delete-all', [RoleController::class, 'deleteAll'])->name('roles.deleteAll');
+    });
+
+    // LOAN CHECK / PENGECEK PEMINJAMAN (Admin Only)
+    Route::get('/pengecek-peminjaman', [LoanCheckController::class, 'index'])->middleware('role:admin')->name('pengecek-peminjaman');
+    Route::get('/pengecek-peminjaman/{id}', [LoanCheckController::class, 'show'])->middleware('role:admin')->name('pengecek-peminjaman.show');
 
     // PROFILE
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
