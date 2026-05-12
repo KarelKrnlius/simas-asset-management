@@ -54,11 +54,21 @@
                             <i class="fas fa-search text-slate-400 hover:text-red-600"></i>
                         </div>
                     </div>
+                    <!-- Clear Button -->
                     <button onclick="performRefresh()"
                             class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
                         <i class="fas fa-sync-alt"></i>
                         Clear
                     </button>
+                    <!-- Sort Dropdown -->
+                    <div class="relative">
+                        <select id="sortSelect"
+                                onchange="performSort(this.value)"
+                                class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent cursor-pointer">
+                            <option value="terbaru" {{ $sort == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                            <option value="terlama" {{ $sort == 'terlama' ? 'selected' : '' }}>Terlama</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             
@@ -289,12 +299,21 @@
 // Search functionality - Submit on Enter key
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortSelect');
     if (searchInput) {
         // Restore search value from URL parameter
         const urlParams = new URLSearchParams(window.location.search);
         const searchParam = urlParams.get('search');
         if (searchParam) {
             searchInput.value = searchParam;
+        }
+    }
+    if (sortSelect) {
+        // Restore sort value from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const sortParam = urlParams.get('sort');
+        if (sortParam) {
+            sortSelect.value = sortParam;
         }
     }
 });
@@ -331,12 +350,26 @@ function performSearch(searchTerm) {
     window.location.href = url.toString();
 }
 
+function performSort(sortValue) {
+    const url = new URL(window.location);
+    
+    // Remove page parameter to always start from page 1 when sorting
+    url.searchParams.delete('page');
+    
+    // Set sort parameter
+    url.searchParams.set('sort', sortValue);
+    
+    // Navigate to new URL
+    window.location.href = url.toString();
+}
+
 function performRefresh() {
     const url = new URL(window.location);
     
     // Clear all parameters
     url.searchParams.delete('search');
     url.searchParams.delete('page');
+    url.searchParams.delete('sort');
     
     // Reload page with clean URL
     window.location.href = url.toString();

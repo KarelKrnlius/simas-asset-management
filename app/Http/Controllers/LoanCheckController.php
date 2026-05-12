@@ -12,8 +12,9 @@ class LoanCheckController extends Controller
      */
     public function index()
     {
-        // Get search parameter
+        // Get search and sort parameters
         $search = request('search');
+        $sort = request('sort', 'terbaru'); // Default: terbaru
         
         // Build query with relationships
         $query = Loan::with(['user', 'assets.category']);
@@ -29,16 +30,24 @@ class LoanCheckController extends Controller
             });
         }
         
-        // Order by latest
-        $query->orderBy('created_at', 'desc');
+        // Apply sorting
+        switch ($sort) {
+            case 'terlama':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'terbaru':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
         
         // Paginate
         $loans = $query->paginate(15);
         
-        // Append search parameter to pagination links
-        $loans->appends(request()->only(['search']));
+        // Append search and sort parameters to pagination links
+        $loans->appends(request()->only(['search', 'sort']));
         
-        return view('loan-check.index', compact('loans'));
+        return view('loan-check.index', compact('loans', 'sort'));
     }
 
     /**
