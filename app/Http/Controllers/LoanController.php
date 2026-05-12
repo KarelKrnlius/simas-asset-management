@@ -99,7 +99,6 @@ class LoanController extends Controller
         // ✅ SIMPAN LOAN
         $loan = Loan::create([
             'user_id' => Auth::id(),
-            'asset_id' => $request->asset_id[0], // Ambil asset pertama sebagai primary asset
             'borrow_date' => $request->borrow_date,
             'return_date' => $request->return_date,
             'status' => 'dipinjam',

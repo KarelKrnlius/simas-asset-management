@@ -15,11 +15,15 @@ class AssetReturnController extends Controller
         /**
          * Mengambil user yang memiliki pinjaman aktif.
          * Filter out loans yang sudah dikembalikan.
+         * Hanya tampilkan user yang memiliki asset yang bisa dikembalikan (belum ada condition di pivot)
          */
         $users = User::whereHas('loans', function($q) {
             $q->where('status', '<>', 'dikembalikan');
         })->with(['loans' => function($query) {
-            $query->where('status', '<>', 'dikembalikan');
+            $query->where('status', '<>', 'dikembalikan')
+                  ->whereHas('assets', function($assetQuery) {
+                      $assetQuery->whereNull('loan_details.condition');
+                  });
         }, 'loans.assets'])->get();
 
         return view('pengembalian.index', compact('users'));

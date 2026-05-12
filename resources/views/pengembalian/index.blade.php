@@ -185,17 +185,20 @@
         loansToLoad.forEach(loan => {
             if (loan.status !== 'dikembalikan') {
                 loan.assets.forEach(asset => {
-                    const key = `${loan.id}-${asset.id}`;
-                    const itemCard = `
-                        <div id="asset_card_${key}" onclick="selectItem(${loan.id}, ${asset.id}, '${asset.name.replace(/'/g, "\\'")}', ${asset.pivot.quantity}, '${key}')" class="p-4 rounded-2xl border border-slate-200 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-all">
-                            <div>
-                                <p class="text-sm font-bold text-slate-900">${asset.name}</p>
-                                <p class="text-[10px] text-slate-400">Kode Pinjam: ${loan.loan_code || loan.id} | Qty: ${asset.pivot.quantity} Unit</p>
+                    // Only show assets that don't have condition (not yet returned)
+                    if (!asset.pivot.condition) {
+                        const key = `${loan.id}-${asset.id}`;
+                        const itemCard = `
+                            <div id="asset_card_${key}" onclick="selectItem(${loan.id}, ${asset.id}, '${asset.name.replace(/'/g, "\\'")}', ${asset.pivot.quantity}, '${key}')" class="p-4 rounded-2xl border border-slate-200 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-all">
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">${asset.name}</p>
+                                    <p class="text-[10px] text-slate-400">Kode Pinjam: ${loan.loan_code || loan.id} | Qty: ${asset.pivot.quantity} Unit</p>
+                                </div>
+                                <span id="asset_label_${key}" class="text-[10px] font-black uppercase tracking-[0.2em] text-red-600">Pilih</span>
                             </div>
-                            <span id="asset_label_${key}" class="text-[10px] font-black uppercase tracking-[0.2em] text-red-600">Pilih</span>
-                        </div>
-                    `;
-                    loanItems.innerHTML += itemCard;
+                        `;
+                        loanItems.innerHTML += itemCard;
+                    }
                 });
             }
         });
