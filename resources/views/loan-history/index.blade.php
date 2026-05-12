@@ -93,7 +93,7 @@
                                     </span>
                                 </td>
                                 <td class="py-4 px-4">
-                                    <span class="inline-block bg-red-100 text-red-700 px-3 py-1 rounded-lg font-black text-sm">
+                                    <span class="inline-block bg-slate-100 text-slate-700 px-3 py-1 rounded-lg font-bold text-sm font-mono">
                                         {{ $loan->loan_code }}
                                     </span>
                                 </td>

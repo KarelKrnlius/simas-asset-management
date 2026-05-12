@@ -14,11 +14,13 @@ class AssetReturnController extends Controller
     {
         /**
          * Mengambil user yang memiliki pinjaman aktif.
-         * Karena tidak ada LoanDetail, kita memanggil relasi 'assets' langsung dari 'loans'.
+         * Filter out loans yang sudah dikembalikan.
          */
         $users = User::whereHas('loans', function($q) {
             $q->where('status', '<>', 'dikembalikan');
-        })->with(['loans.assets'])->get();
+        })->with(['loans' => function($query) {
+            $query->where('status', '<>', 'dikembalikan');
+        }, 'loans.assets'])->get();
 
         return view('pengembalian.index', compact('users'));
     }
@@ -90,7 +92,13 @@ class AssetReturnController extends Controller
 
                 foreach (array_unique($processedLoanIds) as $loanId) {
                     $loan = Loan::findOrFail($loanId);
-                    if ($loan->assets()->count() == 0) {
+                    
+                    // Count remaining assets that are NOT returned
+                    $remainingAssets = $loan->assets()
+                        ->wherePivotNotIn('condition', ['baik', 'rusak', 'hilang'])
+                        ->count();
+                    
+                    if ($remainingAssets == 0) {
                         $loan->update(['status' => 'dikembalikan']);
                     }
                 }

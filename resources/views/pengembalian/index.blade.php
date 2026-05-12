@@ -101,11 +101,19 @@
         }
 
         userResults.innerHTML = users.map(user => {
-            return `
-                <button type="button" data-user-id="${user.id}" class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-all">
-                    <span class="font-semibold text-slate-900">${user.name}</span>
-                </button>
-            `;
+            // Create separate entries for each loan with the same user
+            const loanEntries = user.loans
+                .filter(loan => loan.status !== 'dikembalikan')
+                .map(loan => `
+                    <button type="button" data-user-id="${user.id}" data-loan-id="${loan.id}" class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-all">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-slate-900">${user.name}</span>
+                            <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">Kode Pinjam: ${loan.loan_code || loan.id}</span>
+                        </div>
+                    </button>
+                `);
+            
+            return loanEntries.join('');
         }).join('');
         userResults.classList.remove('hidden');
     }
@@ -138,12 +146,20 @@
         if (!button) return;
 
         const userId = button.getAttribute('data-user-id');
+        const loanId = button.getAttribute('data-loan-id');
         const selected = users.find(user => user.id.toString() === userId);
         if (!selected) return;
 
         userSearch.value = selected.name;
         userResults.classList.add('hidden');
-        loadUserLoans(selected);
+        
+        // If loan-id is specified, load specific loan
+        if (loanId) {
+            const specificLoan = selected.loans.find(loan => loan.id.toString() === loanId);
+            loadUserLoans(selected, specificLoan);
+        } else {
+            loadUserLoans(selected);
+        }
     });
 
     document.addEventListener('click', function(event) {
@@ -152,7 +168,7 @@
         }
     });
 
-    function loadUserLoans(user) {
+    function loadUserLoans(user, specificLoan = null) {
         loanItems.innerHTML = '';
         selectedUserName.innerText = user.name || '-';
         loanListContainer.classList.remove('hidden');
@@ -164,7 +180,9 @@
         Object.keys(selectedAssets).forEach(key => delete selectedAssets[key]);
         updateSelectedCount();
 
-        user.loans.forEach(loan => {
+        const loansToLoad = specificLoan ? [specificLoan] : user.loans;
+        
+        loansToLoad.forEach(loan => {
             if (loan.status !== 'dikembalikan') {
                 loan.assets.forEach(asset => {
                     const key = `${loan.id}-${asset.id}`;
@@ -172,7 +190,7 @@
                         <div id="asset_card_${key}" onclick="selectItem(${loan.id}, ${asset.id}, '${asset.name.replace(/'/g, "\\'")}', ${asset.pivot.quantity}, '${key}')" class="p-4 rounded-2xl border border-slate-200 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-all">
                             <div>
                                 <p class="text-sm font-bold text-slate-900">${asset.name}</p>
-                                <p class="text-[10px] text-slate-400">ID Pinjam: #${loan.id} | Qty: ${asset.pivot.quantity} Unit</p>
+                                <p class="text-[10px] text-slate-400">Kode Pinjam: ${loan.loan_code || loan.id} | Qty: ${asset.pivot.quantity} Unit</p>
                             </div>
                             <span id="asset_label_${key}" class="text-[10px] font-black uppercase tracking-[0.2em] text-red-600">Pilih</span>
                         </div>

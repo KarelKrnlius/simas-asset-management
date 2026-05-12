@@ -86,6 +86,16 @@ class LoanController extends Controller
             }
         }
 
+        // Generate unique loan code
+        $lastLoan = Loan::whereNotNull('loan_code')->latest()->first();
+        if ($lastLoan && $lastLoan->loan_code) {
+            $lastNumber = intval(substr($lastLoan->loan_code, -6));
+        } else {
+            $lastNumber = 0;
+        }
+        $newNumber = str_pad($lastNumber + 1, 6, '0', STR_PAD_LEFT);
+        $loanCode = 'PIN-' . $newNumber;
+
         // ✅ SIMPAN LOAN
         $loan = Loan::create([
             'user_id' => Auth::id(),
@@ -93,6 +103,7 @@ class LoanController extends Controller
             'borrow_date' => $request->borrow_date,
             'return_date' => $request->return_date,
             'status' => 'dipinjam',
+            'loan_code' => $loanCode, // Tambah kode unik
         ]);
 
 // attach assets with required quantity pivot value
