@@ -1,4 +1,4 @@
-{{-- ADD ASSET MODAL --}}
+{{-- TOMBOL TAMBAH ASSET --}}
 <style>
     .bg-red-primary { background-color: #E11D48 !important; }
     .hover\:bg-red-primary:hover { background-color: #E11D48 !important; opacity: 0.9 !important; }
@@ -15,12 +15,14 @@
 <div id="addAssetModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
     <div class="bg-white rounded-[2rem] p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
         <div class="text-center mb-6">
-            <h3 class="text-xl font-black text-slate-900">Tambah Aset Baru</h3>
-            <p class="text-slate-600 text-sm mt-2">Isi detail aset di bawah ini</p>
+            <h3 class="text-xl font-black text-slate-900">Tambah Asset Baru</h3>
+            <p class="text-slate-600 text-sm mt-2">Isi detail Asset di bawah ini</p>
         </div>
         
-        <form id="addAssetForm" method="POST">
+        <form id="addAssetForm" method="POST" enctype="multipart/form-data">
             @csrf
+            <input type="hidden" name="condition" value="baik">
+            <input type="hidden" name="status" value="tersedia">
             
             {{-- CATEGORY --}}
             <div class="mb-6">
@@ -28,8 +30,7 @@
                     Kategori
                 </label>
                 <select name="category_id" id="addCategory" required
-                    class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors"
-                    onchange="updateCodePreview()">
+                    class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors">
                     <option value="">-- Pilih Kategori --</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}" data-category-name="{{ $category->name }}">{{ $category->name }}</option>
@@ -40,22 +41,27 @@
             {{-- NAME --}}
             <div class="mb-6">
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Nama Aset
+                    Nama Asset
                 </label>
                 <input type="text" name="name" required
                     class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors"
-                    placeholder="Masukkan nama aset">
+                    placeholder="Masukkan nama Asset">
             </div>
             
             {{-- CODE --}}
             <div class="mb-6">
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Kode Aset (Auto-Generated)
+                    Kode Asset
                 </label>
-                <input type="text" name="code" id="assetCodePreview" readonly
-                    class="w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-500"
-                    placeholder="Pilih kategori untuk melihat kode">
-                <p class="text-xs text-slate-500 mt-2">Kode akan otomatis di-generate berdasarkan kategori dan stok</p>
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-black text-slate-700">
+                        <span>Auto-generate</span>
+                    </div>
+                    <div class="text-sm text-slate-500">
+                        <i class="fas fa-info-circle"></i>
+                        Otomatis
+                    </div>
+                </div>
             </div>
                         
             {{-- DESCRIPTION --}}
@@ -63,9 +69,10 @@
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
                     Deskripsi
                 </label>
-                <textarea name="description" rows="3"
+                <textarea name="description" rows="3" maxlength="500"
                     class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors"
-                    placeholder="Masukkan deskripsi aset (opsional)"></textarea>
+                    placeholder="Masukkan deskripsi Asset (opsional)"></textarea>
+                <p class="text-xs text-slate-500 mt-1">Maksimal 500 karakter</p>
             </div>
             
             {{-- STOCK --}}
@@ -75,38 +82,58 @@
                 </label>
                 <input type="number" name="stock" id="addStock" required min="0" value="1"
                     class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors"
-                    placeholder="Masukkan jumlah stok"
-                    oninput="updateCodePreview()">
+                    placeholder="Masukkan jumlah stok">
             </div>
             
-            {{-- CONDITION --}}
+            {{-- PHOTO UPLOAD --}}
             <div class="mb-6">
                 <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Kondisi
+                    Foto Asset <span class="text-red-500">*</span>
                 </label>
-                <select name="condition" required
-                    class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors">
-                    <option value="">-- Pilih Kondisi --</option>
-                    <option value="baik">Baik</option>
-                    <option value="cukup">Cukup</option>
-                    <option value="rusak">Rusak</option>
-                </select>
+                
+                {{-- PHOTO BUTTON --}}
+                <button type="button" onclick="document.getElementById('addAssetPhoto').click()" 
+                    class="w-full bg-red-primary hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Pilih File</span>
+                </button>
+                
+                {{-- HIDDEN FILE INPUT --}}
+                <input type="file" name="photo" id="addAssetPhoto" accept="image/*" required class="hidden" onchange="previewAddAssetPhoto(event)">
+                
+                <p class="text-xs text-slate-500 mt-2">
+                    <i class="fas fa-exclamation-circle text-red-500"></i> 
+                    Format: JPG, PNG, JPEG (Max: 2MB) - <span class="font-bold text-red-600">Wajib diisi</span>
+                </p>
+                
+                {{-- PHOTO PREVIEW --}}
+                <div id="addPhotoPreviewContainer" class="mt-4 hidden">
+                    <div class="relative inline-block">
+                        <img id="addPhotoPreview" src="" alt="Preview" class="w-full max-w-xs h-48 object-cover rounded-xl border-2 border-slate-200 shadow-md">
+                        <button type="button" onclick="removeAddAssetPhoto()" 
+                            class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-green-600 mt-2 font-bold">
+                        <i class="fas fa-check-circle"></i> Foto berhasil dipilih
+                    </p>
+                </div>
             </div>
             
-            {{-- STATUS --}}
-            <div class="mb-8">
-                <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                    Status
-                </label>
-                <select name="status" required
-                    class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:border-red-primary focus:outline-none transition-colors">
-                    <option value="">-- Pilih Status --</option>
-                    <option value="tersedia">Tersedia</option>
-                    <option value="dipinjam">Dipinjam</option>
-                    <option value="maintenance">Maintenance</option>
-                </select>
+            {{-- INFO AUTO-SET --}}
+            <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-info-circle text-green-600"></i>
+                    <span class="text-sm font-bold text-green-800">Informasi Otomatis</span>
+                </div>
+                <p class="text-xs text-green-700">
+                    • Status akan otomatis diatur menjadi <span class="font-bold">"Tersedia"</span><br>
+                    • Kondisi akan otomatis diatur menjadi <span class="font-bold">"Baik"</span><br>
+                </p>
             </div>
             
+                        
             {{-- BUTTONS --}}
             <div class="flex gap-4">
                 <button type="button" onclick="closeAddAssetModal()" 
@@ -115,9 +142,59 @@
                 </button>
                 <button type="submit" 
                     class="flex-1 bg-red-primary hover:bg-red-700 text-white font-black py-3 rounded-xl transition-all duration-300 hover:shadow-xl">
-                    <i class="fas fa-save mr-2"></i> Simpan Aset
+                    <i class="fas fa-save mr-2"></i> Simpan Asset
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+// Preview foto saat upload
+function previewAddAssetPhoto(event) {
+    const file = event.target.files[0];
+    const previewContainer = document.getElementById('addPhotoPreviewContainer');
+    const previewImage = document.getElementById('addPhotoPreview');
+    
+    if (file) {
+        // Validasi ukuran file (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Ukuran file terlalu besar! Maksimal 2MB');
+            event.target.value = '';
+            return;
+        }
+        
+        // Validasi tipe file
+        if (!file.type.match('image.*')) {
+            alert('File harus berupa gambar!');
+            event.target.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Hapus foto yang dipilih
+function removeAddAssetPhoto() {
+    const fileInput = document.getElementById('addAssetPhoto');
+    const previewContainer = document.getElementById('addPhotoPreviewContainer');
+    const previewImage = document.getElementById('addPhotoPreview');
+    
+    fileInput.value = '';
+    previewImage.src = '';
+    previewContainer.classList.add('hidden');
+}
+
+// Reset form saat modal ditutup
+function closeAddAssetModal() {
+    document.getElementById('addAssetModal').classList.add('hidden');
+    document.getElementById('addAssetForm').reset();
+    removeAddAssetPhoto();
+}
+</script>

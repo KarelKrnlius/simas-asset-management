@@ -6,11 +6,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Auth\Passwords\CanResetPassword;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, CanResetPassword;
+
+    // Tambahkan ini di dalam class User
+    public function loans()
+    {
+        return $this->hasMany(Loan::class);
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
 
     /**
      * The attributes that are mass assignable.

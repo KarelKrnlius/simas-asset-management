@@ -1,24 +1,28 @@
-{{-- ADD CATEGORY MODAL --}}
-<style>
-    .bg-red-primary { background-color: #E11D48 !important; }
-    .hover\:bg-red-primary:hover { background-color: #E11D48 !important; opacity: 0.9 !important; }
-    .focus\:border-red-primary:focus { border-color: #E11D48 !important; }
-    
-    /* Cursor styles for interactive elements */
-    select:hover { cursor: pointer; }
-    input[type="text"]:hover { cursor: text; }
-    textarea:hover { cursor: text; }
-    button:hover { cursor: pointer; }
-</style>
 <div id="addCategoryModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
     <div class="bg-white rounded-[2rem] p-8 max-w-md w-full mx-4 shadow-2xl">
         <div class="text-center mb-6">
             <h3 class="text-xl font-black text-slate-900">Tambah Kategori Baru</h3>
-            <p class="text-slate-600 text-sm mt-2">Buat kategori baru untuk aset</p>
+            <p class="text-slate-600 text-sm mt-2">Buat kategori baru untuk Asset</p>
         </div>
         
         <form id="addCategoryForm" method="POST">
             @csrf
+            
+            {{-- CATEGORY CODE --}}
+            <div class="mb-6">
+                <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
+                    Kode Kategori
+                </label>
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-black text-slate-700">
+                        <span id="categoryCodeDisplay">Auto-generate</span>
+                    </div>
+                    <div class="text-sm text-slate-500">
+                        <i class="fas fa-info-circle"></i>
+                        Otomatis
+                    </div>
+                </div>
+            </div>
             
             {{-- NAME --}}
             <div class="mb-6">

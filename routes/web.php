@@ -1,163 +1,129 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Log;
 
-use App\Models\User;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\AssetReturnController;
+use App\Http\Controllers\RoleController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
-
-// =====================
 // HOME → LOGIN
-// =====================
-Route::get('/', function () {
+Route::get('/', function () { 
     return redirect()->route('login');
 });
 
-// =====================
-// LOGIN & AUTH
-// =====================
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
+// AUTH
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.process');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::post('/login', function (Request $request) {
-    $user = User::where('email', $request->email)->first();
+// AREA LOGIN
+Route::middleware(['auth', 'nocache'])->group(function () {
 
-    if (!$user) {
-        return back()->withErrors(['email' => 'Email tidak ditemukan']);
-    }
-
-    if (!Hash::check($request->password, $user->password)) {
-        return back()->withErrors(['email' => 'Email atau password salah']);
-    }
-
-    Auth::login($user);
-
-    return redirect()->route('dashboard');
-
-})->name('login.process');
-
-
-// =====================
-// FORGOT PASSWORD
-// =====================
-
-// FORM
-Route::get('/forgot-password', function () {
-    return view('auth.forgot-password');
-})->name('password.request');
-
-
-// KIRIM EMAIL
-Route::post('/forgot-password', function (Request $request) {
-
-    $request->validate([
-        'email' => 'required|email'
-    ]);
-
-    $status = Password::sendResetLink(
-        $request->only('email')
-    );
-
-    return $status === Password::RESET_LINK_SENT
-        ? back()->with('status', 'Link reset sudah dikirim!')
-        : back()->withErrors(['email' => 'Email tidak ditemukan']);
-
-})->name('password.email');
-
-
-// =====================
-// RESET PASSWORD
-// =====================
-
-// FORM RESET
-Route::get('/reset-password/{token}', function ($token) {
-    return view('auth.reset-password', ['token' => $token]);
-})->name('password.reset');
-
-
-// SIMPAN PASSWORD BARU
-Route::post('/reset-password', function (Request $request) {
-
-    $request->validate([
-        'token' => 'required',
-        'email' => 'required|email',
-        'password' => 'required|min:6|confirmed',
-    ]);
-
-    $status = Password::reset(
-        $request->only('email', 'password', 'password_confirmation', 'token'),
-        function ($user, $password) {
-            $user->forceFill([
-                'password' => Hash::make($password)
-            ])->save();
-        }
-    );
-
-    return $status === Password::PASSWORD_RESET
-        ? redirect('/login')->with('status', 'Password berhasil diubah!')
-        : back()->withErrors(['email' => 'Gagal reset password']);
-
-})->name('password.update');
-
-
-// LOGOUT
-// =====================
-Route::post('/logout', function () {
-    Auth::logout();
-    return redirect('/login');
-})->name('logout');
-
-// =====================
-// AUTH AREA
-// =====================
-Route::middleware(['auth'])->group(function () {
-
-    // DASHBOARD UTAMA
+    // DASHBOARD
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // MENU DASHBOARD
+    // MENU
     Route::get('/layanan', [DashboardController::class, 'layanan'])->name('layanan');
+
+    // PEMINJAMAN
     Route::get('/peminjaman', [LoanController::class, 'index'])->name('peminjaman');
+    Route::post('/peminjaman', [LoanController::class, 'store'])->name('peminjaman.store');
+
+    // RIWAYAT
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
-    
-    // Assets Resource Routes
-    Route::resource('assets', AssetController::class);
-    Route::get('/assets/next-code', [AssetController::class, 'getNextCode']);
-    
-    // Categories Resource Routes
-    Route::resource('categories', CategoryController::class);
 
-    // =====================
-    // PROFILE
-    // =====================
-    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    // PENGEMBALIAN
+    Route::get('/pengembalian', [AssetReturnController::class, 'index'])->name('pengembalian');
+    Route::post('/pengembalian', [AssetReturnController::class, 'store'])->name('pengembalian.store');
 
-    Route::get('/assets/create', function () {
-        return view('assets.create');
-    })->name('assets.create');
+    /*
+    |--------------------------------------------------------------------------
+    | ASSETS
+    |--------------------------------------------------------------------------
+    */
 
-    Route::get('/users', function () {
-        return view('users.index');
-    })->name('users');
+    // EXPORT ASSET
+    Route::get('/assets/export', [AssetController::class, 'export'])
+        ->name('assets.export')
+        ->middleware('role:admin');
 
-    Route::get('/users/create', function () {
-        return view('users.create');
-    })->name('users.create');
+    // CUSTOM ROUTES
+    Route::get('/assets/next-code', [AssetController::class, 'getNextCode'])
+        ->middleware('role:admin');
 
+    Route::post('/assets/bulk-delete', [AssetController::class, 'bulkDelete'])
+        ->middleware('role:admin');
+
+    // RESOURCE ROUTES
+    Route::resource('assets', AssetController::class)
+        ->middleware('role:admin');
+
+    /*
+    |--------------------------------------------------------------------------
+    | CATEGORIES
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/categories/list', [CategoryController::class, 'list'])
+        ->middleware('role:admin');
+
+    Route::resource('categories', CategoryController::class)
+        ->middleware('role:admin');
+
+    Route::post('/categories/bulk-delete', [CategoryController::class, 'bulkDelete'])
+        ->middleware('role:admin');
+
+    /*
+    |--------------------------------------------------------------------------
+    | ROLES
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('role:admin')->group(function () {
+
+        // CRUD ROLE
+        Route::resource('roles', RoleController::class)
+            ->except(['create', 'edit', 'show']);
+
+        // BULK DELETE
+        Route::post('/roles/bulk-delete', [RoleController::class, 'bulkDelete'])
+            ->name('roles.bulkDelete');
+
+        // DELETE ALL
+        Route::get('/roles-delete-all', [RoleController::class, 'deleteAll'])
+            ->name('roles.deleteAll');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | USERS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('role:admin')->group(function () {
+
+        Route::resource('users', UserController::class);
+
+        Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
+
+        Route::post('/users/{id}/toggle', [UserController::class, 'toggle']);
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | PROFILE
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/profile', [ProfileController::class, 'index'])
+        ->name('profile');
+
+    Route::put('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
 });

@@ -17,13 +17,13 @@
                 <p class="text-slate-500 font-bold text-xs uppercase tracking-[0.3em]">Sistem pemantauan aset dalam kendali penuh.</p>
             </div>
             <div class="hidden lg:block bg-slate-200/50 backdrop-blur-md border border-slate-300 p-6 rounded-3xl">
-                <p class="text-[10px] font-black text-red-600 uppercase italic">Staff Access</p>
+                <p class="text-[10px] font-black text-red-600 uppercase italic">{{ Auth::user()->role ? ucfirst(Auth::user()->role->name) : 'User' }} Access</p>
                 <p class="text-xs font-bold text-slate-600 opacity-60">ID: {{ Auth::user()->id }}</p>
             </div>
         </div>
     </div>
 
-    @if(Auth::user()->role_id == 1)
+    @if(Auth::user()->role && Auth::user()->role->isAdmin())
         {{-- BAGIAN ADMIN --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 max-w-7xl mx-auto">
             @foreach([
@@ -62,8 +62,8 @@
                 <div class="bg-red-600 p-10 rounded-[3rem] text-white shadow-2xl">
                     <h3 class="text-lg font-black uppercase italic mb-6">Aksi Cepat</h3>
                     <div class="space-y-3">
-                        <a href="/aset/create" class="block w-full bg-white text-red-600 py-5 rounded-2xl text-[10px] font-black uppercase text-center tracking-widest hover:scale-105 transition-all">
-                            <i class="fas fa-plus mr-2"></i> Input Aset Baru
+                        <a href="/assets?open_modal=add" class="block w-full bg-white text-red-600 py-5 rounded-2xl text-[10px] font-black uppercase text-center tracking-widest hover:scale-105 transition-all">
+                            <i class="fas fa-plus mr-2"></i> Tambah Asset Baru
                         </a>
                     </div>
                 </div>
@@ -78,7 +78,7 @@
                             </div>
                             <div class="flex-1">
                                 <p class="text-[11px] font-black text-slate-900 uppercase italic leading-none">{{ $q->asset_name ?? 'Asset' }}</p>
-                                <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">Oleh: {{ $q->user_name ?? 'Staff' }}</p>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">Oleh: {{ $q->user_name ?? 'User' }}</p>
                             </div>
                         </div>
                         @empty
@@ -90,7 +90,7 @@
         </div>
 
     @else
-        {{-- FLOW STAFF --}}
+        {{-- FLOW NON-ADMIN --}}
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-10 max-w-7xl mx-auto">
             
             <div class="lg:col-span-3 space-y-10">
@@ -167,7 +167,7 @@
                 </div>
 
                 <div class="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm">
-                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 italic border-b border-slate-100 pb-4 text-center">Panduan Staff</h3>
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 italic border-b border-slate-100 pb-4 text-center">Panduan {{ Auth::user()->role ? ucfirst(Auth::user()->role->name) : 'User' }}</h3>
                     <div class="space-y-4">
                         <div class="flex gap-4">
                             <span class="w-6 h-6 bg-red-50 text-red-600 rounded-lg flex items-center justify-center text-[10px] font-black">1</span>
@@ -175,7 +175,7 @@
                         </div>
                         <div class="flex gap-4">
                             <span class="w-6 h-6 bg-red-50 text-red-600 rounded-lg flex items-center justify-center text-[10px] font-black">2</span>
-                            <p class="text-[10px] font-bold text-slate-600 uppercase leading-tight">Klik pinjam dan tunggu validasi admin</p>
+                            <p class="text-[10px] font-bold text-slate-600 uppercase leading-tight">Klik pinjam dan tunggu validasi</p>
                         </div>
                         <div class="flex gap-4">
                             <span class="w-6 h-6 bg-red-50 text-red-600 rounded-lg flex items-center justify-center text-[10px] font-black">3</span>
@@ -190,7 +190,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/apexcharts@latest"></script>
 <script>
-    @if(Auth::user()->role_id == 1)
+    @if(Auth::user()->role && Auth::user()->role->isAdmin())
     document.addEventListener('DOMContentLoaded', function() {
         var options = {
             series: [{ name: 'Aktivitas', data: [44, 55, 41, 67, 22, 43, 21] }],

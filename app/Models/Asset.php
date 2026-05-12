@@ -16,6 +16,7 @@ class Asset extends Model
         'stock',
         'condition',
         'status',
+        'photo',
     ];
 
     /**
@@ -25,4 +26,14 @@ class Asset extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    /**
+     * Relasi many-to-many ke peminjaman melalui tabel loan_details.
+     */
+    public function loans()
+    {
+        return $this->belongsToMany(Loan::class, 'loan_details')
+                    ->withPivot('quantity');
+    }
 }
+
