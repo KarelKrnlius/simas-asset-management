@@ -205,7 +205,7 @@
                                     </span>
                                 </td>
                                 <td class="py-4 px-4 text-center">
-                                    <button onclick="generateQR('{{ $asset->id }}', '{{ $asset->qr_code ?? $asset->code }}')" 
+                                    <button onclick="generateQR('{{ $asset->id }}', 'https://magnifier-sinner-unsettled.ngrok-free.dev/asset/{{ $asset->code }}', '{{ $asset->code }}')" 
                                             class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors"
                                             title="Generate QR Code">
                                         <i class="fas fa-qrcode"></i>
@@ -1094,7 +1094,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // QR Code Generator Function
-function generateQR(assetId, qrCode) {
+function generateQR(assetId, qrUrl, assetCode) {
     // Create modal if not exists
     if (!document.getElementById('qrModal')) {
         const modal = document.createElement('div');
@@ -1111,8 +1111,10 @@ function generateQR(assetId, qrCode) {
                 <div class="text-center">
                     <div id="qrCodeContainer" class="inline-block bg-white p-4 rounded-xl border-2 border-red-600 mb-4"></div>
                     <div class="mb-4">
-                        <p class="text-sm font-black text-slate-600 mb-1">QR Code:</p>
-                        <p class="text-xs text-slate-400" id="qrCodeText"></p>
+                        <p class="text-sm font-black text-slate-600 mb-1">Kode Asset:</p>
+                        <p class="text-xs text-slate-400 mb-2" id="qrCodeText"></p>
+                        <p class="text-sm font-black text-slate-600 mb-1">Link URL:</p>
+                        <p class="text-xs text-blue-500 break-all" id="qrUrlText"></p>
                     </div>
                     <button onclick="downloadQR()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors duration-200">
                         <i class="fas fa-download mr-2"></i>Download QR
@@ -1122,29 +1124,30 @@ function generateQR(assetId, qrCode) {
         `;
         document.body.appendChild(modal);
     }
-    
+
     // Show modal
     document.getElementById('qrModal').classList.remove('hidden');
     document.getElementById('qrModal').classList.add('flex');
-    
-    // Generate QR code
-    document.getElementById('qrCodeText').textContent = qrCode;
+
+    // Generate QR code with full URL
+    document.getElementById('qrCodeText').textContent = assetCode;
+    document.getElementById('qrUrlText').textContent = qrUrl;
     document.getElementById('qrCodeContainer').innerHTML = '';
-    
+
     // Load QRCode library if not loaded
     if (typeof QRCode === 'undefined') {
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js';
         script.onload = function() {
-            generateQRCode(qrCode);
+            generateQRCode(qrUrl);
         };
         document.head.appendChild(script);
     } else {
-        generateQRCode(qrCode);
+        generateQRCode(qrUrl);
     }
-    
-    // Store current QR code for download
-    window.currentQRCode = qrCode;
+
+    // Store current asset code for download filename
+    window.currentQRCode = assetCode;
 }
 
 function generateQRCode(qrText) {

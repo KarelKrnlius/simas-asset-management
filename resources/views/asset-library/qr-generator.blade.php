@@ -18,11 +18,14 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
 <script>
-const baseUrl = "http://192.168.1.5:8000/asset-library";
 const assets = @json($assets);
 
+// URL publik ngrok - pastikan QR bisa diakses dari perangkat mana saja
+const publicUrl = "https://magnifier-sinner-unsettled.ngrok-free.dev";
+
 assets.forEach(asset => {
-    const qrText = `${baseUrl}/${asset.code}`;
+    // Route publik /asset/{code} tanpa perlu login
+    const qrText = `${publicUrl}/asset/${asset.code}`;
 
     new QRCode(document.getElementById(`qrcode-${asset.id}`), {
         text: qrText,

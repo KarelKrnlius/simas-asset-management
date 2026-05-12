@@ -85,11 +85,12 @@
             <div class="col-span-2 bg-white rounded-3xl p-10 flex items-center justify-center shadow-sm hover:shadow-md transition">
 
                 @php
-                    $photoUrl = \App\Helpers\AssetHelper::getPhotoUrl($asset->photo) ?? asset('images/no-image.png');
+                    $photoUrl = $asset->photo ? route('asset.photo', $asset->photo) : asset('images/no-image.png');
                 @endphp
 
                 <img src="{{ $photoUrl }}"
-                     class="max-h-[420px] object-contain transition duration-300 hover:scale-105">
+                     class="max-h-[420px] object-contain transition duration-300 hover:scale-105"
+                     onerror="this.src='{{ asset('images/no-image.png') }}'">
 
             </div>
 

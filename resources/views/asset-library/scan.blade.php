@@ -60,11 +60,37 @@ function onScanSuccess(decodedText) {
 
     console.log("QR decoded:", decodedText);
 
-    // Extract code from URL or use directly
-    let code = decodedText;
+    if (!decodedText || decodedText.trim() === '') {
+        alert("QR code tidak valid. Coba lagi.");
+        isScanning = false;
+        return;
+    }
 
-    // If QR contains full URL, extract code
-    if (decodedText.includes('/asset-library/')) {
+    // Stop the scanner immediately
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            console.log("Scanner stopped");
+            processScanResult(decodedText);
+        }).catch(err => {
+            console.error("Failed to stop scanner:", err);
+            processScanResult(decodedText);
+        });
+    } else {
+        processScanResult(decodedText);
+    }
+}
+
+function processScanResult(decodedText) {
+    // Extract code from URL or use directly
+    let code = decodedText.trim();
+
+    // If QR contains full URL with /asset/, extract code
+    if (decodedText.includes('/asset/')) {
+        const parts = decodedText.split('/asset/');
+        code = parts[parts.length - 1];
+    }
+    // If QR contains full URL with /asset-library/, extract code
+    else if (decodedText.includes('/asset-library/')) {
         const parts = decodedText.split('/asset-library/');
         code = parts[parts.length - 1];
     }
@@ -80,8 +106,22 @@ function onScanSuccess(decodedText) {
     console.log("Final code extracted:", code);
     console.log("Redirecting to asset detail:", `/asset-library/search?qr_code=${code}`);
 
-    // Redirect to search page which will find and show the asset
-    window.location.href = `/asset-library/search?qr_code=${encodeURIComponent(code)}`;
+    // Show success feedback
+    const readerDiv = document.getElementById('reader');
+    readerDiv.innerHTML = `
+        <div class="flex items-center justify-center h-full bg-black/50">
+            <div class="text-white text-center">
+                <div class="text-green-400 text-4xl mb-4">✓</div>
+                <p class="text-sm">QR Code berhasil dibaca!</p>
+                <p class="text-xs mt-2">Mengarah ke halaman asset...</p>
+            </div>
+        </div>
+    `;
+
+    // Redirect after a short delay
+    setTimeout(() => {
+        window.location.href = `/asset-library/search?qr_code=${encodeURIComponent(code)}`;
+    }, 1000);
 }
 
 // START CAMERA
@@ -121,21 +161,46 @@ function scanFile(event) {
     if (!file) return;
 
     console.log("Upload file selected:", file.name);
+    console.log("File type:", file.type);
+    console.log("File size:", file.size);
+
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+        alert("Harap pilih file gambar (JPG, PNG, dll)");
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        alert("File terlalu besar. Maksimal 10MB.");
+        return;
+    }
+
+    // Show loading indicator
+    const readerDiv = document.getElementById('reader');
+    const originalContent = readerDiv.innerHTML;
+    readerDiv.innerHTML = `
+        <div class="flex items-center justify-center h-full bg-black/50">
+            <div class="text-white text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                <p class="text-sm">Membaca QR code...</p>
+            </div>
+        </div>
+    `;
 
     // Stop camera scanning first
     if (html5QrCode && html5QrCode.isScanning) {
         html5QrCode.stop().then(() => {
-            scanFileInternal(file);
+            scanFileInternal(file, readerDiv, originalContent);
         }).catch(err => {
             console.error("Error stopping camera:", err);
-            scanFileInternal(file);
+            scanFileInternal(file, readerDiv, originalContent);
         });
     } else {
-        scanFileInternal(file);
+        scanFileInternal(file, readerDiv, originalContent);
     }
 }
 
-function scanFileInternal(file) {
+function scanFileInternal(file, readerDiv, originalContent) {
     console.log("Starting file scan...");
     const scanner = new Html5Qrcode("reader");
 
@@ -143,11 +208,20 @@ function scanFileInternal(file) {
     .then(decodedText => {
         console.log("QR decoded from file:", decodedText);
 
+        if (!decodedText || decodedText.trim() === '') {
+            throw new Error('No QR code found in image');
+        }
+
         // Extract code from URL or use directly
-        let code = decodedText;
+        let code = decodedText.trim();
 
         // If QR contains full URL, extract code
-        if (decodedText.includes('/asset-library/')) {
+        if (decodedText.includes('/asset/')) {
+            const parts = decodedText.split('/asset/');
+            code = parts[parts.length - 1];
+        }
+        // If QR contains /asset-library/ (old format)
+        else if (decodedText.includes('/asset-library/')) {
             const parts = decodedText.split('/asset-library/');
             code = parts[parts.length - 1];
         }
@@ -163,14 +237,43 @@ function scanFileInternal(file) {
         console.log("Final code extracted:", code);
         console.log("Redirecting to:", `/asset-library/search?qr_code=${encodeURIComponent(code)}`);
 
-        // Redirect to search page which will find and show the asset
-        window.location.href = `/asset-library/search?qr_code=${encodeURIComponent(code)}`;
+        // Show success briefly before redirect
+        readerDiv.innerHTML = `
+            <div class="flex items-center justify-center h-full bg-black/50">
+                <div class="text-white text-center">
+                    <div class="text-green-400 text-4xl mb-4">✓</div>
+                    <p class="text-sm">QR Code berhasil dibaca!</p>
+                    <p class="text-xs mt-2">Mengarah ke halaman asset...</p>
+                </div>
+            </div>
+        `;
+
+        // Redirect after a short delay
+        setTimeout(() => {
+            window.location.href = `/asset-library/search?qr_code=${encodeURIComponent(code)}`;
+        }, 1000);
     })
     .catch(err => {
         console.error("QR scan error:", err);
-        alert("QR tidak terbaca. Pastikan QR code jelas dan tidak blur.");
-        // Restart camera
-        startScanner();
+        
+        // Restore original content
+        if (readerDiv && originalContent) {
+            readerDiv.innerHTML = originalContent;
+        }
+        
+        // More specific error messages
+        if (err.name === 'NotFoundException') {
+            alert("QR code tidak ditemukan dalam gambar. Pastikan QR code terlihat jelas.");
+        } else if (err.name === 'Exception') {
+            alert("Gambar tidak valid. Pastikan file berisi QR code yang jelas.");
+        } else {
+            alert("QR tidak terbaca. Pastikan QR code jelas, tidak blur, dan coba dengan gambar yang lebih berkualitas.");
+        }
+        
+        // Restart camera after delay
+        setTimeout(() => {
+            startScanner();
+        }, 1000);
     });
 }
 

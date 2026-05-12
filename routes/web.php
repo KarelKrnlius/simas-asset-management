@@ -17,6 +17,20 @@ use App\Http\Controllers\LoanCheckController;
 // HOME → LOGIN
 Route::get('/', function () { return redirect()->route('login');});
 
+// PUBLIC ASSET DETAIL (Accessible without login for QR scanning)
+Route::get('/asset/{code}', [AssetLibraryController::class, 'publicShow'])->name('asset.public');
+
+// PUBLIC SCAN PAGE (Accessible without login for QR scanning)
+Route::get('/scan', [AssetLibraryController::class, 'publicScan'])->name('scan.public');
+
+// PUBLIC ASSET SEARCH (Accessible without login for QR scanning)
+Route::get('/asset-library/search', [AssetLibraryController::class, 'searchByQrCode'])->name('asset-library.search');
+
+// PUBLIC ASSET PHOTO PROXY (Serve RustFS photos through Laravel for external access)
+Route::get('/asset-photo/{path}', [AssetLibraryController::class, 'servePhoto'])
+    ->where('path', '.*')
+    ->name('asset.photo');
+
 // AUTHENTICATION ROUTES
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.process');
@@ -46,11 +60,10 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/pengembalian', [AssetReturnController::class, 'index'])->name('pengembalian');
     Route::post('/pengembalian', [AssetReturnController::class, 'store'])->name('pengembalian.store');
     
-    // ASSET LIBRARY (All Users)
+    // ASSET LIBRARY (All Authenticated Users)
     Route::get('/asset-library', [AssetLibraryController::class, 'index'])->name('asset-library.index');
     Route::get('/asset-library/scan', [AssetLibraryController::class, 'scan'])->name('asset-library.scan');
     Route::get('/asset-library/qr-generator', [AssetLibraryController::class, 'qrGenerator'])->name('asset-library.qr-generator');
-    Route::get('/asset-library/search', [AssetLibraryController::class, 'searchByQrCode'])->name('asset-library.search');
     Route::get('/asset-library/{code}', [AssetLibraryController::class, 'showAsset'])->name('asset-library.show');
     
     // ASSET LIBRARY ROUTES (Admin Only - Additional Features)

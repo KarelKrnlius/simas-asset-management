@@ -50,11 +50,7 @@
                 <a href="/roles" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('roles*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
                     <div class="min-w-[20px] text-center"><i class="fas fa-user-shield"></i></div>
                     <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Master Role</span>
-                </a>
-                <a href="/categories" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('categories*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
-                    <div class="min-w-[20px] text-center"><i class="fas fa-tags"></i></div>
-                    <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Master Kategori</span>
-                </a>
+                
                 <a href="/pengecek-peminjaman" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('pengecek-peminjaman*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
                     <div class="min-w-[20px] text-center"><i class="fas fa-clipboard-check"></i></div>
                     <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Pengecek Peminjaman</span>
@@ -255,4 +251,4 @@
     </script>
     @endif
 </body>
-</html>
+</html>   
