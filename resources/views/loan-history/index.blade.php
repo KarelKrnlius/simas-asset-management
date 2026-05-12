@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Pengecek Peminjaman')
+@section('title', 'Riwayat Peminjaman')
 
 @section('content')
 <div class="min-h-screen pt-1 items-start w-full">
@@ -9,10 +9,10 @@
         <div class="bg-white rounded-[2rem] shadow-xl p-8 mb-8">
             <div class="mb-6">
                 <h2 class="text-3xl font-black text-red-600 uppercase tracking-tighter mb-2">
-                    Pengecek Peminjaman
+                    Riwayat Peminjaman
                 </h2>
                 <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">
-                    Cek dan monitor semua peminjaman asset
+                    Semua data peminjaman asset (aktif dan sudah dikembalikan)
                 </p>
             </div>
 
@@ -20,7 +20,7 @@
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 <p class="text-sm text-blue-800">
                     <i class="fas fa-info-circle mr-2"></i>
-                    <strong>Informasi:</strong> Halaman ini menampilkan peminjaman yang <span class="font-bold">sedang aktif</span> (status: dipinjam). Klik tombol "Lihat Detail" untuk melihat barang-barang yang dipinjam. Peminjaman yang sudah dikembalikan tidak akan muncul di list ini.
+                    <strong>Informasi:</strong> Halaman ini menampilkan <span class="font-bold">SEMUA</span> peminjaman (status: dipinjam dan dikembalikan). Klik tombol "Lihat Detail" untuk melihat barang-barang yang dipinjam.
                 </p>
             </div>
         </div>
@@ -31,9 +31,9 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <!-- Total Count -->
                 <div class="flex items-center gap-2">
-                    <i class="fas fa-clipboard-list text-red-primary"></i>
+                    <i class="fas fa-history text-red-primary"></i>
                     <span class="font-black text-slate-900">
-                        Peminjaman Aktif: <span class="text-red-primary">{{ $loans->total() }}</span> transaksi
+                        Total Peminjaman: <span class="text-red-primary">{{ $loans->total() }}</span> transaksi
                     </span>
                     <span class="text-sm text-slate-500">
                         (Menampilkan {{ $loans->firstItem() }}-{{ $loans->lastItem() }})
@@ -46,7 +46,7 @@
                     <div class="relative flex-1">
                         <input type="text"
                                id="searchInput"
-                               placeholder="Cari nama atau email..."
+                               placeholder="Cari nama, email, atau kode peminjaman..."
                                value="{{ request('search') }}"
                                class="w-full px-4 py-2 pr-10 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent"
                                onkeypress="handleKeyPress(event)">
@@ -70,6 +70,7 @@
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Kode Peminjaman</th>
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Nama</th>
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Tanggal Peminjaman</th>
+                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Status</th>
                             <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Aksi</th>
                         </tr>
                     </thead>
@@ -106,6 +107,17 @@
                                         </div>
                                     @endif
                                 </td>
+                                <td class="py-4 px-4 text-center">
+                                    @if($loan->status === 'dipinjam')
+                                        <span class="inline-block bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">
+                                            <i class="fas fa-clock mr-1"></i>Aktif
+                                        </span>
+                                    @else
+                                        <span class="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">
+                                            <i class="fas fa-check-circle mr-1"></i>Dikembalikan
+                                        </span>
+                                    @endif
+                                </td>
                                 <td class="py-4 px-4">
                                     <div class="flex justify-center">
                                         <button onclick="showLoanDetail({{ $loan->id }})" 
@@ -118,11 +130,11 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-12">
+                                <td colspan="6" class="text-center py-12">
                                     <div class="flex flex-col items-center">
-                                        <i class="fas fa-inbox text-4xl text-slate-300 mb-4"></i>
-                                        <h3 class="text-lg font-bold text-slate-900 mb-2">Belum Ada Peminjaman Aktif</h3>
-                                        <p class="text-sm text-slate-500">Tidak ada peminjaman yang sedang berjalan</p>
+                                        <i class="fas fa-history text-4xl text-slate-300 mb-4"></i>
+                                        <h3 class="text-lg font-bold text-slate-900 mb-2">Belum Ada Riwayat Peminjaman</h3>
+                                        <p class="text-sm text-slate-500">Tidak ada data peminjaman</p>
                                     </div>
                                 </td>
                             </tr>
@@ -232,6 +244,10 @@
                     <p class="font-bold text-red-600" id="detailLoanCode">-</p>
                 </div>
                 <div>
+                    <p class="text-xs font-bold text-slate-500 uppercase mb-1">Tanggal Pinjam</p>
+                    <p class="font-semibold text-slate-700" id="detailBorrowDate">-</p>
+                </div>
+                <div>
                     <p class="text-xs font-bold text-slate-500 uppercase mb-1">Nama Peminjam</p>
                     <p class="font-bold text-slate-900" id="detailUserName">-</p>
                 </div>
@@ -240,8 +256,8 @@
                     <p class="font-semibold text-slate-700" id="detailUserEmail">-</p>
                 </div>
                 <div>
-                    <p class="text-xs font-bold text-slate-500 uppercase mb-1">Tanggal Pinjam</p>
-                    <p class="font-semibold text-slate-700" id="detailBorrowDate">-</p>
+                    <p class="text-xs font-bold text-slate-500 uppercase mb-1">Status</p>
+                    <p class="font-semibold text-slate-700" id="detailStatus">-</p>
                 </div>
                 <div>
                     <p class="text-xs font-bold text-slate-500 uppercase mb-1">Tanggal Kembali</p>
@@ -261,11 +277,13 @@
                         <th class="text-left py-3 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Nama Asset</th>
                         <th class="text-left py-3 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Kategori</th>
                         <th class="text-center py-3 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Jumlah</th>
+                        <th class="text-center py-3 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Kondisi</th>
+                        <th class="text-center py-3 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Status</th>
                     </tr>
                 </thead>
                 <tbody id="detailAssetsTable">
                     <tr>
-                        <td colspan="5" class="text-center py-8 text-slate-400">
+                        <td colspan="7" class="text-center py-8 text-slate-400">
                             <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
                             <p>Memuat data...</p>
                         </td>
@@ -363,7 +381,7 @@ function showLoanDetail(loanId) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     
     // Fetch loan details
-    fetch(`/pengecek-peminjaman/${loanId}`, {
+    fetch(`/riwayat-peminjaman/${loanId}`, {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
@@ -382,10 +400,40 @@ function showLoanDetail(loanId) {
             document.getElementById('detailBorrowDate').textContent = formatDate(loan.borrow_date);
             document.getElementById('detailReturnDate').textContent = loan.return_date ? formatDate(loan.return_date) : 'Tidak ada rencana';
             
+            // Update status
+            const statusElement = document.getElementById('detailStatus');
+            if (loan.status === 'dipinjam') {
+                statusElement.innerHTML = '<span class="inline-block bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider"><i class="fas fa-clock mr-1"></i>Aktif</span>';
+            } else {
+                statusElement.innerHTML = '<span class="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider"><i class="fas fa-check-circle mr-1"></i>Dikembalikan</span>';
+            }
+            
             // Update assets table
             if (loan.assets && loan.assets.length > 0) {
                 let html = '';
                 loan.assets.forEach((asset, index) => {
+                    // Determine condition badge color
+                    let conditionBadge = '';
+                    if (asset.display_condition === 'baik') {
+                        conditionBadge = '<span class="inline-block bg-green-100 text-green-700 px-2 py-1 rounded-lg text-xs font-semibold uppercase">Baik</span>';
+                    } else if (asset.display_condition === 'rusak') {
+                        conditionBadge = '<span class="inline-block bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg text-xs font-semibold uppercase">Rusak</span>';
+                    } else if (asset.display_condition === 'hilang') {
+                        conditionBadge = '<span class="inline-block bg-red-100 text-red-700 px-2 py-1 rounded-lg text-xs font-semibold uppercase">Hilang</span>';
+                    } else {
+                        conditionBadge = '<span class="inline-block bg-slate-100 text-slate-700 px-2 py-1 rounded-lg text-xs font-semibold uppercase">-</span>';
+                    }
+
+                    // Determine status badge color
+                    let statusBadge = '';
+                    if (asset.return_status === 'dikembalikan') {
+                        statusBadge = '<span class="inline-block bg-green-100 text-green-700 px-2 py-1 rounded-lg text-xs font-semibold uppercase">Dikembalikan</span>';
+                    } else if (asset.return_status === 'tidak ditemukan') {
+                        statusBadge = '<span class="inline-block bg-red-100 text-red-700 px-2 py-1 rounded-lg text-xs font-semibold uppercase">Tidak Ditemukan</span>';
+                    } else {
+                        statusBadge = '<span class="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs font-semibold uppercase">Dipinjam</span>';
+                    }
+
                     html += `
                         <tr class="border-b border-slate-100 hover:bg-slate-50">
                             <td class="py-3 px-4">
@@ -412,6 +460,12 @@ function showLoanDetail(loanId) {
                                     ${asset.pivot.quantity}
                                 </span>
                             </td>
+                            <td class="py-3 px-4 text-center">
+                                ${conditionBadge}
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                ${statusBadge}
+                            </td>
                         </tr>
                     `;
                 });
@@ -419,7 +473,7 @@ function showLoanDetail(loanId) {
             } else {
                 assetsTable.innerHTML = `
                     <tr>
-                        <td colspan="5" class="text-center py-8 text-slate-400">
+                        <td colspan="7" class="text-center py-8 text-slate-400">
                             <i class="fas fa-inbox text-2xl mb-2"></i>
                             <p>Tidak ada asset yang dipinjam</p>
                         </td>

@@ -81,7 +81,10 @@ class AssetReturnController extends Controller
                         ]);
                     }
 
-                    $loan->assets()->detach($returnItem['asset_id']);
+                    // Update pivot condition instead of detaching
+                    $loan->assets()->updateExistingPivot($returnItem['asset_id'], [
+                        'condition' => $returnItem['condition']
+                    ]);
                     $processedLoanIds[] = $loan->id;
                 }
 

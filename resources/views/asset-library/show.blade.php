@@ -130,7 +130,7 @@
                             </div>
 
                             <p class="text-sm text-gray-500 mt-2">
-                                {{ \Carbon\Carbon::parse($loan->borrow_date)->format('d M Y') }} - {{ $loan->return_date ? \Carbon\Carbon::parse($loan->return_date)->format('d M Y') : 'Sekarang' }}
+                                {{ \Carbon\Carbon::parse($loan->borrow_date)->format('d') }} {{ ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][\Carbon\Carbon::parse($loan->borrow_date)->format('n') - 1] }} {{ \Carbon\Carbon::parse($loan->borrow_date)->format('Y') }} - {{ $loan->return_date ? \Carbon\Carbon::parse($loan->return_date)->format('d') . ' ' . ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][\Carbon\Carbon::parse($loan->return_date)->format('n') - 1] . ' ' . \Carbon\Carbon::parse($loan->return_date)->format('Y') : 'Sekarang' }}
                             </p>
 
                             @if($loan->borrow_date && $loan->return_date)

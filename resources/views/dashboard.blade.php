@@ -150,7 +150,7 @@
                                 </div>
                                 <div>
                                     <p class="text-[11px] font-black text-slate-900 uppercase italic">ID Peminjaman #{{ $loan->id }}</p>
-                                    <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">Pinjam: {{ \Carbon\Carbon::parse($loan->borrow_date)->format('d M Y') }}</p>
+                                    <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">Pinjam: {{ \Carbon\Carbon::parse($loan->borrow_date)->format('d') }} {{ ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][\Carbon\Carbon::parse($loan->borrow_date)->format('n') - 1] }} {{ \Carbon\Carbon::parse($loan->borrow_date)->format('Y') }}</p>
                                 </div>
                             </div>
                             @empty

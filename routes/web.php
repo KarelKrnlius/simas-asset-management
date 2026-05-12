@@ -13,8 +13,9 @@ use App\Http\Controllers\AssetReturnController;
 use App\Http\Controllers\AssetLibraryController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\LoanCheckController;
+use App\Http\Controllers\LoanHistoryController;
 
-// HOME → LOGIN
+// HOME ? LOGIN
 Route::get('/', function () { return redirect()->route('login');});
 
 // AUTHENTICATION ROUTES
@@ -41,6 +42,10 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     // RIWAYAT
     Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
+    
+    // RIWAYAT PEMINJAMAN (All Roles)
+    Route::get('/riwayat-peminjaman', [LoanHistoryController::class, 'index'])->name('riwayat-peminjaman');
+    Route::get('/riwayat-peminjaman/{id}', [LoanHistoryController::class, 'show'])->name('riwayat-peminjaman.show');
     
     // PENGEMBALIAN
     Route::get('/pengembalian', [AssetReturnController::class, 'index'])->name('pengembalian');

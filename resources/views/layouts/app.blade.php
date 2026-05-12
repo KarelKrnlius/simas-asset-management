@@ -15,7 +15,7 @@
         .sidebar-transition { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
-<body x-data="{ sidebarOpen: true, showLogoutAllModal: false }">
+<body x-data="{ sidebarOpen: true }">
 
     <aside :class="sidebarOpen ? 'w-72' : 'w-24'" class="sidebar-transition bg-white fixed inset-y-0 left-0 z-50 border-r border-slate-100 flex flex-col shadow-xl">
         <div class="h-24 flex items-center px-8">
@@ -68,9 +68,9 @@
                     <div class="min-w-[20px] text-center"><i class="fas fa-hand-holding"></i></div>
                     <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Peminjaman</span>
                 </a>
-                <a href="/riwayat" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('riwayat*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
+                <a href="/riwayat-peminjaman" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('riwayat-peminjaman*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
                     <div class="min-w-[20px] text-center"><i class="fas fa-history"></i></div>
-                    <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Riwayat Asset</span>
+                    <span x-show="sidebarOpen" class="font-bold text-xs uppercase tracking-widest">Riwayat Peminjaman</span>
                 </a>
                 <a href="/asset-library" class="flex items-center gap-4 p-3.5 rounded-2xl {{ Request::is('asset-library*') ? 'sidebar-active' : 'text-slate-500 hover:bg-red-50 hover:text-red-600' }} mt-1">
                     <div class="min-w-[20px] text-center"><i class="fas fa-qrcode"></i></div>
@@ -126,7 +126,7 @@
             <div class="flex items-center gap-3">
                 <div class="text-right hidden sm:block leading-tight">
                     <p class="text-sm font-black uppercase text-slate-900">{{ Auth::user()->name }}</p>
-                    <p class="text-xs font-bold text-red-500 uppercase">Admin</p>
+                    <p class="text-xs font-bold text-red-500 uppercase">{{ Auth::user()->role ? ucfirst(Auth::user()->role->name) : 'User' }}</p>
                 </div>
                 <div class="w-14 h-14 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-700 border border-slate-200 uppercase text-lg">
                     {{ substr(Auth::user()->name, 0, 1) }}
@@ -141,59 +141,26 @@
 
 <!-- Security: Prevent back button access to login when authenticated -->
 <script>
-    // Immediate check - runs before page load
-    (function() {
-        @if(auth()->check())
-            // If authenticated and trying to access login, redirect immediately
-            if (window.location.pathname === '/login' || window.location.pathname === '/') {
-                window.location.replace('/dashboard');
-                return;
-            }
-        @endif
-    })();
-    
-    // Check authentication on page load
-    window.addEventListener('load', function() {
-        // If authenticated and on login page, redirect to dashboard
-        @if(auth()->check())
-            if (window.location.pathname === '/login' || window.location.pathname === '/') {
-                window.location.replace('/dashboard');
-            }
-        @endif
-    });
-    
-    // Prevent back button cache for authenticated users
-    window.addEventListener('pageshow', function(event) {
-        // If page is loaded from cache (back button)
-        if (event.persisted) {
-            @if(auth()->check())
-                // If authenticated and somehow back to login, redirect to dashboard
-                if (window.location.pathname === '/login' || window.location.pathname === '/') {
-                    window.location.replace('/dashboard');
-                }
-            @endif
+    // Prevent back button to login page for authenticated users
+    @if(Auth::check())
+    window.addEventListener('popstate', function(event) {
+        if (window.location.pathname === '/login' || window.location.pathname === '/') {
+            window.location.replace('/dashboard');
         }
     });
     
-    // Handle browser history navigation
-    window.addEventListener('popstate', function(event) {
-        @if(auth()->check())
-            // If authenticated and trying to go back to login, prevent and stay on current page
-            if (window.location.pathname === '/login' || window.location.pathname === '/') {
-                event.preventDefault();
-                window.location.replace('/dashboard');
-            }
-        @endif
+    window.addEventListener('load', function() {
+        if (window.location.pathname === '/login' || window.location.pathname === '/') {
+            window.location.replace('/dashboard');
+        }
     });
     
-    // Continuous monitoring - check every 100ms
     setInterval(function() {
-        @if(auth()->check())
-            if (window.location.pathname === '/login' || window.location.pathname === '/') {
-                window.location.replace('/dashboard');
-            }
-        @endif
+        if (window.location.pathname === '/login' || window.location.pathname === '/') {
+            window.location.replace('/dashboard');
+        }
     }, 100);
+    @endif
 </script>
 <!-- Success Toast Notification -->
 <div x-data="{ 
@@ -228,31 +195,5 @@
     </div>
 </div>
 
-@if(Auth::check())
-    <script>
-        // Prevent back button to login page for authenticated users
-        window.addEventListener('popstate', function(event) {
-            // Check if we're trying to go back to login page
-            if (window.location.pathname === '/login' || document.referrer.includes('/login')) {
-                // Redirect to dashboard immediately
-                window.location.href = '{{ route("dashboard") }}';
-            }
-        });
-        
-        // Also handle browser back button
-        window.addEventListener('beforeunload', function(event) {
-            // Store that user is authenticated
-            sessionStorage.setItem('user_authenticated', 'true');
-        });
-        
-        // Check on page load if user was authenticated and trying to access login
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.location.pathname === '/login') {
-                // If user is authenticated, redirect to dashboard
-                window.location.href = '{{ route("dashboard") }}';
-            }
-        });
-    </script>
-    @endif
 </body>
 </html>
