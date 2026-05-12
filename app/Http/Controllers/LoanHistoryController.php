@@ -12,30 +12,53 @@ class LoanHistoryController extends Controller
      */
     public function index()
     {
-        // Get search parameter
+        // Get search and sort parameters
         $search = request('search');
+        $sort = request('sort', 'terbaru'); // Default: terbaru
         
         // Build query with relationships
         $query = Loan::with(['user', 'assets.category']);
         
-        // Apply search filter (case-insensitive) - search in user name, email, loan_code
+        // Filter by logged in user (only show their own loans)
+        $query->where('user_id', auth()->id());
+        
+        // Apply search filter (case-insensitive) - search in user name, email, loan id, dates, status
         if ($search) {
-            $query->whereHas('user', function($q) use ($search) {
-                $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
-                  ->orWhereRaw('LOWER(email) LIKE ?', ['%' . strtolower($search) . '%']);
-            })->orWhere('id', 'LIKE', '%' . str_replace('PIN-', '', $search) . '%');
+            $query->where(function($q) use ($search) {
+                // Search in user name and email
+                $q->whereHas('user', function($subQ) use ($search) {
+                    $subQ->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
+                         ->orWhereRaw('LOWER(email) LIKE ?', ['%' . strtolower($search) . '%']);
+                })
+                // Search in loan id (PIN-XXX format)
+                ->orWhere('id', 'LIKE', '%' . str_replace('PIN-', '', $search) . '%')
+                // Search in borrow_date
+                ->orWhere('borrow_date', 'LIKE', '%' . $search . '%')
+                // Search in return_date
+                ->orWhere('return_date', 'LIKE', '%' . $search . '%')
+                // Search in status
+                ->orWhere('status', 'LIKE', '%' . $search . '%');
+            });
         }
         
-        // Order by latest
-        $query->orderBy('created_at', 'desc');
+        // Apply sorting
+        switch ($sort) {
+            case 'terlama':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'terbaru':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
         
         // Paginate
         $loans = $query->paginate(15);
         
-        // Append search parameter to pagination links
-        $loans->appends(request()->only(['search']));
+        // Append search and sort parameters to pagination links
+        $loans->appends(request()->only(['search', 'sort']));
         
-        return view('loan-history.index', compact('loans'));
+        return view('loan-history.index', compact('loans', 'sort'));
     }
 
     /**
@@ -44,6 +67,7 @@ class LoanHistoryController extends Controller
     public function show($id)
     {
         $loan = Loan::with(['user', 'assets.category'])
+            ->where('user_id', auth()->id())
             ->findOrFail($id);
         
         // Tambahkan loan_code ke response
