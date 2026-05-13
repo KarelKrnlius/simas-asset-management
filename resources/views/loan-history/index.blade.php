@@ -40,7 +40,7 @@
                     </span>
                 </div>
                 
-                <!-- Search, Sort, and Clear -->
+                <!-- Search, Clear, Sort, and Hapus Terpilih -->
                 <div class="flex gap-3">
                     <!-- Search Input -->
                     <div class="relative flex-1">
@@ -54,12 +54,14 @@
                             <i class="fas fa-search text-slate-400 hover:text-red-600"></i>
                         </div>
                     </div>
+                    
                     <!-- Clear Button -->
                     <button onclick="performRefresh()"
                             class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
                         <i class="fas fa-sync-alt"></i>
                         Clear
                     </button>
+                    
                     <!-- Sort Dropdown -->
                     <div class="relative">
                         <select id="sortSelect"
@@ -69,6 +71,12 @@
                             <option value="terlama" {{ $sort == 'terlama' ? 'selected' : '' }}>Terlama</option>
                         </select>
                     </div>
+                    
+                    <!-- Bulk Delete Button -->
+                    <button onclick="showBulkDeleteModal()" id="bulkDeleteBtn" disabled
+                        class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-trash mr-1"></i> Hapus Terpilih
+                    </button>
                 </div>
             </div>
             
@@ -76,6 +84,10 @@
                 <table class="w-full" id="loansTable">
                     <thead>
                         <tr class="border-b-2 border-slate-200">
+                            <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">
+                                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" 
+                                    class="w-4 h-4 text-red-primary border-slate-300 rounded focus:ring-red-primary focus:ring-2">
+                            </th>
                             <th class="text-center py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">NO</th>
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Kode Peminjaman</th>
                             <th class="text-left py-4 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Nama</th>
@@ -87,6 +99,10 @@
                     <tbody>
                         @forelse($loans as $index => $loan)
                             <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-4 text-center">
+                                    <input type="checkbox" class="loan-checkbox" value="{{ $loan->id }}" onchange="updateBulkDeleteButton()"
+                                        class="w-4 h-4 text-red-primary border-slate-300 rounded focus:ring-red-primary focus:ring-2">
+                                </td>
                                 <td class="py-4 px-4 text-center">
                                     <span class="inline-block bg-slate-100 text-slate-700 px-3 py-1 rounded-lg font-bold text-sm">
                                         {{ ($loans->currentPage() - 1) * $loans->perPage() + $loop->index + 1 }}
@@ -140,7 +156,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-12">
+                                <td colspan="7" class="text-center py-12">
                                     <div class="flex flex-col items-center">
                                         <i class="fas fa-history text-4xl text-slate-300 mb-4"></i>
                                         <h3 class="text-lg font-bold text-slate-900 mb-2">Belum Ada Riwayat Peminjaman</h3>
@@ -352,7 +368,34 @@ document.addEventListener('DOMContentLoaded', function() {
             sortSelect.value = sortParam;
         }
     }
+    
+    // Show success notification after bulk delete
+    if (sessionStorage.getItem('bulkDeleteSuccess') === 'true') {
+        const message = sessionStorage.getItem('bulkDeleteMessage') || 'Peminjaman berhasil dihapus';
+        showNotification(message, 'success');
+        sessionStorage.removeItem('bulkDeleteSuccess');
+        sessionStorage.removeItem('bulkDeleteMessage');
+    }
 });
+
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transform transition-all duration-300 ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white font-semibold`;
+    notification.innerHTML = `
+        <div class="flex items-center gap-3">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} text-xl"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
 
 function handleKeyPress(event) {
     if (event.key === 'Enter') {
@@ -561,8 +604,155 @@ document.addEventListener('keydown', function(event) {
 });
 </script>
 
+{{-- BULK DELETE MODAL --}}
+<div id="bulkDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-slate-900">Hapus Peminjaman Terpilih</h3>
+                <p class="text-sm text-slate-600">Aksi ini tidak dapat dibatalkan</p>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <p class="text-slate-700 mb-2">
+                Apakah Anda yakin ingin menghapus <span id="selectedCount" class="font-bold text-red-600">0</span> peminjaman terpilih?
+            </p>
+            <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p class="text-sm text-red-800">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Semua peminjaman yang dipilih akan dihapus dan status asset akan dikembalikan.
+                </p>
+            </div>
+        </div>
+        
+        <div class="flex gap-3">
+            <button onclick="closeBulkDeleteModal()" 
+                class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-colors">
+                Batal
+            </button>
+            <button onclick="confirmBulkDelete()" 
+                class="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-xl transition-all duration-300 hover:shadow-xl">
+                <i class="fas fa-trash mr-2"></i> Hapus
+            </button>
+        </div>
+    </div>
+</div>
+
 <style>
 .bg-red-primary { background-color: #E11D48 !important; }
 </style>
+
+<script>
+// Bulk delete functionality
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const checkboxes = document.querySelectorAll('.loan-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    
+    updateBulkDeleteButton();
+}
+
+function updateBulkDeleteButton() {
+    const checkboxes = document.querySelectorAll('.loan-checkbox:checked');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const totalCheckboxes = document.querySelectorAll('.loan-checkbox');
+    
+    bulkDeleteBtn.disabled = checkboxes.length === 0;
+    
+    const checkedCount = checkboxes.length;
+    const totalCount = totalCheckboxes.length;
+    
+    if (checkedCount === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    } else if (checkedCount === totalCount) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+    } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+    }
+}
+
+function showBulkDeleteModal() {
+    const checkboxes = document.querySelectorAll('.loan-checkbox:checked');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    selectedCount.textContent = checkboxes.length;
+    document.getElementById('bulkDeleteModal').style.display = 'flex';
+}
+
+function closeBulkDeleteModal() {
+    document.getElementById('bulkDeleteModal').style.display = 'none';
+}
+
+function confirmBulkDelete() {
+    const checkboxes = document.querySelectorAll('.loan-checkbox:checked');
+    const loanIds = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (loanIds.length === 0) {
+        alert('Pilih minimal satu peminjaman untuk dihapus');
+        return;
+    }
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (!csrfToken) {
+        alert('CSRF token tidak ditemukan');
+        return;
+    }
+    
+    // Show loading on delete button
+    const deleteBtn = event.target;
+    const originalText = deleteBtn.innerHTML;
+    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menghapus...';
+    deleteBtn.disabled = true;
+    
+    // Send delete request
+    fetch('/riwayat-peminjaman/bulk-delete', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({
+            loan_ids: loanIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Store success message for post-refresh notification
+            sessionStorage.setItem('bulkDeleteSuccess', 'true');
+            sessionStorage.setItem('bulkDeleteMessage', data.message);
+            
+            closeBulkDeleteModal();
+            setTimeout(() => {
+                location.reload(true);
+            }, 500);
+        } else {
+            // Restore button
+            deleteBtn.innerHTML = originalText;
+            deleteBtn.disabled = false;
+            alert('Gagal menghapus: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Restore button
+        deleteBtn.innerHTML = originalText;
+        deleteBtn.disabled = false;
+        alert('Terjadi kesalahan saat menghapus');
+    });
+}
+</script>
 
 @endsection

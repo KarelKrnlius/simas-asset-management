@@ -491,6 +491,26 @@ class AssetController extends Controller
                 ], 400);
             }
             
+            // Check if any assets are currently being borrowed
+            $assetsInUse = \DB::table('loan_details')
+                ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+                ->whereIn('loan_details.asset_id', $assetIds)
+                ->where('loans.status', 'dipinjam')
+                ->whereNull('loans.deleted_at')
+                ->count();
+            
+            if ($assetsInUse > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak dapat menghapus asset yang sedang dipinjam. Silakan kembalikan asset terlebih dahulu.'
+                ], 400);
+            }
+            
+            // Delete loan_details records for returned loans
+            \DB::table('loan_details')
+                ->whereIn('asset_id', $assetIds)
+                ->delete();
+            
             // Delete assets
             $deletedCount = Asset::whereIn('id', $assetIds)->delete();
             
