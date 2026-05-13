@@ -60,6 +60,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // RIWAYAT PEMINJAMAN (All Roles)
     Route::get('/riwayat-peminjaman', [LoanHistoryController::class, 'index'])->name('riwayat-peminjaman');
     Route::get('/riwayat-peminjaman/{id}', [LoanHistoryController::class, 'show'])->name('riwayat-peminjaman.show');
+    Route::post('/riwayat-peminjaman/bulk-delete', [LoanHistoryController::class, 'bulkDelete'])->name('riwayat-peminjaman.bulkDelete');
     
     // PENGEMBALIAN
     Route::get('/pengembalian', [AssetReturnController::class, 'index'])->name('pengembalian');
@@ -98,6 +99,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // LOAN CHECK / PENGECEK PEMINJAMAN (Admin Only)
     Route::get('/pengecek-peminjaman', [LoanCheckController::class, 'index'])->middleware('role:admin')->name('pengecek-peminjaman');
     Route::get('/pengecek-peminjaman/{id}', [LoanCheckController::class, 'show'])->middleware('role:admin')->name('pengecek-peminjaman.show');
+    Route::post('/pengecek-peminjaman/bulk-delete', [LoanCheckController::class, 'bulkDelete'])->middleware('role:admin')->name('pengecek-peminjaman.bulkDelete');
 
     // PROFILE
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');

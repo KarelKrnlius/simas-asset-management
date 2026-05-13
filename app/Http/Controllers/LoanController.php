@@ -39,93 +39,98 @@ class LoanController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'asset_id' => 'required|array',
-            'asset_id.*' => 'exists:assets,id',
-            'borrow_date' => 'required|date',
-            'return_date' => 'required|date|after_or_equal:borrow_date',
-        ]);
+        try {
+            $request->validate([
+                'asset_id' => 'required|array',
+                'asset_id.*' => 'exists:assets,id',
+                'borrow_date' => 'required|date',
+                'return_date' => 'required|date|after_or_equal:borrow_date',
+            ]);
 
-        // CEK DUPLIKAT
-        if (count(array_unique($request->asset_id)) != count($request->asset_id)) {
-            return back()->with('error', 'Asset tidak boleh sama!');
-        }
-
-        // DYNAMIC BORROWING LIMIT - CEK JUMLAH PINJAMAN AKTIF SAAT INI
-        $currentUserId = Auth::id();
-        $activeLoansCount = Loan::where('user_id', $currentUserId)
-            ->where('status', 'dipinjam')
-            ->withCount('assets')
-            ->get()
-            ->sum('assets_count');
-        
-        $requestedItems = count($request->asset_id);
-        $totalAfterBorrow = $activeLoansCount + $requestedItems;
-        
-        // CEK BATAS MAKSIMAL 5
-        if ($totalAfterBorrow > 5) {
-            $availableSlots = 5 - $activeLoansCount;
-            if ($availableSlots <= 0) {
-                return back()->with('error', 'Anda sudah mencapai batas maksimal 5 peminjaman. Kembalikan minimal 1 barang untuk bisa meminjam lagi.');
-            } else {
-                return back()->with('error', "Anda sedang meminjam {$activeLoansCount} barang. Maksimal bisa tambah {$availableSlots} barang lagi.");
+            // CEK DUPLIKAT
+            if (count(array_unique($request->asset_id)) != count($request->asset_id)) {
+                return back()->with('error', 'Asset tidak boleh sama!');
             }
-        }
-        
-        // VALIDASI STATIS - TIDAK BOLEH LEBIH DARI 5 SEKALIGAN
-        if ($requestedItems > 5) {
-            return back()->with('error', 'Maksimal 5 asset per peminjaman!');
-        }
 
-        //  CEK KETERSEDIAAN
-        foreach ($request->asset_id as $id) {
-            $asset = Asset::find($id);
-
-            if (!$asset || $asset->status !== 'tersedia') {
-                return back()->with('error', 'Ada asset tidak tersedia!');
+            // DYNAMIC BORROWING LIMIT - CEK JUMLAH PINJAMAN AKTIF SAAT INI
+            $currentUserId = Auth::id();
+            $activeLoansCount = Loan::where('user_id', $currentUserId)
+                ->where('status', 'dipinjam')
+                ->withCount('assets')
+                ->get()
+                ->sum('assets_count');
+            
+            $requestedItems = count($request->asset_id);
+            $totalAfterBorrow = $activeLoansCount + $requestedItems;
+            
+            // CEK BATAS MAKSIMAL 5
+            if ($totalAfterBorrow > 5) {
+                $availableSlots = 5 - $activeLoansCount;
+                if ($availableSlots <= 0) {
+                    return back()->with('error', 'Anda sudah mencapai batas maksimal 5 peminjaman. Kembalikan minimal 1 barang untuk bisa meminjam lagi.');
+                } else {
+                    return back()->with('error', "Anda sedang meminjam {$activeLoansCount} barang. Maksimal bisa tambah {$availableSlots} barang lagi.");
+                }
             }
-        }
-
-        // Generate unique loan code
-        $lastLoan = Loan::whereNotNull('loan_code')->latest()->first();
-        if ($lastLoan && $lastLoan->loan_code) {
-            $lastNumber = intval(substr($lastLoan->loan_code, -6));
-        } else {
-            $lastNumber = 0;
-        }
-        $newNumber = str_pad($lastNumber + 1, 6, '0', STR_PAD_LEFT);
-        $loanCode = 'PIN-' . $newNumber;
-
-        // ✅ SIMPAN LOAN
-        $loan = Loan::create([
-            'user_id' => Auth::id(),
-            'borrow_date' => $request->borrow_date,
-            'return_date' => $request->return_date,
-            'status' => 'dipinjam',
-            'loan_code' => $loanCode, // Tambah kode unik
-        ]);
-
-// attach assets with required quantity pivot value
-        $attachData = collect($request->asset_id)
-            ->unique()
-            ->mapWithKeys(fn ($assetId) => [$assetId => ['quantity' => 1]])
-            ->all();
-
-        $loan->assets()->attach($attachData);
-
-        // update status asset and decrease stock
-        foreach (array_keys($attachData) as $assetId) {
-            $asset = Asset::find($assetId);
-            if ($asset) {
-                $newStock = max(0, $asset->stock - 1);
-                $asset->update([
-                    'status' => 'dipinjam',
-                    'stock' => $newStock
-                ]);
+            
+            // VALIDASI STATIS - TIDAK BOLEH LEBIH DARI 5 SEKALIGAN
+            if ($requestedItems > 5) {
+                return back()->with('error', 'Maksimal 5 asset per peminjaman!');
             }
-        }
 
-        return redirect()->route('riwayat-peminjaman', ['loan_id' => $loan->id])->with('success', 'Peminjaman berhasil!');
+            //  CEK KETERSEDIAAN
+            foreach ($request->asset_id as $id) {
+                $asset = Asset::find($id);
+
+                if (!$asset || $asset->status !== 'tersedia') {
+                    return back()->with('error', 'Ada asset tidak tersedia!');
+                }
+            }
+
+            // ✅ SIMPAN LOAN DULU (tanpa loan_code)
+            $loan = Loan::create([
+                'user_id' => Auth::id(),
+                'borrow_date' => $request->borrow_date,
+                'return_date' => $request->return_date,
+                'status' => 'dipinjam',
+            ]);
+
+            // Generate loan_code SETELAH loan dibuat (pakai ID yang baru dibuat)
+            $sequence = str_pad($loan->id, 6, '0', STR_PAD_LEFT);
+            $loanCode = 'PIN-' . $sequence;
+            
+            // Update loan dengan loan_code
+            $loan->update(['loan_code' => $loanCode]);
+
+            // attach assets with required quantity pivot value
+            $attachData = collect($request->asset_id)
+                ->unique()
+                ->mapWithKeys(fn ($assetId) => [$assetId => ['quantity' => 1]])
+                ->all();
+
+            $loan->assets()->attach($attachData);
+
+            // update status asset and decrease stock
+            foreach (array_keys($attachData) as $assetId) {
+                $asset = Asset::find($assetId);
+                if ($asset) {
+                    $newStock = max(0, $asset->stock - 1);
+                    $asset->update([
+                        'status' => 'dipinjam',
+                        'stock' => $newStock
+                    ]);
+                }
+            }
+
+            return redirect()->route('riwayat-peminjaman', ['loan_id' => $loan->id])->with('success', 'Peminjaman berhasil!');
+            
+        } catch (\Exception $e) {
+            // Log error untuk debugging
+            \Log::error('Loan Store Error: ' . $e->getMessage());
+            \Log::error('Stack Trace: ' . $e->getTraceAsString());
+            
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Loan $loan)
