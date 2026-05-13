@@ -287,11 +287,12 @@
                         <th class="text-left py-3 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Nama Asset</th>
                         <th class="text-left py-3 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Kategori</th>
                         <th class="text-center py-3 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Jumlah</th>
+                        <th class="text-center py-3 px-4 font-black text-slate-900 uppercase tracking-wider text-xs">Kondisi</th>
                     </tr>
                 </thead>
                 <tbody id="detailAssetsTable">
                     <tr>
-                        <td colspan="5" class="text-center py-8 text-slate-400">
+                        <td colspan="6" class="text-center py-8 text-slate-400">
                             <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
                             <p>Memuat data...</p>
                         </td>
@@ -462,6 +463,17 @@ function showLoanDetail(loanId) {
             if (loan.assets && loan.assets.length > 0) {
                 let html = '';
                 loan.assets.forEach((asset, index) => {
+                    // Badge kondisi dari master asset
+                    const conditionMap = {
+                        'baik'  : 'bg-green-100 text-green-700',
+                        'rusak' : 'bg-yellow-100 text-yellow-700',
+                        'hilang': 'bg-red-100 text-red-700',
+                    };
+                    const condClass = conditionMap[asset.display_condition] ?? 'bg-slate-100 text-slate-700';
+                    const condLabel = asset.display_condition
+                        ? asset.display_condition.charAt(0).toUpperCase() + asset.display_condition.slice(1)
+                        : '-';
+
                     html += `
                         <tr class="border-b border-slate-100 hover:bg-slate-50">
                             <td class="py-3 px-4">
@@ -488,6 +500,11 @@ function showLoanDetail(loanId) {
                                     ${asset.pivot.quantity}
                                 </span>
                             </td>
+                            <td class="py-3 px-4 text-center">
+                                <span class="inline-block px-2 py-1 rounded-lg text-xs font-semibold uppercase ${condClass}">
+                                    ${condLabel}
+                                </span>
+                            </td>
                         </tr>
                     `;
                 });
@@ -495,7 +512,7 @@ function showLoanDetail(loanId) {
             } else {
                 assetsTable.innerHTML = `
                     <tr>
-                        <td colspan="5" class="text-center py-8 text-slate-400">
+                        <td colspan="6" class="text-center py-8 text-slate-400">
                             <i class="fas fa-inbox text-2xl mb-2"></i>
                             <p>Tidak ada asset yang dipinjam</p>
                         </td>

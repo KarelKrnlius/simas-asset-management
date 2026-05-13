@@ -181,27 +181,37 @@
         updateSelectedCount();
 
         const loansToLoad = specificLoan ? [specificLoan] : user.loans;
+        let hasAnyAsset = false;
         
         loansToLoad.forEach(loan => {
             if (loan.status !== 'dikembalikan') {
                 loan.assets.forEach(asset => {
-                    // Only show assets that don't have condition (not yet returned)
-                    if (!asset.pivot.condition) {
-                        const key = `${loan.id}-${asset.id}`;
-                        const itemCard = `
-                            <div id="asset_card_${key}" onclick="selectItem(${loan.id}, ${asset.id}, '${asset.name.replace(/'/g, "\\'")}', ${asset.pivot.quantity}, '${key}')" class="p-4 rounded-2xl border border-slate-200 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-all">
-                                <div>
-                                    <p class="text-sm font-bold text-slate-900">${asset.name}</p>
-                                    <p class="text-[10px] text-slate-400">Kode Pinjam: ${loan.loan_code || loan.id} | Qty: ${asset.pivot.quantity} Unit</p>
-                                </div>
-                                <span id="asset_label_${key}" class="text-[10px] font-black uppercase tracking-[0.2em] text-red-600">Pilih</span>
+                    hasAnyAsset = true;
+                    const key = `${loan.id}-${asset.id}`;
+                    const itemCard = `
+                        <div id="asset_card_${key}" onclick="selectItem(${loan.id}, ${asset.id}, '${asset.name.replace(/'/g, "\\'")}', ${asset.pivot.quantity}, '${key}')" class="p-4 rounded-2xl border border-slate-200 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-all">
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">${asset.name}</p>
+                                <p class="text-[10px] text-slate-400">Kode Pinjam: ${loan.loan_code || loan.id} | Qty: ${asset.pivot.quantity} Unit</p>
                             </div>
-                        `;
-                        loanItems.innerHTML += itemCard;
-                    }
+                            <span id="asset_label_${key}" class="text-[10px] font-black uppercase tracking-[0.2em] text-red-600">Pilih</span>
+                        </div>
+                    `;
+                    loanItems.innerHTML += itemCard;
                 });
             }
         });
+
+        // Jika tidak ada asset yang bisa dikembalikan, tampilkan pesan
+        if (!hasAnyAsset) {
+            loanItems.innerHTML = `
+                <div class="p-6 text-center rounded-2xl border border-slate-200 bg-slate-50">
+                    <i class="fas fa-check-circle text-4xl text-green-500 mb-3"></i>
+                    <p class="text-sm font-bold text-slate-700">Semua barang sudah dikembalikan</p>
+                    <p class="text-xs text-slate-500 mt-1">Tidak ada barang yang perlu dikembalikan untuk peminjam ini</p>
+                </div>
+            `;
+        }
     }
 
     function selectItem(loanId, assetId, name, qty, key) {
@@ -313,14 +323,45 @@
             const resData = await response.json();
 
             if (response.ok) {
-                Swal.fire('Berhasil', resData.message, 'success').then(() => location.reload());
+                // Hapus kartu asset yang sudah dikembalikan dari tampilan
+                returns.forEach(item => {
+                    const key = `${item.loan_id}-${item.asset_id}`;
+                    const card = document.getElementById(`asset_card_${key}`);
+                    if (card) card.remove();
+                });
+
+                // Tutup form kondisi
+                conditionForm.classList.add('hidden');
+                currentLoanId = null;
+                currentAssetId = null;
+                currentAssetKey = null;
+                selectedCondition = null;
+                Object.keys(selectedAssets).forEach(k => delete selectedAssets[k]);
+                updateSelectedCount();
+
+                // Cek apakah masih ada kartu tersisa
+                const remaining = loanItems.querySelectorAll('[id^="asset_card_"]');
+                if (remaining.length === 0) {
+                    // Semua sudah dikembalikan, reload untuk refresh data
+                    Swal.fire('Berhasil', resData.message, 'success').then(() => location.reload());
+                } else {
+                    // Masih ada barang lain, tampilkan notif tanpa reload
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: resData.message + ` Masih ada ${remaining.length} barang lain yang belum dikembalikan.`,
+                        confirmButtonColor: '#dc2626'
+                    });
+                    this.disabled = false;
+                    this.innerText = 'KONFIRMASI PENGEMBALIAN';
+                }
             } else {
                 throw new Error(resData.message || 'Gagal memproses');
             }
         } catch (err) {
             Swal.fire('Error', err.message, 'error');
             this.disabled = false;
-            this.innerText = 'Konfirmasi Pengembalian';
+            this.innerText = 'KONFIRMASI PENGEMBALIAN';
         }
     });
 </script>

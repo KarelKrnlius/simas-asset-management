@@ -104,6 +104,11 @@ class LoanCheckController extends Controller
         
         // Tambahkan loan_code ke response
         $loan->loan_code = $loan->loan_code;
+
+        // Tambahkan kondisi terakhir dari master asset
+        foreach ($loan->assets as $asset) {
+            $asset->display_condition = $asset->condition ?? 'baik';
+        }
         
         return response()->json([
             'success' => true,

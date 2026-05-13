@@ -148,7 +148,7 @@
                     class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-colors">
                     Batal
                 </button>
-                <button type="submit" 
+                <button type="submit" id="editAssetSubmitBtn"
                     class="flex-1 bg-red-primary hover:bg-red-primary text-white font-black py-3 rounded-xl transition-all duration-300 hover:shadow-xl">
                     <i class="fas fa-save mr-2"></i> Update Asset
                 </button>
@@ -232,7 +232,10 @@ function removeEditAssetPhoto() {
 // Reset form saat modal ditutup
 function closeEditAssetModal() {
     document.getElementById('editAssetModal').classList.add('hidden');
-    document.getElementById('editAssetForm').reset();
+    
+    const form = document.getElementById('editAssetForm');
+    form.reset();
+    form.dataset.isSubmitting = 'false';
     
     // Reset photo previews
     document.getElementById('editCurrentPhotoContainer').classList.add('hidden');
@@ -242,4 +245,26 @@ function closeEditAssetModal() {
     document.getElementById('editPhotoButtonText').textContent = 'Pilih File';
     currentEditFile = null;
 }
+
+// Loading state saat submit update asset
+document.getElementById('editAssetForm').addEventListener('submit', function (e) {
+    // Cegah double submit
+    if (this.dataset.isSubmitting === 'true') {
+        e.preventDefault();
+        return;
+    }
+    this.dataset.isSubmitting = 'true';
+
+    const btn = document.getElementById('editAssetSubmitBtn');
+    const cancelBtn = btn.previousElementSibling;
+
+    // Disable tombol & tampilkan spinner
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...';
+    btn.classList.add('opacity-75', 'cursor-not-allowed');
+
+    // Disable tombol batal juga agar tidak ditutup saat proses
+    cancelBtn.disabled = true;
+    cancelBtn.classList.add('opacity-50', 'cursor-not-allowed');
+});
 </script>

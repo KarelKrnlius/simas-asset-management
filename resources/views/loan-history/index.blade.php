@@ -134,13 +134,22 @@
                                     @endif
                                 </td>
                                 <td class="py-4 px-4 text-center">
-                                    @if($loan->status === 'dipinjam')
-                                        <span class="inline-block bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">
-                                            <i class="fas fa-clock mr-1"></i>Aktif
-                                        </span>
-                                    @else
+                                    @php
+                                        $totalAssets    = $loan->assets->count();
+                                        $returnedAssets = $loan->assets->filter(fn($a) => $a->pivot->condition !== null)->count();
+                                        $isPartial      = $loan->status === 'dipinjam' && $returnedAssets > 0;
+                                    @endphp
+                                    @if($loan->status === 'dikembalikan')
                                         <span class="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">
                                             <i class="fas fa-check-circle mr-1"></i>Dikembalikan
+                                        </span>
+                                    @elseif($isPartial)
+                                        <span class="inline-block bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">
+                                            <i class="fas fa-clock mr-1"></i>Sebagian ({{ $returnedAssets }}/{{ $totalAssets }})
+                                        </span>
+                                    @else
+                                        <span class="inline-block bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">
+                                            <i class="fas fa-clock mr-1"></i>Aktif
                                         </span>
                                     @endif
                                 </td>
@@ -515,7 +524,7 @@ function showLoanDetail(loanId) {
                     } else if (asset.display_condition === 'hilang') {
                         conditionBadge = '<span class="inline-block bg-red-100 text-red-700 px-2 py-1 rounded-lg text-xs font-semibold uppercase">Hilang</span>';
                     } else {
-                        conditionBadge = '<span class="inline-block bg-slate-100 text-slate-700 px-2 py-1 rounded-lg text-xs font-semibold uppercase">-</span>';
+                        conditionBadge = '<span class="inline-block bg-slate-100 text-slate-700 px-2 py-1 rounded-lg text-xs font-semibold uppercase">' + (asset.display_condition || '-') + '</span>';
                     }
 
                     // Determine status badge color

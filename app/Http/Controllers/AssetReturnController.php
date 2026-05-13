@@ -13,18 +13,28 @@ class AssetReturnController extends Controller
     public function index()
     {
         /**
-         * Mengambil user yang memiliki pinjaman aktif.
-         * Filter out loans yang sudah dikembalikan.
-         * Hanya tampilkan user yang memiliki asset yang bisa dikembalikan (belum ada condition di pivot)
+         * Mengambil user yang memiliki pinjaman aktif dengan asset yang belum dikembalikan.
+         * - Loan harus berstatus bukan 'dikembalikan'
+         * - Loan harus punya minimal 1 asset yang pivot condition-nya masih null
+         * - Asset yang di-load hanya yang belum dikembalikan (pivot condition null)
          */
-        $users = User::whereHas('loans', function($q) {
-            $q->where('status', '<>', 'dikembalikan');
-        })->with(['loans' => function($query) {
-            $query->where('status', '<>', 'dikembalikan')
-                  ->whereHas('assets', function($assetQuery) {
-                      $assetQuery->whereNull('loan_details.condition');
-                  });
-        }, 'loans.assets'])->get();
+        $users = User::whereHas('loans', function ($q) {
+            $q->where('status', '<>', 'dikembalikan')
+              ->whereHas('assets', function ($assetQ) {
+                  $assetQ->whereNull('loan_details.condition');
+              });
+        })->with([
+            'loans' => function ($query) {
+                $query->where('status', '<>', 'dikembalikan')
+                      ->whereHas('assets', function ($assetQ) {
+                          $assetQ->whereNull('loan_details.condition');
+                      });
+            },
+            'loans.assets' => function ($query) {
+                // Hanya load asset yang belum dikembalikan
+                $query->wherePivotNull('condition');
+            },
+        ])->get();
 
         return view('pengembalian.index', compact('users'));
     }
@@ -97,9 +107,9 @@ class AssetReturnController extends Controller
                 foreach (array_unique($processedLoanIds) as $loanId) {
                     $loan = Loan::findOrFail($loanId);
                     
-                    // Count remaining assets that are NOT returned
+                    // Count remaining assets that are NOT yet returned (condition is NULL)
                     $remainingAssets = $loan->assets()
-                        ->wherePivotNotIn('condition', ['baik', 'rusak', 'hilang'])
+                        ->wherePivotNull('condition')
                         ->count();
                     
                     if ($remainingAssets == 0) {

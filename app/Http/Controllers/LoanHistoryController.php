@@ -110,33 +110,41 @@ class LoanHistoryController extends Controller
      */
     public function show($id)
     {
-        $loan = Loan::with(['user', 'assets.category'])
-            ->where('user_id', auth()->id())
-            ->findOrFail($id);
+        $query = Loan::with(['user', 'assets.category']);
+
+        // Admin bisa lihat semua, user biasa hanya miliknya
+        if (auth()->user()->role_id != 1) {
+            $query->where('user_id', auth()->id());
+        }
+
+        $loan = $query->findOrFail($id);
         
         // Tambahkan loan_code ke response
         $loan->loan_code = $loan->loan_code;
         
-        // Tambahkan status berdasarkan condition dari pivot
+        // Tentukan status per-asset berdasarkan pivot condition (bukan status loan)
         foreach ($loan->assets as $asset) {
-            if ($loan->status === 'dikembalikan') {
-                $pivotCondition = $asset->pivot->condition ?? null;
+            $pivotCondition = $asset->pivot->condition ?? null;
+
+            if ($pivotCondition !== null) {
+                // Asset ini sudah dikembalikan — tampilkan kondisi saat dikembalikan
                 if ($pivotCondition === 'hilang') {
-                    $asset->return_status = 'tidak ditemukan';
+                    $asset->return_status    = 'tidak ditemukan';
                     $asset->display_condition = 'hilang';
                 } else {
-                    $asset->return_status = 'dikembalikan';
-                    $asset->display_condition = $pivotCondition ?? 'baik';
+                    $asset->return_status    = 'dikembalikan';
+                    $asset->display_condition = $pivotCondition;
                 }
             } else {
-                $asset->return_status = 'dipinjam';
-                $asset->display_condition = '-';
+                // Asset ini belum dikembalikan — tampilkan kondisi terakhir dari master asset
+                $asset->return_status    = 'dipinjam';
+                $asset->display_condition = $asset->condition ?? 'baik';
             }
         }
         
         return response()->json([
             'success' => true,
-            'data' => $loan
+            'data'    => $loan
         ]);
     }
 

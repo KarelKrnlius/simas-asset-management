@@ -638,7 +638,7 @@ function openHistoryModal(userId) {
                             </span>
                         </div>
                     </div>
-                `}).join('')
+                `}).join('')    
                 : '<p class="text-slate-400 text-center py-4">Tidak ada riwayat peminjaman</p>';
             
             document.getElementById('pastHistory').innerHTML = pastHistoryHtml;
