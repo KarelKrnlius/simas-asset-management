@@ -73,6 +73,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     
     // Assets Resource Routes (Admin Only)
     Route::resource('assets', AssetController::class)->middleware('role:admin');
+    Route::get('/assets-export', [AssetController::class, 'export'])->middleware('role:admin')->name('assets.export');
     Route::get('/assets/next-code', [AssetController::class, 'getNextCode'])->middleware('role:admin');
     Route::post('/assets/bulk-delete', [AssetController::class, 'bulkDelete'])->middleware('role:admin');
     

@@ -57,6 +57,13 @@
                 
                 <!-- Sort and Bulk Actions -->
                 <div class="flex flex-col lg:flex-row gap-3">
+                    <!-- Export Excel Button -->
+                    <a href="{{ route('assets.export') }}" 
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                        <i class="fas fa-file-excel"></i>
+                        Export Excel
+                    </a>
+                    
                     <!-- Search Input -->
                     <div class="flex-1">
                         <div class="relative flex-1">

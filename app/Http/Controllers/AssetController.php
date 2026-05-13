@@ -353,6 +353,97 @@ class AssetController extends Controller
     }
 
     /**
+     * Export assets to Excel
+     */
+    public function export()
+    {
+        try {
+            // Get all assets with category
+            $assets = Asset::with('category')->orderBy('code')->get();
+            
+            // Create Excel content with proper formatting
+            $filename = 'master_asset_' . date('Y-m-d_His') . '.xls';
+            
+            $headers = [
+                'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0'
+            ];
+            
+            $callback = function() use ($assets) {
+                // Start HTML table with styling
+                echo '<html xmlns:x="urn:schemas-microsoft-com:office:excel">';
+                echo '<head>';
+                echo '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">';
+                echo '<style>';
+                echo 'table { border-collapse: collapse; width: 100%; }';
+                echo 'th { background-color: #E11D48; color: white; font-weight: bold; padding: 12px; text-align: left; border: 1px solid #ddd; }';
+                echo 'td { padding: 10px; border: 1px solid #ddd; }';
+                echo 'tr:nth-child(even) { background-color: #f9fafb; }';
+                echo 'tr:hover { background-color: #f1f5f9; }';
+                echo '</style>';
+                echo '</head>';
+                echo '<body>';
+                
+                echo '<h2 style="color: #E11D48; font-family: Arial, sans-serif;">Master Asset - SIMAS</h2>';
+                echo '<p style="font-family: Arial, sans-serif; color: #64748b;">Exported on: ' . date('d F Y H:i:s') . '</p>';
+                
+                echo '<table border="1">';
+                
+                // Header row
+                echo '<thead><tr>';
+                echo '<th>No</th>';
+                echo '<th>Kode Asset</th>';
+                echo '<th>Nama Asset</th>';
+                echo '<th>Kategori</th>';
+                echo '<th>Deskripsi</th>';
+                echo '<th>Stok Tersedia</th>';
+                echo '<th>Stok Keluar</th>';
+                echo '<th>Kondisi</th>';
+                echo '<th>Status Asset</th>';
+                echo '<th>Link Barcode QR</th>';
+                echo '</tr></thead>';
+                
+                // Data rows
+                echo '<tbody>';
+                $no = 1;
+                foreach ($assets as $asset) {
+                    // Calculate stok keluar (assuming initial stock was always 1 per asset)
+                    $stokKeluar = ($asset->stock == 0) ? 1 : 0;
+                    
+                    // Generate QR code URL with ngrok domain
+                    $qrUrl = 'https://magnifier-sinner-unsettled.ngrok-free.dev/asset/' . $asset->code;
+                    
+                    echo '<tr>';
+                    echo '<td>' . $no++ . '</td>';
+                    echo '<td>' . htmlspecialchars($asset->code) . '</td>';
+                    echo '<td>' . htmlspecialchars($asset->name) . '</td>';
+                    echo '<td>' . htmlspecialchars($asset->category->name ?? '-') . '</td>';
+                    echo '<td>' . htmlspecialchars($asset->description ?? '-') . '</td>';
+                    echo '<td style="text-align: center;">' . $asset->stock . '</td>';
+                    echo '<td style="text-align: center;">' . $stokKeluar . '</td>';
+                    echo '<td>' . ucfirst($asset->condition) . '</td>';
+                    echo '<td>' . str_replace('_', ' ', ucfirst($asset->status)) . '</td>';
+                    echo '<td><a href="' . $qrUrl . '" target="_blank">' . $qrUrl . '</a></td>';
+                    echo '</tr>';
+                }
+                echo '</tbody>';
+                
+                echo '</table>';
+                echo '</body>';
+                echo '</html>';
+            };
+            
+            return response()->stream($callback, 200, $headers);
+            
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal export data: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Request $request, $id)
