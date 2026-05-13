@@ -34,7 +34,7 @@ class LoanController extends Controller
             ->get()
             ->sum('assets_count');
 
-        return view('assets.loan', compact('peminjaman', 'assets', 'categories', 'activeLoansCount'));
+        return view('loan.loan', compact('peminjaman', 'assets', 'categories', 'activeLoansCount'));
     }
 
     public function store(Request $request)

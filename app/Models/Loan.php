@@ -20,6 +20,7 @@ class Loan extends Model
         'created_by',
         'updated_by',
         'deleted_by',
+        'loan_code',
     ];
 
     protected static function boot()
