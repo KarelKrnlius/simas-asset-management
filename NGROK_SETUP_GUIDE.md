@@ -12,6 +12,8 @@ Panduan ini menjelaskan cara menjalankan aplikasi SIMAS Asset Management agar QR
 - Aplikasi SIMAS sudah bisa diakses di `http://localhost:8000`
 
 ---
+## KODE INSTAL
+winget install -e --id Ngrok.Ngrok
 
 ## 2. Daftar Akun ngrok (Gratis)
 
