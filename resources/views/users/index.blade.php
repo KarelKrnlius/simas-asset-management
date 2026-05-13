@@ -263,8 +263,8 @@
                 </h2>
                 <p id="historyUserName" class="text-sm font-semibold text-slate-500 mt-1"></p>
             </div>
-            <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                <i class="fas fa-times text-xl"></i>
+            <button onclick="closeHistoryModal()" class="w-9 h-9 flex items-center justify-center rounded-full bg-slate-200 hover:bg-slate-300 text-slate-500 hover:text-slate-700 transition-colors">
+                <i class="fas fa-times text-sm"></i>
             </button>
         </div>
 
@@ -611,7 +611,14 @@ function openHistoryModal(userId) {
             
             // Past history
             const pastHistoryHtml = data.past_history.length > 0
-                ? data.past_history.map(loan => `
+                ? data.past_history.map(loan => {
+                    const conditionMap = {
+                        'baik'   : { label: 'Baik',        cls: 'bg-green-100 text-green-700' },
+                        'rusak'  : { label: 'Rusak',       cls: 'bg-orange-100 text-orange-700' },
+                        'hilang' : { label: 'Hilang',      cls: 'bg-red-100 text-red-700' },
+                    };
+                    const cond = conditionMap[loan.condition] ?? { label: loan.condition ?? '-', cls: 'bg-slate-100 text-slate-600' };
+                    return `
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
                         <div class="flex justify-between items-start">
                             <div>
@@ -621,13 +628,17 @@ function openHistoryModal(userId) {
                                     <p>Pinjam: ${loan.borrow_date}</p>
                                     <p>Kembali: ${loan.return_date}</p>
                                 </div>
+                                <div class="mt-2 flex items-center gap-1">
+                                    <span class="text-xs text-slate-500">Kondisi:</span>
+                                    <span class="px-2 py-0.5 rounded-full text-xs font-black ${cond.cls}">${cond.label}</span>
+                                </div>
                             </div>
                             <span class="px-3 py-1 bg-green-600 text-white rounded-full text-xs font-black">
                                 Selesai
                             </span>
                         </div>
                     </div>
-                `).join('')
+                `}).join('')
                 : '<p class="text-slate-400 text-center py-4">Tidak ada riwayat peminjaman</p>';
             
             document.getElementById('pastHistory').innerHTML = pastHistoryHtml;

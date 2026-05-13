@@ -83,6 +83,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     // MASTER USER (Admin Only)
     Route::middleware('role:admin')->group(function () {
+        Route::get('/users/{id}/history', [UserController::class, 'history'])->name('users.history');
         Route::resource('users', UserController::class);
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset');
     });

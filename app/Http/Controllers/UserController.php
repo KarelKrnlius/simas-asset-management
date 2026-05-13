@@ -334,6 +334,65 @@ class UserController extends Controller
     }
 
     /**
+     * Get loan history for a specific user (API endpoint for modal).
+     */
+    public function history($id)
+    {
+        $user = User::findOrFail($id);
+
+        $activeLoans = Loan::with(['assets.category'])
+            ->where('user_id', $id)
+            ->where('status', '!=', 'dikembalikan')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($loan) {
+                return $loan->assets->map(function ($asset) use ($loan) {
+                    return [
+                        'loan_id'    => $loan->id,
+                        'loan_code'  => $loan->loan_code,
+                        'asset_name' => $asset->name,
+                        'asset_code' => $asset->code ?? '-',
+                        'borrow_date'=> $loan->borrow_date
+                            ? \Carbon\Carbon::parse($loan->borrow_date)->format('d/m/Y')
+                            : '-',
+                        'status'     => $loan->status,
+                    ];
+                });
+            })->flatten(1)->values();
+
+        $pastHistory = Loan::with(['assets.category'])
+            ->where('user_id', $id)
+            ->where('status', 'dikembalikan')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($loan) {
+                return $loan->assets->map(function ($asset) use ($loan) {
+                    $condition = $asset->pivot->condition ?? null;
+                    return [
+                        'loan_id'     => $loan->id,
+                        'loan_code'   => $loan->loan_code,
+                        'asset_name'  => $asset->name,
+                        'asset_code'  => $asset->code ?? '-',
+                        'borrow_date' => $loan->borrow_date
+                            ? \Carbon\Carbon::parse($loan->borrow_date)->format('d/m/Y')
+                            : '-',
+                        'return_date' => $loan->return_date
+                            ? \Carbon\Carbon::parse($loan->return_date)->format('d/m/Y')
+                            : '-',
+                        'condition'   => $condition ?? 'baik',
+                        'status'      => $loan->status,
+                    ];
+                });
+            })->flatten(1)->values();
+
+        return response()->json([
+            'user_name'    => $user->name,
+            'active_loans' => $activeLoans,
+            'past_history' => $pastHistory,
+        ]);
+    }
+
+    /**
      * Change user status with confirmation.
      */
     public function changeStatus(Request $request, $id)
