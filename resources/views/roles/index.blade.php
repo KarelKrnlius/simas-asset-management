@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title','Master Role')
 @section('content')
 <div class="min-h-screen flex flex-col items-start pt-4 px-6"
     x-data="{ 
@@ -9,7 +9,7 @@
     editData: {} 
 }"
 
-<!-- HEADER -->
+<-- HEADER -->
 <div class="w-full max-w-7xl mx-auto mb-6">
     <div class="flex justify-between items-center">
         <div> 

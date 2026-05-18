@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Form Peminjaman Asset')
+@section('title', 'Peminjaman')
 
 @section('content')
 

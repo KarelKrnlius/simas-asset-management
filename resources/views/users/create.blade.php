@@ -1,6 +1,6 @@
- @extends('layouts.app')
+@extends('layouts.app')
 
-@section('title', 'Tambah User - SIMAS')
+@section('title', 'Tambah User')
 
 @section('content')
 <div class="min-h-screen flex flex-col items-start pt-4 px-6">

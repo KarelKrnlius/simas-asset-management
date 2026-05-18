@@ -53,7 +53,6 @@
                 <div class="relative">
                     <select id="categorySortSelect" onchange="performCategorySearch()"
                             class="appearance-none bg-white border border-slate-200 rounded-lg px-4 py-2 pr-8 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent">
-                        <option value="code">Kode (Default)</option>
                         <option value="newest">Terbaru</option>
                         <option value="oldest">Terlama</option>
                         <option value="az">A - Z</option>
@@ -326,7 +325,7 @@ function performCategorySearch() {
 
 function clearCategorySearch() {
     document.getElementById('categorySearchInput').value = '';
-    document.getElementById('categorySortSelect').value = 'code';
+    document.getElementById('categorySortSelect').value = 'newest';
     performCategorySearch();
 }
 

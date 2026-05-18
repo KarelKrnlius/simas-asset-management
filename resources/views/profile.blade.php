@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Profil | Asset System')
+@section('title', 'Profile')
 
 @section('content')
 <style>

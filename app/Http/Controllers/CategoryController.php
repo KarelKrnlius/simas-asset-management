@@ -26,7 +26,7 @@ class CategoryController extends Controller
         }
         
         // Sort
-        $sort = $request->get('sort', 'code'); // Default sort by code
+        $sort = $request->get('sort', 'newest'); // Default sort by newest
         switch ($sort) {
             case 'newest':
                 $query->orderBy('created_at', 'desc');
@@ -40,9 +40,8 @@ class CategoryController extends Controller
             case 'za':
                 $query->orderBy('name', 'desc');
                 break;
-            case 'code':
             default:
-                $query->orderBy('category_code', 'asc');
+                $query->orderBy('created_at', 'desc');
                 break;
         }
         
@@ -85,7 +84,7 @@ class CategoryController extends Controller
         }
         
         // Sort
-        $sort = $request->get('sort', 'code'); // Default sort by code
+        $sort = $request->get('sort', 'newest'); // Default sort by newest
         switch ($sort) {
             case 'newest':
                 $query->orderBy('created_at', 'desc');
@@ -99,9 +98,8 @@ class CategoryController extends Controller
             case 'za':
                 $query->orderBy('name', 'desc');
                 break;
-            case 'code':
             default:
-                $query->orderBy('category_code', 'asc');
+                $query->orderBy('created_at', 'desc');
                 break;
         }
         

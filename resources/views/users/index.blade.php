@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Master User SIMAS')
+@section('title', 'Master User')
 
 @section('content')
 <div class="min-h-screen pt-1 items-start">
