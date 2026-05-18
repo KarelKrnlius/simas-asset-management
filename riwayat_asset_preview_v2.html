@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview V2 - Riwayat Asset (Tabel + Kotak)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-6">
+
+    <div id="modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white w-full max-w-5xl rounded-[2rem] shadow-2xl m-4 max-h-[90vh] overflow-y-auto">
+
+            <!-- ===== HEADER ===== -->
+            <div class="sticky top-0 bg-white rounded-t-[2rem] px-8 pt-7 pb-5 border-b border-slate-100 z-10">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tighter">Riwayat Asset</h2>
+                        <p class="text-xs font-semibold text-slate-400 mt-0.5 uppercase tracking-wider">Aktivitas & riwayat peminjaman</p>
+                    </div>
+                    <div class="w-9 h-9 flex items-center justify-center rounded-full bg-slate-200 text-slate-500 cursor-pointer">
+                        <i class="fas fa-times text-sm"></i>
+                    </div>
+                </div>
+
+                <!-- INFO ASSET — 2 kolom: foto+detail kiri, stats kanan -->
+                <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+                    <!-- Kiri: detail asset -->
+                    <div class="sm:col-span-2 bg-slate-50 rounded-2xl p-4 flex gap-4 items-center">
+                        <div class="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-laptop text-red-500 text-xl"></i>
+                        </div>
+                        <div class="grid grid-cols-2 gap-x-6 gap-y-2 flex-1">
+                            <div>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kode</p>
+                                <p class="font-black text-slate-900 text-sm font-mono">BRIN-01-000001</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama</p>
+                                <p class="font-black text-slate-900 text-sm">Laptop Dell XPS</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kategori</p>
+                                <span class="inline-block bg-blue-100 text-blue-700 px-2 py-0.5 rounded-lg text-xs font-bold">Elektronik</span>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kondisi Saat Ini</p>
+                                <span class="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded-lg text-xs font-bold">Baik</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kanan: 3 kotak statistik vertikal -->
+                    <div class="grid grid-cols-3 sm:grid-cols-1 gap-2">
+                        <div class="bg-blue-50 rounded-xl p-3 flex sm:flex-row items-center gap-3">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-boxes text-blue-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-xl font-black text-blue-600 leading-none">8</p>
+                                <p class="text-[10px] font-bold text-blue-400 uppercase">Total Pinjam</p>
+                            </div>
+                        </div>
+                        <div class="bg-green-50 rounded-xl p-3 flex sm:flex-row items-center gap-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-check-circle text-green-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-xl font-black text-green-600 leading-none">7</p>
+                                <p class="text-[10px] font-bold text-green-400 uppercase">Sudah Kembali</p>
+                            </div>
+                        </div>
+                        <div class="bg-red-50 rounded-xl p-3 flex sm:flex-row items-center gap-3">
+                            <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-clock text-red-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-xl font-black text-red-600 leading-none">1</p>
+                                <p class="text-[10px] font-bold text-red-400 uppercase">Dipinjam</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== BODY ===== -->
+            <div class="px-8 py-6 space-y-8">
+
+                <!-- ===== AKTIVITAS ASSET — TABEL ===== -->
+                <div>
+                    <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <i class="fas fa-bolt text-yellow-400"></i> Aktivitas Asset
+                        <span class="text-[10px] font-semibold text-slate-400 normal-case tracking-normal">(terbaru di atas)</span>
+                    </h3>
+                    <div class="border border-slate-200 rounded-2xl overflow-hidden">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider">Waktu</th>
+                                    <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider">Aktivitas</th>
+                                    <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider">Keterangan</th>
+                                    <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider">Oleh</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <!-- Terbaru -->
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="py-3 px-4 whitespace-nowrap">
+                                        <p class="text-xs font-bold text-slate-700">15 Feb 2026</p>
+                                        <p class="text-[10px] text-slate-400">14:30</p>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="inline-flex items-center gap-1.5 bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg text-[10px] font-black uppercase">
+                                            <i class="fas fa-pen text-[9px]"></i> Diperbarui
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-xs text-slate-600">
+                                        Stok diubah dari <span class="font-bold text-slate-800">3</span> → <span class="font-bold text-slate-800">5</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <span class="text-yellow-700 font-black text-[10px]">A</span>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs font-bold text-slate-700">Admin Sistem</p>
+                                                <p class="text-[10px] text-slate-400">admin@brin.go.id</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Terlama -->
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="py-3 px-4 whitespace-nowrap">
+                                        <p class="text-xs font-bold text-slate-700">01 Jan 2026</p>
+                                        <p class="text-[10px] text-slate-400">09:00</p>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-[10px] font-black uppercase">
+                                            <i class="fas fa-plus text-[9px]"></i> Ditambahkan
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-xs text-slate-600">
+                                        Asset baru didaftarkan ke sistem
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <span class="text-blue-700 font-black text-[10px]">A</span>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs font-bold text-slate-700">Admin Sistem</p>
+                                                <p class="text-[10px] text-slate-400">admin@brin.go.id</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ===== SEDANG DIPINJAM — KOTAK ===== -->
+                <div>
+                    <h3 class="text-xs font-black text-red-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <i class="fas fa-clock"></i> Sedang Dipinjam
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="border-2 border-red-200 bg-red-50 rounded-2xl p-4 space-y-3">
+                            <!-- Badge + kode -->
+                            <div class="flex items-center justify-between">
+                                <span class="font-mono font-black text-slate-700 text-sm bg-white border border-slate-200 px-2 py-0.5 rounded-lg">PIN-000036</span>
+                                <span class="bg-red-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full">Aktif</span>
+                            </div>
+                            <!-- Grid info -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="bg-white rounded-xl p-2.5">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Peminjam</p>
+                                    <p class="font-bold text-slate-900 text-xs mt-0.5">Budi Santoso</p>
+                                    <p class="text-[10px] text-slate-400">budi@brin.go.id</p>
+                                </div>
+                                <div class="bg-white rounded-xl p-2.5">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Tgl Pinjam</p>
+                                    <p class="font-bold text-slate-900 text-xs mt-0.5">12 Mei 2026</p>
+                                </div>
+                                <div class="bg-white rounded-xl p-2.5">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Rencana Kembali</p>
+                                    <p class="font-bold text-slate-900 text-xs mt-0.5">20 Mei 2026</p>
+                                </div>
+                                <div class="bg-white rounded-xl p-2.5">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Qty</p>
+                                    <p class="font-bold text-slate-900 text-xs mt-0.5">1 Unit</p>
+                                </div>
+                                <div class="bg-white rounded-xl p-2.5">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Kondisi Pinjam</p>
+                                    <span class="inline-block bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold mt-0.5">Baik</span>
+                                </div>
+                                <div class="bg-white rounded-xl p-2.5">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Diproses Oleh</p>
+                                    <p class="font-bold text-slate-900 text-xs mt-0.5">Admin Sistem</p>
+                                    <p class="text-[10px] text-slate-400">admin@brin.go.id</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== RIWAYAT SELESAI — TABEL ===== -->
+                <div>
+                    <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <i class="fas fa-history text-slate-400"></i> Riwayat Selesai
+                    </h3>
+                    <div class="border border-slate-200 rounded-2xl overflow-hidden">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider">Kode PIN</th>
+                                    <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider">Peminjam</th>
+                                    <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider">Tgl Pinjam</th>
+                                    <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider">Tgl Kembali</th>
+                                    <th class="text-center py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider">Qty</th>
+                                    <th class="text-center py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider">Kondisi</th>
+                                    <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider">Diproses Oleh</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+
+                                <!-- Baris 1: Baik -->
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="py-3 px-4">
+                                        <span class="font-mono font-bold text-slate-700 text-xs bg-slate-100 px-2 py-0.5 rounded-lg">PIN-000020</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <p class="font-bold text-slate-900 text-xs">Siti Rahayu</p>
+                                        <p class="text-[10px] text-slate-400">siti@brin.go.id</p>
+                                    </td>
+                                    <td class="py-3 px-4 text-xs text-slate-700 font-semibold">01 Apr 2026</td>
+                                    <td class="py-3 px-4 text-xs text-slate-700 font-semibold">10 Apr 2026</td>
+                                    <td class="py-3 px-4 text-center text-xs font-bold text-slate-700">1</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <span class="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded-lg text-[10px] font-black">Baik</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <p class="text-xs font-bold text-slate-700">Admin Sistem</p>
+                                        <p class="text-[10px] text-slate-400">10 Apr 2026, 11:20</p>
+                                    </td>
+                                </tr>
+
+                                <!-- Baris 2: Rusak -->
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="py-3 px-4">
+                                        <span class="font-mono font-bold text-slate-700 text-xs bg-slate-100 px-2 py-0.5 rounded-lg">PIN-000015</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <p class="font-bold text-slate-900 text-xs">Ahmad Fauzi</p>
+                                        <p class="text-[10px] text-slate-400">ahmad@brin.go.id</p>
+                                    </td>
+                                    <td class="py-3 px-4 text-xs text-slate-700 font-semibold">10 Mar 2026</td>
+                                    <td class="py-3 px-4 text-xs text-slate-700 font-semibold">25 Mar 2026</td>
+                                    <td class="py-3 px-4 text-center text-xs font-bold text-slate-700">1</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <span class="inline-block bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-lg text-[10px] font-black">Rusak</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <p class="text-xs font-bold text-slate-700">Rina Wati</p>
+                                        <p class="text-[10px] text-slate-400">25 Mar 2026, 15:45</p>
+                                    </td>
+                                </tr>
+
+                                <!-- Baris 3: Hilang -->
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="py-3 px-4">
+                                        <span class="font-mono font-bold text-slate-700 text-xs bg-slate-100 px-2 py-0.5 rounded-lg">PIN-000008</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <p class="font-bold text-slate-900 text-xs">Dewi Lestari</p>
+                                        <p class="text-[10px] text-slate-400">dewi@brin.go.id</p>
+                                    </td>
+                                    <td class="py-3 px-4 text-xs text-slate-700 font-semibold">05 Jan 2026</td>
+                                    <td class="py-3 px-4 text-xs text-slate-700 font-semibold">20 Jan 2026</td>
+                                    <td class="py-3 px-4 text-center text-xs font-bold text-slate-700">1</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <span class="inline-block bg-red-100 text-red-700 px-2 py-0.5 rounded-lg text-[10px] font-black">Hilang</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <p class="text-xs font-bold text-slate-700">Admin Sistem</p>
+                                        <p class="text-[10px] text-slate-400">20 Jan 2026, 09:10</p>
+                                    </td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="px-8 pb-8">
+                <button class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-2xl transition-colors">
+                    Tutup
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
