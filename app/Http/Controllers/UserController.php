@@ -187,6 +187,11 @@ class UserController extends Controller
                 DB::beginTransaction();
                 $user->update(['is_active' => $newStatus]);
                 DB::commit();
+
+                // Jika dinonaktifkan, paksa logout user tersebut
+                if (!$newStatus) {
+                    DB::table('sessions')->where('user_id', $id)->delete();
+                }
                 
                 $statusText = $newStatus ? 'diaktifkan' : 'dinonaktifkan';
                 
@@ -219,6 +224,9 @@ class UserController extends Controller
 
             DB::beginTransaction();
 
+            // Simpan role lama sebelum diupdate
+            $oldRoleId = $user->role_id;
+
             // Update user data
             $updateData = [
                 'name' => $validated['name'],
@@ -234,6 +242,12 @@ class UserController extends Controller
             $user->update($updateData);
 
             DB::commit();
+
+            // Jika role diubah, paksa logout user tersebut
+            // dengan menghapus semua session aktifnya
+            if ((int)$validated['role_id'] !== (int)$oldRoleId) {
+                DB::table('sessions')->where('user_id', $id)->delete();
+            }
 
             return response()->json([
                 'success' => true,
@@ -413,6 +427,11 @@ class UserController extends Controller
             DB::beginTransaction();
             $user->update(['is_active' => $newStatus]);
             DB::commit();
+
+            // Jika dinonaktifkan, paksa logout user tersebut
+            if (!$newStatus) {
+                DB::table('sessions')->where('user_id', $id)->delete();
+            }
             
             $statusText = $newStatus ? 'diaktifkan' : 'dinonaktifkan';
             

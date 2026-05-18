@@ -230,6 +230,12 @@ body {
         </div>
       @endif
 
+      @if (session('error'))
+        <div class="error">
+          {{ session('error') }}
+        </div>
+      @endif
+
       <form id="loginForm" method="POST" action="{{ route('login') }}">
         @csrf
 

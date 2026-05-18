@@ -19,11 +19,10 @@ class LoanHistoryController extends Controller
         // Build query with relationships
         $query = Loan::with(['user', 'assets.category']);
         
-        // Filter by logged in user (only show their own loans) - KECUALI ADMIN
-        // Admin bisa lihat semua peminjaman
-        if (auth()->user()->role_id != 1) { // Assuming role_id 1 is Admin
-            $query->where('user_id', auth()->id());
-        }
+        // Menu ini hanya untuk user biasa (non-admin).
+        // Admin punya menu tersendiri: Pengecek Peminjaman.
+        // Selalu filter berdasarkan user yang sedang login, tanpa pengecualian.
+        $query->where('user_id', auth()->id());
         
         // Apply search filter
         if ($search) {
