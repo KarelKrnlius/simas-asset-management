@@ -220,6 +220,11 @@
                                 </td>
                                 <td class="py-4 px-4">
                                     <div class="flex justify-center gap-2">
+                                        <button onclick="openAssetHistory({{ $asset->id }})" 
+                                            class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors"
+                                            title="Riwayat Asset">
+                                            <i class="fas fa-history"></i>
+                                        </button>
                                         <button onclick="editAsset({{ $asset->id }})" 
                                             class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors"
                                             title="Edit Asset">
@@ -315,6 +320,7 @@
 @include('assets.edit-asset')
 @include('assets.delete-asset')
 @include('assets.foto-asset')
+@include('assets.riwayat-asset')
 
 {{-- DELETE ASSET --}}
 {{-- JAVASCRIPT DATA --}}
@@ -740,89 +746,153 @@ function closeEditAssetModal() {
 }
 
 function deleteAsset(id) {
-    // Get CSRF token
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    
-    if (!csrfToken) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    // Fetch dulu kondisi asset sebelum tampilkan dialog
+    fetch(`/assets/${id}/history`, {
+        headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) {
+            Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat memuat data asset.', confirmButtonColor: '#E11D48' });
+            return;
+        }
+
+        const hasHistory = data.has_loan_history;
+        const canDelete  = data.can_delete;
+        const condition  = (data.asset?.condition || '').toLowerCase();
+        const assetName  = data.asset?.name || 'Asset ini';
+        const assetCode  = data.asset?.code || '';
+
+        // ── KASUS 1: Pernah dipinjam & bukan hilang → TIDAK BISA DIHAPUS ──
+        if (hasHistory && !canDelete) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Tidak Dapat Dihapus',
+                html: `
+                    <div class="text-left space-y-3">
+                        <p class="text-sm text-slate-600">
+                            Asset <strong class="text-slate-900">${assetName}</strong>
+                            <span class="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">(${assetCode})</span>
+                            tidak dapat dihapus.
+                        </p>
+                        <div class="bg-orange-50 border border-orange-200 rounded-xl p-3 flex gap-2">
+                            <i class="fas fa-info-circle text-orange-500 mt-0.5 flex-shrink-0"></i>
+                            <p class="text-xs text-orange-700 font-semibold">
+                                Asset ini memiliki <strong>riwayat peminjaman</strong>. Asset yang pernah digunakan tidak boleh dihapus untuk menjaga integritas data.
+                            </p>
+                        </div>
+                        <p class="text-xs text-slate-500">
+                            Jika asset ini hilang, ubah kondisinya menjadi <strong>"Hilang"</strong> terlebih dahulu melalui menu Edit, kemudian asset dapat dihapus.
+                        </p>
+                    </div>`,
+                confirmButtonColor: '#64748b',
+                confirmButtonText: 'Mengerti',
+                customClass: { popup: 'rounded-2xl' }
+            });
+            return;
+        }
+
+        // ── KASUS 2: Kondisi hilang & pernah dipinjam → BISA HAPUS dengan peringatan ──
+        if (hasHistory && canDelete && condition === 'hilang') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Hapus Asset Hilang?',
+                html: `
+                    <div class="text-left space-y-3">
+                        <p class="text-sm text-slate-600">
+                            Anda akan menghapus asset <strong class="text-slate-900">${assetName}</strong>
+                            <span class="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">(${assetCode})</span>.
+                        </p>
+                        <div class="bg-red-50 border border-red-200 rounded-xl p-3 flex gap-2">
+                            <i class="fas fa-exclamation-triangle text-red-500 mt-0.5 flex-shrink-0"></i>
+                            <p class="text-xs text-red-700 font-semibold">
+                                Asset ini memiliki <strong>riwayat peminjaman</strong>. Jika dihapus, seluruh histori penggunaan asset ini akan <strong>ikut terhapus secara permanen</strong> dan tidak dapat dipulihkan.
+                            </p>
+                        </div>
+                        <p class="text-xs text-slate-500">Tindakan ini tidak dapat dibatalkan.</p>
+                    </div>`,
+                showCancelButton: true,
+                confirmButtonColor: '#E11D48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '<i class="fas fa-trash mr-1"></i> Ya, Hapus',
+                cancelButtonText: 'Batal',
+                customClass: { popup: 'rounded-2xl' },
+                showLoaderOnConfirm: true,
+                preConfirm: () => doDeleteAsset(id, csrfToken),
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then(result => {
+                if (result.isConfirmed) handleDeleteResult(result.value);
+            });
+            return;
+        }
+
+        // ── KASUS 3: Belum pernah dipinjam → HAPUS LANGSUNG tanpa peringatan tambahan ──
+        Swal.fire({
+            icon: 'question',
+            title: 'Hapus Asset?',
+            html: `Apakah Anda yakin ingin menghapus <strong>${assetName}</strong>?`,
+            showCancelButton: true,
+            confirmButtonColor: '#E11D48',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: '<i class="fas fa-trash mr-1"></i> Hapus',
+            cancelButtonText: 'Batal',
+            customClass: { popup: 'rounded-2xl' },
+            showLoaderOnConfirm: true,
+            preConfirm: () => doDeleteAsset(id, csrfToken),
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then(result => {
+            if (result.isConfirmed) handleDeleteResult(result.value);
+        });
+    })
+    .catch(() => {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan jaringan.', confirmButtonColor: '#E11D48' });
+    });
+}
+
+// Kirim request DELETE ke server
+function doDeleteAsset(id, csrfToken) {
+    const currentUrl = new URL(window.location);
+    const sortParams = currentUrl.searchParams.toString();
+    const baseUrl = '/assets/' + id;
+    const fullUrl = sortParams ? baseUrl + '?' + sortParams : baseUrl;
+
+    return fetch(fullUrl, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'X-HTTP-Method-Override': 'DELETE',
+            'Accept': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: '_method=DELETE&_token=' + encodeURIComponent(csrfToken)
+    })
+    .then(r => r.json())
+    .catch(() => ({ success: false, message: 'Terjadi kesalahan jaringan.' }));
+}
+
+// Handle hasil delete
+function handleDeleteResult(data) {
+    if (!data) return;
+    if (data.success) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: 'Asset berhasil dihapus.',
+            confirmButtonColor: '#E11D48',
+            timer: 1500,
+            showConfirmButton: false
+        }).then(() => window.location.reload());
+    } else {
         Swal.fire({
             icon: 'error',
-            title: 'Error',
-            text: 'CSRF token tidak ditemukan',
+            title: 'Gagal',
+            text: data.message || 'Gagal menghapus asset.',
             confirmButtonColor: '#E11D48',
-            customClass: {
-                popup: 'animated-shake'
-            }
+            customClass: { popup: 'rounded-2xl' }
         });
-        return;
     }
-    
-    // Show confirmation with SweetAlert2
-    Swal.fire({
-        title: 'Hapus Asset?',
-        html: 'Apakah Anda yakin ingin menghapus asset ini?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#E11D48',
-        cancelButtonColor: '#64748b',
-        confirmButtonText: 'Hapus',
-        cancelButtonText: 'Batal',
-        showLoaderOnConfirm: true,
-        preConfirm: () => {
-            // Store current sorting parameters before deletion
-            const currentUrl = new URL(window.location);
-            sessionStorage.setItem('currentSort', currentUrl.searchParams.toString());
-            
-            // Send delete request
-            return fetch(`/assets/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Individual delete response:', data); // Debug log
-                if (!data.success) {
-                    // Return error object instead of throwing
-                    return { error: true, message: data.message || 'Unknown error' };
-                }
-                return data;
-            })
-            .catch(error => {
-                console.log('Individual delete error:', error); // Debug log
-                // Return error object instead of showing validation message
-                return { error: true, message: error.message };
-            });
-        },
-        allowOutsideClick: () => !Swal.isLoading()
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Check if there's an error in the result
-            if (result.value && result.value.error) {
-                // Show error dialog with X icon
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal!',
-                    html: result.value.message || 'Asset ini tidak bisa dihapus',
-                    confirmButtonColor: '#E11D48',
-                    confirmButtonText: 'OK'
-                });
-            } else if (result.value && result.value.success) {
-                // Show success and reload
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: result.value.message,
-                    timer: 2000,
-                    showConfirmButton: false
-                }).then(() => {
-                    location.reload(true);
-                });
-            }
-        }
-    });
 }
 
 function closeDeleteModal() {

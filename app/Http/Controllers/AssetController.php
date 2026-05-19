@@ -286,107 +286,6 @@ class AssetController extends Controller
     }
 
     /**
-     * Show asset loan history (riwayat peminjaman asset).
-     */
-    public function history($id)
-    {
-        $asset = Asset::with('category')->findOrFail($id);
-
-        // Cek apakah asset pernah dipinjam
-        $hasLoanHistory = \DB::table('loan_details')
-            ->where('asset_id', $id)
-            ->exists();
-
-        // Ambil semua loan yang sedang aktif (dipinjam) untuk asset ini
-        $activeLoans = \DB::table('loan_details')
-            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
-            ->join('users', 'loans.user_id', '=', 'users.id')
-            ->leftJoin('users as created_by_user', 'loans.created_by', '=', 'created_by_user.id')
-            ->where('loan_details.asset_id', $id)
-            ->where('loans.status', 'dipinjam')
-            ->whereNull('loans.deleted_at')
-            ->select(
-                'loans.id as loan_id',
-                'loans.loan_code',
-                'loans.borrow_date',
-                'loans.return_date',
-                'loans.status',
-                'loans.created_at as loan_created_at',
-                'users.name as borrower_name',
-                'users.email as borrower_email',
-                'loan_details.quantity',
-                'loan_details.condition as return_condition',
-                'created_by_user.name as processed_by_name',
-                'created_by_user.email as processed_by_email'
-            )
-            ->orderBy('loans.borrow_date', 'desc')
-            ->get();
-
-        // Ambil semua riwayat selesai (dikembalikan) untuk asset ini
-        $completedLoans = \DB::table('loan_details')
-            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
-            ->join('users', 'loans.user_id', '=', 'users.id')
-            ->leftJoin('users as updated_by_user', 'loans.updated_by', '=', 'updated_by_user.id')
-            ->where('loan_details.asset_id', $id)
-            ->where('loans.status', 'dikembalikan')
-            ->whereNull('loans.deleted_at')
-            ->select(
-                'loans.id as loan_id',
-                'loans.loan_code',
-                'loans.borrow_date',
-                'loans.return_date',
-                'loans.status',
-                'loans.updated_at as returned_at',
-                'users.name as borrower_name',
-                'users.email as borrower_email',
-                'loan_details.quantity',
-                'loan_details.condition as return_condition',
-                'updated_by_user.name as processed_by_name',
-                'updated_by_user.email as processed_by_email'
-            )
-            ->orderBy('loans.return_date', 'desc')
-            ->get();
-
-        // Statistik
-        $totalLoans   = \DB::table('loan_details')
-            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
-            ->where('loan_details.asset_id', $id)
-            ->whereNull('loans.deleted_at')
-            ->count();
-
-        $totalReturned = \DB::table('loan_details')
-            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
-            ->where('loan_details.asset_id', $id)
-            ->where('loans.status', 'dikembalikan')
-            ->whereNull('loans.deleted_at')
-            ->count();
-
-        $totalActive = \DB::table('loan_details')
-            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
-            ->where('loan_details.asset_id', $id)
-            ->where('loans.status', 'dipinjam')
-            ->whereNull('loans.deleted_at')
-            ->count();
-
-        // Apakah bisa dihapus?
-        $canDelete = !$hasLoanHistory || $asset->condition === 'hilang';
-
-        return response()->json([
-            'success'        => true,
-            'asset'          => $asset,
-            'has_loan_history' => $hasLoanHistory,
-            'can_delete'     => $canDelete,
-            'active_loans'   => $activeLoans,
-            'completed_loans'=> $completedLoans,
-            'stats' => [
-                'total'     => $totalLoans,
-                'returned'  => $totalReturned,
-                'active'    => $totalActive,
-            ],
-        ]);
-    }
-
-    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Asset $asset)
@@ -545,6 +444,137 @@ class AssetController extends Controller
     }
 
     /**
+     * Show asset loan history (riwayat peminjaman asset).
+     */
+    public function history($id)
+    {
+        $asset = Asset::with('category')->findOrFail($id);
+
+        // Cek apakah asset pernah dipinjam
+        $hasLoanHistory = \DB::table('loan_details')
+            ->where('asset_id', $id)
+            ->exists();
+
+        // Ambil semua loan yang sedang aktif (dipinjam) untuk asset ini
+        $activeLoansRaw = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->join('users', 'loans.user_id', '=', 'users.id')
+            ->leftJoin('users as created_by_user', 'loans.created_by', '=', 'created_by_user.id')
+            ->where('loan_details.asset_id', $id)
+            ->where('loans.status', 'dipinjam')
+            ->whereNull('loans.deleted_at')
+            ->select(
+                'loans.id as loan_id',
+                'loans.loan_code',
+                'loans.borrow_date',
+                'loans.return_date',
+                'loans.status',
+                'loans.created_at as loan_created_at',
+                'users.name as borrower_name',
+                'users.email as borrower_email',
+                'loan_details.quantity',
+                'loan_details.condition as return_condition',
+                'created_by_user.name as processed_by_name',
+                'created_by_user.email as processed_by_email'
+            )
+            ->orderBy('loans.borrow_date', 'desc')
+            ->get();
+
+        // Format timestamp active loans ke WIB
+        $activeLoans = $activeLoansRaw->map(function ($loan) {
+            $loan = (array) $loan;
+            $loan['borrow_date']     = $loan['borrow_date']
+                ? \Carbon\Carbon::parse($loan['borrow_date'])->setTimezone('Asia/Jakarta')->formatId()
+                : null;
+            $loan['return_date']     = $loan['return_date']
+                ? \Carbon\Carbon::parse($loan['return_date'])->setTimezone('Asia/Jakarta')->formatId()
+                : null;
+            $loan['loan_created_at'] = $loan['loan_created_at']
+                ? \Carbon\Carbon::parse($loan['loan_created_at'])->setTimezone('Asia/Jakarta')->formatIdDateTime()
+                : null;
+            return $loan;
+        });
+
+        // Ambil semua riwayat selesai (dikembalikan) untuk asset ini — terbaru di atas
+        $completedLoansRaw = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->join('users', 'loans.user_id', '=', 'users.id')
+            ->leftJoin('users as updated_by_user', 'loans.updated_by', '=', 'updated_by_user.id')
+            ->where('loan_details.asset_id', $id)
+            ->where('loans.status', 'dikembalikan')
+            ->whereNull('loans.deleted_at')
+            ->select(
+                'loans.id as loan_id',
+                'loans.loan_code',
+                'loans.borrow_date',
+                'loans.return_date',
+                'loans.status',
+                'loans.updated_at as returned_at',
+                'users.name as borrower_name',
+                'users.email as borrower_email',
+                'loan_details.quantity',
+                'loan_details.condition as return_condition',
+                'updated_by_user.name as processed_by_name',
+                'updated_by_user.email as processed_by_email'
+            )
+            ->orderBy('loans.updated_at', 'desc') // terbaru diproses tampil paling atas
+            ->get();
+
+        // Format timestamp completed loans ke WIB
+        $completedLoans = $completedLoansRaw->map(function ($loan) {
+            $loan = (array) $loan;
+            $loan['borrow_date']  = $loan['borrow_date']
+                ? \Carbon\Carbon::parse($loan['borrow_date'])->setTimezone('Asia/Jakarta')->formatId()
+                : null;
+            $loan['return_date']  = $loan['return_date']
+                ? \Carbon\Carbon::parse($loan['return_date'])->setTimezone('Asia/Jakarta')->formatId()
+                : null;
+            $loan['returned_at']  = $loan['returned_at']
+                ? \Carbon\Carbon::parse($loan['returned_at'])->setTimezone('Asia/Jakarta')->formatIdDateTime()
+                : null;
+            return $loan;
+        });
+
+        // Statistik
+        $totalLoans = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->where('loan_details.asset_id', $id)
+            ->whereNull('loans.deleted_at')
+            ->count();
+
+        $totalReturned = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->where('loan_details.asset_id', $id)
+            ->where('loans.status', 'dikembalikan')
+            ->whereNull('loans.deleted_at')
+            ->count();
+
+        $totalActive = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->where('loan_details.asset_id', $id)
+            ->where('loans.status', 'dipinjam')
+            ->whereNull('loans.deleted_at')
+            ->count();
+
+        // Apakah bisa dihapus?
+        $canDelete = !$hasLoanHistory || $asset->condition === 'hilang';
+
+        return response()->json([
+            'success'          => true,
+            'asset'            => $asset,
+            'has_loan_history' => $hasLoanHistory,
+            'can_delete'       => $canDelete,
+            'active_loans'     => $activeLoans,
+            'completed_loans'  => $completedLoans,
+            'stats' => [
+                'total'    => $totalLoans,
+                'returned' => $totalReturned,
+                'active'   => $totalActive,
+            ],
+        ]);
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Request $request, $id)
@@ -552,81 +582,25 @@ class AssetController extends Controller
         \Log::info('Individual delete started', ['asset_id' => $id]);
         
         try {
-            // Find asset
+            // Find asset manually to handle missing assets gracefully
             $asset = Asset::find($id);
-            
+
             if (!$asset) {
-                \Log::warning('Asset not found', ['asset_id' => $id]);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Asset tidak ditemukan'
-                ], 404);
-            }
-            
-            \Log::info('Asset found', [
-                'asset_id' => $id,
-                'asset_code' => $asset->code,
-                'asset_name' => $asset->name,
-                'condition' => $asset->condition
-            ]);
-            
-            // Check if asset has loan history
-            $hasLoanHistory = \DB::table('loan_details')
-                ->where('asset_id', $id)
-                ->exists();
-            
-            \Log::info('Loan history check', [
-                'asset_id' => $id,
-                'has_loan_history' => $hasLoanHistory
-            ]);
-            
-            // If asset has loan history and condition is NOT "hilang", prevent deletion
-            if ($hasLoanHistory && $asset->condition !== 'hilang') {
-                \Log::warning('Delete prevented - asset has loan history and not lost', [
-                    'asset_id' => $id,
-                    'condition' => $asset->condition
-                ]);
-                
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Asset ini pernah dipinjam dan tidak bisa dihapus. Hanya asset dengan kondisi "hilang" yang bisa dihapus jika pernah dipinjam.'
-                ], 400);
-            }
-            
-            // Start transaction
-            \DB::beginTransaction();
-            
-            try {
-                // Delete loan_details records first (to avoid foreign key constraint)
-                if ($hasLoanHistory) {
-                    \DB::table('loan_details')
-                        ->where('asset_id', $id)
-                        ->delete();
-                    
-                    \Log::info('Loan details deleted', ['asset_id' => $id]);
-                }
-                
-                // Delete the asset
-                $asset->delete();
-                
-                \DB::commit();
-                
-                \Log::info('Asset deleted successfully', ['asset_id' => $id]);
-                
+                session()->flash('success', 'Berhasil menghapus');
                 return response()->json([
                     'success' => true,
-                    'message' => 'Asset berhasil dihapus'
+                    'message' => 'Asset already deleted or not found'
                 ]);
-                
-            } catch (\Exception $e) {
-                \DB::rollBack();
-                \Log::error('Transaction failed', [
-                    'asset_id' => $id,
-                    'error' => $e->getMessage()
-                ]);
-                throw $e;
             }
             
+            $asset->delete();
+            
+            session()->flash('success', 'Berhasil menghapus');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Asset deleted successfully'
+            ]);
         } catch (\Exception $e) {
             \Log::error('Delete failed', [
                 'asset_id' => $id,
@@ -650,7 +624,7 @@ class AssetController extends Controller
         
         try {
             $assetIds = json_decode($request->asset_ids, true);
-            
+
             if (!is_array($assetIds) || empty($assetIds)) {
                 return response()->json([
                     'success' => false,
@@ -658,124 +632,34 @@ class AssetController extends Controller
                 ], 400);
             }
             
-            \Log::info('Asset IDs to delete', ['ids' => $assetIds]);
+            // Check if any assets are currently being borrowed
+            $assetsInUse = \DB::table('loan_details')
+                ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+                ->whereIn('loan_details.asset_id', $assetIds)
+                ->where('loans.status', 'dipinjam')
+                ->whereNull('loans.deleted_at')
+                ->count();
             
-            // Start transaction
-            \DB::beginTransaction();
-            
-            try {
-                // Check if any assets are currently being borrowed
-                $assetsInUse = \DB::table('loan_details')
-                    ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
-                    ->whereIn('loan_details.asset_id', $assetIds)
-                    ->where('loans.status', 'dipinjam')
-                    ->whereNull('loans.deleted_at')
-                    ->count();
-                
-                \Log::info('Assets in use count', ['count' => $assetsInUse]);
-                
-                if ($assetsInUse > 0) {
-                    \DB::rollBack();
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Tidak dapat menghapus asset yang sedang dipinjam. Silakan kembalikan asset terlebih dahulu.'
-                    ], 400);
-                }
-                
-                // Get all assets with their loan history
-                $assets = Asset::whereIn('id', $assetIds)->get();
-                $canDelete = [];
-                $cannotDelete = [];
-                $lostAssets = [];
-                
-                foreach ($assets as $asset) {
-                    // Check if asset has loan history
-                    $hasHistory = \DB::table('loan_details')
-                        ->where('asset_id', $asset->id)
-                        ->exists();
-                    
-                    \Log::info('Asset check', [
-                        'id' => $asset->id,
-                        'code' => $asset->code,
-                        'condition' => $asset->condition,
-                        'hasHistory' => $hasHistory
-                    ]);
-                    
-                    if ($hasHistory) {
-                        // Asset pernah dipinjam
-                        if ($asset->condition === 'hilang') {
-                            // Asset hilang, boleh dihapus
-                            $canDelete[] = $asset->id;
-                            $lostAssets[] = $asset->code;
-                        } else {
-                            // Asset pernah dipinjam tapi tidak hilang, tidak boleh dihapus
-                            $cannotDelete[] = $asset->code;
-                        }
-                    } else {
-                        // Asset belum pernah dipinjam, boleh dihapus
-                        $canDelete[] = $asset->id;
-                    }
-                }
-                
-                \Log::info('Delete decision', [
-                    'canDelete' => $canDelete,
-                    'cannotDelete' => $cannotDelete,
-                    'lostAssets' => $lostAssets
-                ]);
-                
-                // If there are assets that cannot be deleted
-                if (!empty($cannotDelete)) {
-                    \DB::rollBack();
-                    $assetList = implode(', ', $cannotDelete);
-                    return response()->json([
-                        'success' => false,
-                        'message' => "Asset berikut tidak dapat dihapus karena memiliki riwayat peminjaman: {$assetList}. Hanya asset dengan kondisi 'hilang' yang dapat dihapus."
-                    ], 400);
-                }
-                
-                // If no assets can be deleted
-                if (empty($canDelete)) {
-                    \DB::rollBack();
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Tidak ada asset yang dapat dihapus'
-                    ], 400);
-                }
-                
-                // Delete loan_details records first (to avoid foreign key constraint)
-                $deletedDetails = \DB::table('loan_details')
-                    ->whereIn('asset_id', $canDelete)
-                    ->delete();
-                
-                \Log::info('Deleted loan_details', ['count' => $deletedDetails]);
-                
-                // Now delete the assets
-                $deletedCount = Asset::whereIn('id', $canDelete)->delete();
-                
-                \Log::info('Deleted assets', ['count' => $deletedCount]);
-                
-                // Commit transaction
-                \DB::commit();
-                
-                // Prepare success message
-                if (!empty($lostAssets)) {
-                    $lostList = implode(', ', $lostAssets);
-                    $message = "Berhasil menghapus {$deletedCount} asset hilang: {$lostList}";
-                } else {
-                    $message = "Berhasil menghapus {$deletedCount} asset";
-                }
-                
+            if ($assetsInUse > 0) {
                 return response()->json([
-                    'success' => true,
-                    'message' => $message,
-                    'deleted_count' => $deletedCount
-                ]);
-                
-            } catch (\Exception $e) {
-                \DB::rollBack();
-                \Log::error('Transaction error', ['error' => $e->getMessage()]);
-                throw $e;
+                    'success' => false,
+                    'message' => 'Tidak dapat menghapus asset yang sedang dipinjam. Silakan kembalikan asset terlebih dahulu.'
+                ], 400);
             }
+            
+            // Delete loan_details records for returned loans
+            \DB::table('loan_details')
+                ->whereIn('asset_id', $assetIds)
+                ->delete();
+            
+            // Delete assets
+            $deletedCount = Asset::whereIn('id', $assetIds)->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Berhasil menghapus {$deletedCount} aset",
+                'deleted_count' => $deletedCount
+            ]);
             
         } catch (\Exception $e) {
             \Log::error('Bulk delete error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
