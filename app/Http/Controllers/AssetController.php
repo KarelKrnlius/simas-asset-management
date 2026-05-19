@@ -286,6 +286,107 @@ class AssetController extends Controller
     }
 
     /**
+     * Show asset loan history (riwayat peminjaman asset).
+     */
+    public function history($id)
+    {
+        $asset = Asset::with('category')->findOrFail($id);
+
+        // Cek apakah asset pernah dipinjam
+        $hasLoanHistory = \DB::table('loan_details')
+            ->where('asset_id', $id)
+            ->exists();
+
+        // Ambil semua loan yang sedang aktif (dipinjam) untuk asset ini
+        $activeLoans = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->join('users', 'loans.user_id', '=', 'users.id')
+            ->leftJoin('users as created_by_user', 'loans.created_by', '=', 'created_by_user.id')
+            ->where('loan_details.asset_id', $id)
+            ->where('loans.status', 'dipinjam')
+            ->whereNull('loans.deleted_at')
+            ->select(
+                'loans.id as loan_id',
+                'loans.loan_code',
+                'loans.borrow_date',
+                'loans.return_date',
+                'loans.status',
+                'loans.created_at as loan_created_at',
+                'users.name as borrower_name',
+                'users.email as borrower_email',
+                'loan_details.quantity',
+                'loan_details.condition as return_condition',
+                'created_by_user.name as processed_by_name',
+                'created_by_user.email as processed_by_email'
+            )
+            ->orderBy('loans.borrow_date', 'desc')
+            ->get();
+
+        // Ambil semua riwayat selesai (dikembalikan) untuk asset ini
+        $completedLoans = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->join('users', 'loans.user_id', '=', 'users.id')
+            ->leftJoin('users as updated_by_user', 'loans.updated_by', '=', 'updated_by_user.id')
+            ->where('loan_details.asset_id', $id)
+            ->where('loans.status', 'dikembalikan')
+            ->whereNull('loans.deleted_at')
+            ->select(
+                'loans.id as loan_id',
+                'loans.loan_code',
+                'loans.borrow_date',
+                'loans.return_date',
+                'loans.status',
+                'loans.updated_at as returned_at',
+                'users.name as borrower_name',
+                'users.email as borrower_email',
+                'loan_details.quantity',
+                'loan_details.condition as return_condition',
+                'updated_by_user.name as processed_by_name',
+                'updated_by_user.email as processed_by_email'
+            )
+            ->orderBy('loans.return_date', 'desc')
+            ->get();
+
+        // Statistik
+        $totalLoans   = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->where('loan_details.asset_id', $id)
+            ->whereNull('loans.deleted_at')
+            ->count();
+
+        $totalReturned = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->where('loan_details.asset_id', $id)
+            ->where('loans.status', 'dikembalikan')
+            ->whereNull('loans.deleted_at')
+            ->count();
+
+        $totalActive = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->where('loan_details.asset_id', $id)
+            ->where('loans.status', 'dipinjam')
+            ->whereNull('loans.deleted_at')
+            ->count();
+
+        // Apakah bisa dihapus?
+        $canDelete = !$hasLoanHistory || $asset->condition === 'hilang';
+
+        return response()->json([
+            'success'        => true,
+            'asset'          => $asset,
+            'has_loan_history' => $hasLoanHistory,
+            'can_delete'     => $canDelete,
+            'active_loans'   => $activeLoans,
+            'completed_loans'=> $completedLoans,
+            'stats' => [
+                'total'     => $totalLoans,
+                'returned'  => $totalReturned,
+                'active'    => $totalActive,
+            ],
+        ]);
+    }
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Asset $asset)
