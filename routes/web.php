@@ -77,6 +77,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/assets-export', [AssetController::class, 'export'])->middleware('role:admin')->name('assets.export');
     Route::get('/assets/next-code', [AssetController::class, 'getNextCode'])->middleware('role:admin');
     Route::post('/assets/bulk-delete', [AssetController::class, 'bulkDelete'])->middleware('role:admin');
+    Route::get('/assets/{id}/history', [AssetController::class, 'history'])->middleware('role:admin')->name('assets.history');
     
     // Categories Resource Routes (Admin Only)
     Route::get('/categories/list', [CategoryController::class, 'list'])->middleware('role:admin');

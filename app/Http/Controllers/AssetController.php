@@ -444,34 +444,191 @@ class AssetController extends Controller
     }
 
     /**
+     * Show asset loan history (riwayat peminjaman asset).
+     */
+    public function history($id)
+    {
+        $asset = Asset::with('category')->findOrFail($id);
+
+        // Cek apakah asset pernah dipinjam
+        $hasLoanHistory = \DB::table('loan_details')
+            ->where('asset_id', $id)
+            ->exists();
+
+        // Ambil semua loan yang sedang aktif (dipinjam) untuk asset ini
+        $activeLoansRaw = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->join('users', 'loans.user_id', '=', 'users.id')
+            ->leftJoin('users as created_by_user', 'loans.created_by', '=', 'created_by_user.id')
+            ->where('loan_details.asset_id', $id)
+            ->where('loans.status', 'dipinjam')
+            ->whereNull('loans.deleted_at')
+            ->select(
+                'loans.id as loan_id',
+                'loans.loan_code',
+                'loans.borrow_date',
+                'loans.return_date',
+                'loans.status',
+                'loans.created_at as loan_created_at',
+                'users.name as borrower_name',
+                'users.email as borrower_email',
+                'loan_details.quantity',
+                'loan_details.condition as return_condition',
+                'created_by_user.name as processed_by_name',
+                'created_by_user.email as processed_by_email'
+            )
+            ->orderBy('loans.borrow_date', 'desc')
+            ->get();
+
+        // Format timestamp active loans ke WIB
+        $activeLoans = $activeLoansRaw->map(function ($loan) {
+            $loan = (array) $loan;
+            $loan['borrow_date']     = $loan['borrow_date']
+                ? \Carbon\Carbon::parse($loan['borrow_date'])->setTimezone('Asia/Jakarta')->formatId()
+                : null;
+            $loan['return_date']     = $loan['return_date']
+                ? \Carbon\Carbon::parse($loan['return_date'])->setTimezone('Asia/Jakarta')->formatId()
+                : null;
+            $loan['loan_created_at'] = $loan['loan_created_at']
+                ? \Carbon\Carbon::parse($loan['loan_created_at'])->setTimezone('Asia/Jakarta')->formatIdDateTime()
+                : null;
+            return $loan;
+        });
+
+        // Ambil semua riwayat selesai (dikembalikan) untuk asset ini — terbaru di atas
+        $completedLoansRaw = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->join('users', 'loans.user_id', '=', 'users.id')
+            ->leftJoin('users as updated_by_user', 'loans.updated_by', '=', 'updated_by_user.id')
+            ->where('loan_details.asset_id', $id)
+            ->where('loans.status', 'dikembalikan')
+            ->whereNull('loans.deleted_at')
+            ->select(
+                'loans.id as loan_id',
+                'loans.loan_code',
+                'loans.borrow_date',
+                'loans.return_date',
+                'loans.status',
+                'loans.updated_at as returned_at',
+                'users.name as borrower_name',
+                'users.email as borrower_email',
+                'loan_details.quantity',
+                'loan_details.condition as return_condition',
+                'updated_by_user.name as processed_by_name',
+                'updated_by_user.email as processed_by_email'
+            )
+            ->orderBy('loans.updated_at', 'desc') // terbaru diproses tampil paling atas
+            ->get();
+
+        // Format timestamp completed loans ke WIB
+        $completedLoans = $completedLoansRaw->map(function ($loan) {
+            $loan = (array) $loan;
+            $loan['borrow_date']  = $loan['borrow_date']
+                ? \Carbon\Carbon::parse($loan['borrow_date'])->setTimezone('Asia/Jakarta')->formatId()
+                : null;
+            $loan['return_date']  = $loan['return_date']
+                ? \Carbon\Carbon::parse($loan['return_date'])->setTimezone('Asia/Jakarta')->formatId()
+                : null;
+            $loan['returned_at']  = $loan['returned_at']
+                ? \Carbon\Carbon::parse($loan['returned_at'])->setTimezone('Asia/Jakarta')->formatIdDateTime()
+                : null;
+            return $loan;
+        });
+
+        // Statistik
+        $totalLoans = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->where('loan_details.asset_id', $id)
+            ->whereNull('loans.deleted_at')
+            ->count();
+
+        $totalReturned = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->where('loan_details.asset_id', $id)
+            ->where('loans.status', 'dikembalikan')
+            ->whereNull('loans.deleted_at')
+            ->count();
+
+        $totalActive = \DB::table('loan_details')
+            ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+            ->where('loan_details.asset_id', $id)
+            ->where('loans.status', 'dipinjam')
+            ->whereNull('loans.deleted_at')
+            ->count();
+
+        // Apakah bisa dihapus?
+        $canDelete = !$hasLoanHistory || $asset->condition === 'hilang';
+
+        return response()->json([
+            'success'          => true,
+            'asset'            => $asset,
+            'has_loan_history' => $hasLoanHistory,
+            'can_delete'       => $canDelete,
+            'active_loans'     => $activeLoans,
+            'completed_loans'  => $completedLoans,
+            'stats' => [
+                'total'    => $totalLoans,
+                'returned' => $totalReturned,
+                'active'   => $totalActive,
+            ],
+        ]);
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Request $request, $id)
     {
         try {
-            // Find asset manually to handle missing assets gracefully
             $asset = Asset::find($id);
-            
+
             if (!$asset) {
-                session()->flash('success', 'Berhasil menghapus');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Asset tidak ditemukan'
+                ], 404);
+            }
+
+            // Cek apakah asset pernah dipinjam
+            $hasLoanHistory = \DB::table('loan_details')
+                ->where('asset_id', $id)
+                ->exists();
+
+            // Jika pernah dipinjam dan kondisi BUKAN hilang → tolak
+            if ($hasLoanHistory && $asset->condition !== 'hilang') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Asset ini pernah dipinjam sehingga tidak dapat dihapus. Hanya asset dengan kondisi "Hilang" yang boleh dihapus.',
+                    'has_history' => true,
+                    'condition'   => $asset->condition,
+                ], 400);
+            }
+
+            \DB::beginTransaction();
+            try {
+                // Hapus loan_details jika ada (asset hilang yang pernah dipinjam)
+                if ($hasLoanHistory) {
+                    \DB::table('loan_details')->where('asset_id', $id)->delete();
+                }
+
+                $asset->delete();
+                \DB::commit();
+
+                session()->flash('success', 'Berhasil menghapus asset');
+
                 return response()->json([
                     'success' => true,
-                    'message' => 'Asset already deleted or not found'
+                    'message' => 'Asset berhasil dihapus'
                 ]);
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                throw $e;
             }
-            
-            $asset->delete();
-            
-            session()->flash('success', 'Berhasil menghapus');
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Asset deleted successfully'
-            ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete asset: ' . $e->getMessage()
+                'message' => 'Gagal menghapus asset: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -483,47 +640,69 @@ class AssetController extends Controller
     {
         try {
             $assetIds = json_decode($request->asset_ids, true);
-            
+
             if (!is_array($assetIds) || empty($assetIds)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No assets selected for deletion'
+                    'message' => 'Tidak ada asset yang dipilih'
                 ], 400);
             }
-            
-            // Check if any assets are currently being borrowed
-            $assetsInUse = \DB::table('loan_details')
-                ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
-                ->whereIn('loan_details.asset_id', $assetIds)
-                ->where('loans.status', 'dipinjam')
-                ->whereNull('loans.deleted_at')
-                ->count();
-            
-            if ($assetsInUse > 0) {
+
+            \DB::beginTransaction();
+            try {
+                $assets      = Asset::whereIn('id', $assetIds)->get();
+                $canDelete   = [];
+                $cannotDelete = [];
+
+                foreach ($assets as $asset) {
+                    $hasHistory = \DB::table('loan_details')
+                        ->where('asset_id', $asset->id)
+                        ->exists();
+
+                    if ($hasHistory && $asset->condition !== 'hilang') {
+                        $cannotDelete[] = $asset->code;
+                    } else {
+                        $canDelete[] = $asset->id;
+                    }
+                }
+
+                if (!empty($cannotDelete)) {
+                    \DB::rollBack();
+                    $list = implode(', ', $cannotDelete);
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Asset berikut tidak dapat dihapus karena memiliki riwayat peminjaman: {$list}. Hanya asset dengan kondisi \"Hilang\" yang dapat dihapus."
+                    ], 400);
+                }
+
+                if (empty($canDelete)) {
+                    \DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tidak ada asset yang dapat dihapus'
+                    ], 400);
+                }
+
+                \DB::table('loan_details')->whereIn('asset_id', $canDelete)->delete();
+                $deletedCount = Asset::whereIn('id', $canDelete)->delete();
+
+                \DB::commit();
+
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Tidak dapat menghapus asset yang sedang dipinjam. Silakan kembalikan asset terlebih dahulu.'
-                ], 400);
+                    'success'       => true,
+                    'message'       => "Berhasil menghapus {$deletedCount} asset",
+                    'deleted_count' => $deletedCount
+                ]);
+
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                throw $e;
             }
-            
-            // Delete loan_details records for returned loans
-            \DB::table('loan_details')
-                ->whereIn('asset_id', $assetIds)
-                ->delete();
-            
-            // Delete assets
-            $deletedCount = Asset::whereIn('id', $assetIds)->delete();
-            
-            return response()->json([
-                'success' => true,
-                'message' => "Berhasil menghapus {$deletedCount} aset",
-                'deleted_count' => $deletedCount
-            ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete assets: ' . $e->getMessage()
+                'message' => 'Gagal menghapus asset: ' . $e->getMessage()
             ], 500);
         }
     }
