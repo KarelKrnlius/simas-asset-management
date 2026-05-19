@@ -448,30 +448,94 @@ class AssetController extends Controller
      */
     public function destroy(Request $request, $id)
     {
+        \Log::info('Individual delete started', ['asset_id' => $id]);
+        
         try {
-            // Find asset manually to handle missing assets gracefully
+            // Find asset
             $asset = Asset::find($id);
             
             if (!$asset) {
-                session()->flash('success', 'Berhasil menghapus');
+                \Log::warning('Asset not found', ['asset_id' => $id]);
                 return response()->json([
-                    'success' => true,
-                    'message' => 'Asset already deleted or not found'
-                ]);
+                    'success' => false,
+                    'message' => 'Asset tidak ditemukan'
+                ], 404);
             }
             
-            $asset->delete();
-            
-            session()->flash('success', 'Berhasil menghapus');
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Asset deleted successfully'
+            \Log::info('Asset found', [
+                'asset_id' => $id,
+                'asset_code' => $asset->code,
+                'asset_name' => $asset->name,
+                'condition' => $asset->condition
             ]);
+            
+            // Check if asset has loan history
+            $hasLoanHistory = \DB::table('loan_details')
+                ->where('asset_id', $id)
+                ->exists();
+            
+            \Log::info('Loan history check', [
+                'asset_id' => $id,
+                'has_loan_history' => $hasLoanHistory
+            ]);
+            
+            // If asset has loan history and condition is NOT "hilang", prevent deletion
+            if ($hasLoanHistory && $asset->condition !== 'hilang') {
+                \Log::warning('Delete prevented - asset has loan history and not lost', [
+                    'asset_id' => $id,
+                    'condition' => $asset->condition
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Asset ini pernah dipinjam dan tidak bisa dihapus. Hanya asset dengan kondisi "hilang" yang bisa dihapus jika pernah dipinjam.'
+                ], 400);
+            }
+            
+            // Start transaction
+            \DB::beginTransaction();
+            
+            try {
+                // Delete loan_details records first (to avoid foreign key constraint)
+                if ($hasLoanHistory) {
+                    \DB::table('loan_details')
+                        ->where('asset_id', $id)
+                        ->delete();
+                    
+                    \Log::info('Loan details deleted', ['asset_id' => $id]);
+                }
+                
+                // Delete the asset
+                $asset->delete();
+                
+                \DB::commit();
+                
+                \Log::info('Asset deleted successfully', ['asset_id' => $id]);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Asset berhasil dihapus'
+                ]);
+                
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                \Log::error('Transaction failed', [
+                    'asset_id' => $id,
+                    'error' => $e->getMessage()
+                ]);
+                throw $e;
+            }
+            
         } catch (\Exception $e) {
+            \Log::error('Delete failed', [
+                'asset_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete asset: ' . $e->getMessage()
+                'message' => 'Gagal menghapus asset: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -481,49 +545,142 @@ class AssetController extends Controller
      */
     public function bulkDelete(Request $request)
     {
+        \Log::info('Bulk delete started', ['asset_ids' => $request->asset_ids]);
+        
         try {
             $assetIds = json_decode($request->asset_ids, true);
             
             if (!is_array($assetIds) || empty($assetIds)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No assets selected for deletion'
+                    'message' => 'Tidak ada asset yang dipilih'
                 ], 400);
             }
             
-            // Check if any assets are currently being borrowed
-            $assetsInUse = \DB::table('loan_details')
-                ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
-                ->whereIn('loan_details.asset_id', $assetIds)
-                ->where('loans.status', 'dipinjam')
-                ->whereNull('loans.deleted_at')
-                ->count();
+            \Log::info('Asset IDs to delete', ['ids' => $assetIds]);
             
-            if ($assetsInUse > 0) {
+            // Start transaction
+            \DB::beginTransaction();
+            
+            try {
+                // Check if any assets are currently being borrowed
+                $assetsInUse = \DB::table('loan_details')
+                    ->join('loans', 'loan_details.loan_id', '=', 'loans.id')
+                    ->whereIn('loan_details.asset_id', $assetIds)
+                    ->where('loans.status', 'dipinjam')
+                    ->whereNull('loans.deleted_at')
+                    ->count();
+                
+                \Log::info('Assets in use count', ['count' => $assetsInUse]);
+                
+                if ($assetsInUse > 0) {
+                    \DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tidak dapat menghapus asset yang sedang dipinjam. Silakan kembalikan asset terlebih dahulu.'
+                    ], 400);
+                }
+                
+                // Get all assets with their loan history
+                $assets = Asset::whereIn('id', $assetIds)->get();
+                $canDelete = [];
+                $cannotDelete = [];
+                $lostAssets = [];
+                
+                foreach ($assets as $asset) {
+                    // Check if asset has loan history
+                    $hasHistory = \DB::table('loan_details')
+                        ->where('asset_id', $asset->id)
+                        ->exists();
+                    
+                    \Log::info('Asset check', [
+                        'id' => $asset->id,
+                        'code' => $asset->code,
+                        'condition' => $asset->condition,
+                        'hasHistory' => $hasHistory
+                    ]);
+                    
+                    if ($hasHistory) {
+                        // Asset pernah dipinjam
+                        if ($asset->condition === 'hilang') {
+                            // Asset hilang, boleh dihapus
+                            $canDelete[] = $asset->id;
+                            $lostAssets[] = $asset->code;
+                        } else {
+                            // Asset pernah dipinjam tapi tidak hilang, tidak boleh dihapus
+                            $cannotDelete[] = $asset->code;
+                        }
+                    } else {
+                        // Asset belum pernah dipinjam, boleh dihapus
+                        $canDelete[] = $asset->id;
+                    }
+                }
+                
+                \Log::info('Delete decision', [
+                    'canDelete' => $canDelete,
+                    'cannotDelete' => $cannotDelete,
+                    'lostAssets' => $lostAssets
+                ]);
+                
+                // If there are assets that cannot be deleted
+                if (!empty($cannotDelete)) {
+                    \DB::rollBack();
+                    $assetList = implode(', ', $cannotDelete);
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Asset berikut tidak dapat dihapus karena memiliki riwayat peminjaman: {$assetList}. Hanya asset dengan kondisi 'hilang' yang dapat dihapus."
+                    ], 400);
+                }
+                
+                // If no assets can be deleted
+                if (empty($canDelete)) {
+                    \DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tidak ada asset yang dapat dihapus'
+                    ], 400);
+                }
+                
+                // Delete loan_details records first (to avoid foreign key constraint)
+                $deletedDetails = \DB::table('loan_details')
+                    ->whereIn('asset_id', $canDelete)
+                    ->delete();
+                
+                \Log::info('Deleted loan_details', ['count' => $deletedDetails]);
+                
+                // Now delete the assets
+                $deletedCount = Asset::whereIn('id', $canDelete)->delete();
+                
+                \Log::info('Deleted assets', ['count' => $deletedCount]);
+                
+                // Commit transaction
+                \DB::commit();
+                
+                // Prepare success message
+                if (!empty($lostAssets)) {
+                    $lostList = implode(', ', $lostAssets);
+                    $message = "Berhasil menghapus {$deletedCount} asset hilang: {$lostList}";
+                } else {
+                    $message = "Berhasil menghapus {$deletedCount} asset";
+                }
+                
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Tidak dapat menghapus asset yang sedang dipinjam. Silakan kembalikan asset terlebih dahulu.'
-                ], 400);
+                    'success' => true,
+                    'message' => $message,
+                    'deleted_count' => $deletedCount
+                ]);
+                
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                \Log::error('Transaction error', ['error' => $e->getMessage()]);
+                throw $e;
             }
-            
-            // Delete loan_details records for returned loans
-            \DB::table('loan_details')
-                ->whereIn('asset_id', $assetIds)
-                ->delete();
-            
-            // Delete assets
-            $deletedCount = Asset::whereIn('id', $assetIds)->delete();
-            
-            return response()->json([
-                'success' => true,
-                'message' => "Berhasil menghapus {$deletedCount} aset",
-                'deleted_count' => $deletedCount
-            ]);
             
         } catch (\Exception $e) {
+            \Log::error('Bulk delete error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete assets: ' . $e->getMessage()
+                'message' => 'Gagal menghapus asset: ' . $e->getMessage()
             ], 500);
         }
     }

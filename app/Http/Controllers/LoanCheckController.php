@@ -123,6 +123,14 @@ class LoanCheckController extends Controller
     {
         $loanIds = $request->input('loan_ids', []);
         
+        // Ensure loan_ids is an array
+        if (!is_array($loanIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Format data tidak valid'
+            ], 400);
+        }
+        
         if (empty($loanIds)) {
             return response()->json([
                 'success' => false,

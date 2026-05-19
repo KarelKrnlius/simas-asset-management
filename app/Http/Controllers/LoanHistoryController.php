@@ -154,6 +154,14 @@ class LoanHistoryController extends Controller
     {
         $loanIds = $request->input('loan_ids', []);
         
+        // Ensure loan_ids is an array
+        if (!is_array($loanIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Format data tidak valid'
+            ], 400);
+        }
+        
         if (empty($loanIds)) {
             return response()->json([
                 'success' => false,
@@ -188,6 +196,44 @@ class LoanHistoryController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => $deletedCount . ' peminjaman berhasil dihapus'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete individual loan
+     */
+    public function destroy($id)
+    {
+        try {
+            $loan = Loan::with('assets')->findOrFail($id);
+            
+            // Return assets to available status and increment stock
+            foreach ($loan->assets as $asset) {
+                $quantity = $asset->pivot->quantity;
+                
+                // Increment stock
+                $newStock = $asset->stock + $quantity;
+                
+                // Update asset status to 'tersedia' if stock is available
+                $asset->update([
+                    'stock' => $newStock,
+                    'status' => 'tersedia'
+                ]);
+            }
+            
+            // Delete the loan (soft delete)
+            $loan->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Peminjaman berhasil dihapus'
             ]);
             
         } catch (\Exception $e) {

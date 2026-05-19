@@ -317,43 +317,6 @@
 @include('assets.foto-asset')
 
 {{-- DELETE ASSET --}}
-<div id="bulkDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-    <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
-        <div class="flex items-center gap-3 mb-4">
-            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
-            </div>
-            <div>
-                <h3 class="text-xl font-bold text-slate-900">Hapus Asset Terpilih</h3>
-                <p class="text-sm text-slate-600">Aksi ini tidak dapat dibatalkan</p>
-            </div>
-        </div>
-        
-        <div class="mb-6">
-            <p class="text-slate-700 mb-2">
-                Apakah Anda yakin ingin menghapus <span id="selectedCount" class="font-bold text-red-600">0</span> Asset terpilih?
-            </p>
-            <div class="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p class="text-sm text-red-800">
-                    <i class="fas fa-info-circle mr-2"></i>
-                    Semua Asset yang dipilih akan dihapus secara permanen dari sistem.
-                </p>
-            </div>
-        </div>
-        
-        <div class="flex gap-3">
-            <button onclick="closeBulkDeleteModal()" 
-                class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-colors">
-                Batal
-            </button>
-            <button onclick="confirmBulkDelete()" 
-                class="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-xl transition-all duration-300 hover:shadow-xl">
-                <i class="fas fa-trash mr-2"></i> Hapus Asset
-            </button>
-        </div>
-    </div>
-</div>
-
 {{-- JAVASCRIPT DATA --}}
 <script>
     // Pass existing categories to JavaScript
@@ -536,15 +499,8 @@ function updateBulkDeleteButton() {
 }
 
 function showBulkDeleteModal() {
-    const checkboxes = document.querySelectorAll('.asset-checkbox:checked');
-    const selectedCount = document.getElementById('selectedCount');
-    
-    selectedCount.textContent = checkboxes.length;
-    document.getElementById('bulkDeleteModal').style.display = 'flex';
-}
-
-function closeBulkDeleteModal() {
-    document.getElementById('bulkDeleteModal').style.display = 'none';
+    // Langsung panggil confirmBulkDelete (yang sudah pakai SweetAlert2)
+    confirmBulkDelete();
 }
 
 function confirmBulkDelete() {
@@ -552,70 +508,104 @@ function confirmBulkDelete() {
     const assetIds = Array.from(checkboxes).map(cb => cb.value);
     
     if (assetIds.length === 0) {
-        alert('Pilih minimal satu Asset untuk dihapus');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Tidak Ada Asset Dipilih',
+            text: 'Pilih minimal satu asset untuk dihapus',
+            confirmButtonColor: '#E11D48',
+            customClass: {
+                popup: 'animated-shake'
+            }
+        });
         return;
     }
     
     // Get CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     if (!csrfToken) {
-        alert('CSRF token tidak ditemukan');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'CSRF token tidak ditemukan',
+            confirmButtonColor: '#E11D48',
+            customClass: {
+                popup: 'animated-shake'
+            }
+        });
         return;
     }
     
-    // Store current sorting parameters before deletion
-    const currentUrl = new URL(window.location);
-    sessionStorage.setItem('currentSort', currentUrl.searchParams.toString());
-    
-    // Create form data for bulk delete
-    const formData = new FormData();
-    formData.append('_token', csrfToken);
-    formData.append('asset_ids', JSON.stringify(assetIds));
-    
-    // Show loading
-    const deleteBtn = event.target;
-    const originalText = deleteBtn.innerHTML;
-    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menghapus...';
-    deleteBtn.disabled = true;
-    
-    // Send bulk delete request
-    fetch('/assets/bulk-delete', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json'
+    // Show confirmation with SweetAlert2
+    Swal.fire({
+        title: 'Hapus Asset?',
+        html: `Apakah Anda yakin ingin menghapus <strong>${assetIds.length}</strong> asset yang dipilih?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#E11D48',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Hapus',
+        cancelButtonText: 'Batal',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            // Store current sorting parameters before deletion
+            const currentUrl = new URL(window.location);
+            sessionStorage.setItem('currentSort', currentUrl.searchParams.toString());
+            
+            // Create form data for bulk delete
+            const formData = new FormData();
+            formData.append('_token', csrfToken);
+            formData.append('asset_ids', JSON.stringify(assetIds));
+            
+            // Send bulk delete request
+            return fetch('/assets/bulk-delete', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Bulk delete response:', data); // Debug log
+                if (!data.success) {
+                    // Return error object instead of throwing
+                    return { error: true, message: data.message || 'Unknown error' };
+                }
+                return data;
+            })
+            .catch(error => {
+                console.log('Bulk delete error:', error); // Debug log
+                // Return error object instead of showing validation message
+                return { error: true, message: error.message };
+            });
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Check if there's an error in the result
+            if (result.value && result.value.error) {
+                // Show error dialog with X icon
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    html: result.value.message || 'Beberapa asset tidak bisa dihapus',
+                    confirmButtonColor: '#E11D48',
+                    confirmButtonText: 'OK'
+                });
+            } else if (result.value && result.value.success) {
+                // Show success and reload
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: result.value.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload(true);
+                });
+            }
         }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Store success message for post-refresh notification
-            sessionStorage.setItem('bulkDeleteSuccess', 'true');
-            sessionStorage.setItem('bulkDeleteMessage', data.message);
-            
-            // Close modal and hard refresh
-            closeBulkDeleteModal();
-            
-            setTimeout(() => {
-                location.reload(true);
-            }, 500);
-        } else {
-            // Restore button
-            deleteBtn.innerHTML = originalText;
-            deleteBtn.disabled = false;
-            
-            alert('Gagal menghapus Asset: ' + (data.message || 'Unknown error'));
-        }
-    })
-    .catch(error => {
-        console.error('Error deleting assets:', error);
-        
-        // Restore button
-        deleteBtn.innerHTML = originalText;
-        deleteBtn.disabled = false;
-        
-        alert('Terjadi kesalahan saat menghapus Asset: ' + error.message);
     });
 }
 
@@ -634,60 +624,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             openAddAssetModal();
         }, 500);
-    }
-    
-    const bulkDeleteSuccess = sessionStorage.getItem('bulkDeleteSuccess');
-    const bulkDeleteMessage = sessionStorage.getItem('bulkDeleteMessage');
-    
-    if (bulkDeleteSuccess === 'true' && bulkDeleteMessage) {
-        // Create and show notification
-        const notification = document.createElement('div');
-        notification.className = 'fixed top-4 right-4 bg-emerald-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 z-50';
-        notification.style.cssText = `
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            background-color: #10b981;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            z-index: 9999;
-            transform: translateX(100%);
-            transition: transform 0.3s ease-out;
-        `;
-        
-        notification.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <path d="m22 4-10 10.01L7 9.01"/>
-            </svg>
-            <span class="font-medium">${bulkDeleteMessage}</span>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Animate in
-        setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
-        }, 100);
-        
-        // Remove after 3 seconds
-        setTimeout(() => {
-            notification.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 3000);
-        
-        // Clear sessionStorage
-        sessionStorage.removeItem('bulkDeleteSuccess');
-        sessionStorage.removeItem('bulkDeleteMessage');
     }
     
     // Restore sorting state if exists
@@ -804,16 +740,89 @@ function closeEditAssetModal() {
 }
 
 function deleteAsset(id) {
-    document.getElementById('deleteAsset').style.display = 'flex';
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     
-    // Preserve current sorting parameters in the form action
-    const currentUrl = new URL(window.location);
-    const sortParams = currentUrl.searchParams.toString();
+    if (!csrfToken) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'CSRF token tidak ditemukan',
+            confirmButtonColor: '#E11D48',
+            customClass: {
+                popup: 'animated-shake'
+            }
+        });
+        return;
+    }
     
-    // Set form action with preserved parameters
-    const baseUrl = '/assets/' + id;
-    const fullUrl = sortParams ? baseUrl + '?' + sortParams : baseUrl;
-    document.getElementById('deleteForm').action = fullUrl;
+    // Show confirmation with SweetAlert2
+    Swal.fire({
+        title: 'Hapus Asset?',
+        html: 'Apakah Anda yakin ingin menghapus asset ini?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#E11D48',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Hapus',
+        cancelButtonText: 'Batal',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            // Store current sorting parameters before deletion
+            const currentUrl = new URL(window.location);
+            sessionStorage.setItem('currentSort', currentUrl.searchParams.toString());
+            
+            // Send delete request
+            return fetch(`/assets/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Individual delete response:', data); // Debug log
+                if (!data.success) {
+                    // Return error object instead of throwing
+                    return { error: true, message: data.message || 'Unknown error' };
+                }
+                return data;
+            })
+            .catch(error => {
+                console.log('Individual delete error:', error); // Debug log
+                // Return error object instead of showing validation message
+                return { error: true, message: error.message };
+            });
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Check if there's an error in the result
+            if (result.value && result.value.error) {
+                // Show error dialog with X icon
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    html: result.value.message || 'Asset ini tidak bisa dihapus',
+                    confirmButtonColor: '#E11D48',
+                    confirmButtonText: 'OK'
+                });
+            } else if (result.value && result.value.success) {
+                // Show success and reload
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: result.value.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload(true);
+                });
+            }
+        }
+    });
 }
 
 function closeDeleteModal() {
@@ -1191,5 +1200,32 @@ function downloadQR() {
     }
 }
 </script>
+
+{{-- SweetAlert2 --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{{-- CSS for Shake Animation --}}
+<style>
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+.animated-shake {
+    animation: shake 0.5s;
+}
+
+/* Custom SweetAlert2 styling for error */
+.swal2-icon.swal2-error {
+    border-color: #dc2626 !important;
+    color: #dc2626 !important;
+}
+
+.swal2-icon.swal2-error [class^='swal2-x-mark-line'] {
+    background-color: #dc2626 !important;
+}
+</style>
+
 @endsection
             

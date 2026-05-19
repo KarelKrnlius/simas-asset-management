@@ -594,7 +594,7 @@ function closeBulkDeleteModal() {
     document.getElementById('bulkDeleteModal').style.display = 'none';
 }
 
-function confirmBulkDelete() {
+function confirmBulkDelete(event) {
     const checkboxes = document.querySelectorAll('.loan-checkbox:checked');
     const loanIds = Array.from(checkboxes).map(cb => cb.value);
     
@@ -677,7 +677,7 @@ function confirmBulkDelete() {
                 class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-colors">
                 Batal
             </button>
-            <button onclick="confirmBulkDelete()" 
+            <button onclick="confirmBulkDelete(event)" 
                 class="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-xl transition-all duration-300 hover:shadow-xl">
                 <i class="fas fa-trash mr-2"></i> Hapus
             </button>

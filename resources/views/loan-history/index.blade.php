@@ -154,11 +154,16 @@
                                     @endif
                                 </td>
                                 <td class="py-4 px-4">
-                                    <div class="flex justify-center">
+                                    <div class="flex justify-center gap-2">
                                         <button onclick="showLoanDetail({{ $loan->id }})" 
-                                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2">
+                                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2">
                                             <i class="fas fa-eye"></i>
                                             Lihat Detail
+                                        </button>
+                                        <button onclick="confirmDeleteLoan({{ $loan->id }}, '{{ $loan->loan_code }}')" 
+                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2">
+                                            <i class="fas fa-trash"></i>
+                                            Hapus
                                         </button>
                                     </div>
                                 </td>
@@ -643,7 +648,7 @@ document.addEventListener('keydown', function(event) {
                 class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-colors">
                 Batal
             </button>
-            <button onclick="confirmBulkDelete()" 
+            <button onclick="confirmBulkDelete(event)" 
                 class="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-xl transition-all duration-300 hover:shadow-xl">
                 <i class="fas fa-trash mr-2"></i> Hapus
             </button>
@@ -703,7 +708,7 @@ function closeBulkDeleteModal() {
     document.getElementById('bulkDeleteModal').style.display = 'none';
 }
 
-function confirmBulkDelete() {
+function confirmBulkDelete(event) {
     const checkboxes = document.querySelectorAll('.loan-checkbox:checked');
     const loanIds = Array.from(checkboxes).map(cb => cb.value);
     
@@ -760,6 +765,42 @@ function confirmBulkDelete() {
         deleteBtn.innerHTML = originalText;
         deleteBtn.disabled = false;
         alert('Terjadi kesalahan saat menghapus');
+    });
+}
+
+// Delete individual loan
+function confirmDeleteLoan(loanId, loanCode) {
+    if (confirm(`Apakah Anda yakin ingin menghapus peminjaman ${loanCode}?\n\nAsset yang dipinjam akan dikembalikan ke status tersedia.`)) {
+        deleteLoan(loanId);
+    }
+}
+
+function deleteLoan(loanId) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    fetch(`/riwayat-peminjaman/${loanId}`, {
+        method: 'DELETE',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Store success message for post-refresh notification
+            sessionStorage.setItem('bulkDeleteSuccess', 'true');
+            sessionStorage.setItem('bulkDeleteMessage', data.message);
+            
+            // Reload page
+            location.reload(true);
+        } else {
+            alert('Gagal menghapus: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat menghapus peminjaman');
     });
 }
 </script>
