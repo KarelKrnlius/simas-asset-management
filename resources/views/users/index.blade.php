@@ -4,9 +4,9 @@
 
 @section('content')
 <div class="min-h-screen pt-1 items-start">
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {{-- HEADER, BUTTONS, AND CATATAN CONTAINER --}}
-        <div class="bg-white rounded-[2rem] shadow-xl p-8 mb-8">
+        <div class="bg-white rounded-[2rem] shadow-xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
             {{-- HEADER --}}
             <div class="mb-6">
                 <h2 class="text-3xl font-black text-red-600 uppercase tracking-tighter mb-2">
@@ -42,10 +42,10 @@
             </div>
         @endif
 
-        <div class="bg-white rounded-[2.5rem] shadow-sm p-8">
+        <div class="bg-white rounded-[2.5rem] shadow-sm p-4 sm:p-6 lg:p-8">
             
             <!-- Controls Bar -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <!-- Total User Count -->
                 <div class="flex items-center gap-2">
                     <i class="fas fa-users text-red-primary"></i>
@@ -110,8 +110,8 @@
             </div>
 
             {{-- USERS TABLE --}}
-            <div class="overflow-x-auto">
-                <table class="w-full table-auto min-w-[800px]" id="usersTable">
+            <div class="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table class="w-full table-auto min-w-[800px] sm:min-w-full" id="usersTable">
                     <thead>
                         <tr class="border-b-2 border-slate-200">
                             <th class="text-center py-3 px-2 font-black text-slate-900 uppercase tracking-wider text-xs" style="min-width: 50px;">
@@ -233,13 +233,13 @@
 
             {{-- PAGINATION --}}
             @if($users->hasPages())
-                <div class="mt-8 flex justify-center">
+                <div class="mt-6 sm:mt-8 flex justify-center">
                     {{ $users->links('pagination::bootstrap-4') }}
                 </div>
             @endif
 
             {{-- TOTAL INFO --}}
-            <div class="mt-6 text-center text-sm text-slate-500">
+            <div class="mt-6 text-center text-xs sm:text-sm text-slate-500">
                 Menampilkan {{ $users->firstItem() }} - {{ $users->lastItem() }} dari {{ $users->total() }} user
             </div>
         </div>

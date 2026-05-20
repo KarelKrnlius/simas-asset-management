@@ -1,5 +1,5 @@
-<div id="categoryListModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-    <div class="bg-white rounded-[2rem] p-8 max-w-6xl w-full mx-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+<div id="categoryListModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-[2rem] p-4 sm:p-6 lg:p-8 max-w-6xl w-full modal-responsive shadow-2xl max-h-[90vh] overflow-y-auto">
         <div class="text-center mb-6">
             <h3 class="text-xl font-black text-slate-900">Manajemen Kategori</h3>
             <p class="text-slate-600 text-sm mt-2">Lihat, edit, atau hapus kategori beserta Assetnya</p>
@@ -158,8 +158,8 @@
 </div>
 
 <!-- Bulk Delete Modal -->
-<div id="categoryBulkDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-    <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+<div id="categoryBulkDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 max-w-md w-full modal-responsive">
         <div class="flex items-center gap-3 mb-4">
             <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                 <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>

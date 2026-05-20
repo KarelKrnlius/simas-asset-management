@@ -4,7 +4,7 @@
 
 @section('content')
 
-<div class="w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl p-10 h-auto -mt-4">
+<div class="w-full max-w-2xl lg:max-w-4xl bg-white rounded-[2.5rem] shadow-2xl p-6 sm:p-8 lg:p-10 h-auto -mt-4 mx-4 sm:mx-auto">
 
 <div class="text-center mb-8">
     <h2 class="text-2xl font-black text-red-600 uppercase tracking-tighter mb-2">
@@ -51,7 +51,7 @@
     </div>
 
     {{-- TANGGAL --}}
-    <div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <div>
             <label class="block text-xs font-black text-slate-600 mb-2">
                 Tanggal Peminjaman

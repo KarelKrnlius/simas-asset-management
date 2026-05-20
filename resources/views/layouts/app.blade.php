@@ -19,6 +19,15 @@
             aside { transform: translateX(-100%); width: 18rem !important; }
             aside.mobile-open { transform: translateX(0); }
         }
+        /* Ensure all tables are responsive */
+        table { min-width: 600px; }
+        @media (max-width: 640px) {
+            table { min-width: 500px; }
+        }
+        /* Responsive modals */
+        @media (max-width: 640px) {
+            .modal-responsive { width: 95% !important; max-width: 95% !important; margin: 10px !important; }
+        }
     </style>
 </head>
 <body x-data="{ sidebarOpen: window.innerWidth >= 1024, mobileMenuOpen: false }" @resize.window="sidebarOpen = window.innerWidth >= 1024; if(window.innerWidth >= 1024) mobileMenuOpen = false">

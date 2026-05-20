@@ -1,5 +1,5 @@
-<div id="editAssetModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-    <div class="bg-white rounded-[2rem] p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+<div id="editAssetModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-[2rem] p-4 sm:p-6 lg:p-8 max-w-2xl w-full modal-responsive max-h-[90vh] overflow-y-auto shadow-2xl">
         <div class="text-center mb-6">
             <h3 class="text-xl font-black text-slate-900">Edit Asset</h3>
             <p class="text-slate-600 text-sm mt-2">Ubah detail Asset di bawah ini</p>
