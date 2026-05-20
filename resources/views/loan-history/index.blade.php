@@ -41,12 +41,12 @@
                 </div>
                 
                 <!-- Search, Clear, Sort -->
-                <div class="flex gap-3">
+                <div class="flex flex-wrap gap-2">
                     <!-- Search Input -->
-                    <div class="relative flex-1">
+                    <div class="relative min-w-[160px] flex-1">
                         <input type="text"
                                id="searchInput"
-                               placeholder="Cari nama, email, kode peminjaman, tanggal, atau status..."
+                               placeholder="Cari nama, email, kode peminjaman..."
                                value="{{ request('search') }}"
                                class="w-full px-4 py-2 pr-10 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent"
                                onkeypress="handleKeyPress(event)">
@@ -57,16 +57,16 @@
                     
                     <!-- Clear Button -->
                     <button onclick="performRefresh()"
-                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                            class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 whitespace-nowrap">
                         <i class="fas fa-sync-alt"></i>
-                        Clear
+                        <span class="hidden sm:inline">Clear</span>
                     </button>
                     
                     <!-- Sort Dropdown -->
                     <div class="relative">
                         <select id="sortSelect"
                                 onchange="performSort(this.value)"
-                                class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent cursor-pointer">
+                                class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent cursor-pointer">
                             <option value="terbaru" {{ $sort == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
                             <option value="terlama" {{ $sort == 'terlama' ? 'selected' : '' }}>Terlama</option>
                         </select>

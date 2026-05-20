@@ -56,43 +56,41 @@
                 </div>
                 
                 <!-- Sort and Bulk Actions -->
-                <div class="flex flex-col lg:flex-row gap-3">
+                <div class="flex flex-wrap gap-2">
                     <!-- Export Excel Button -->
                     <a href="{{ route('assets.export') }}" 
-                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                        class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 whitespace-nowrap">
                         <i class="fas fa-file-excel"></i>
-                        Export Excel
+                        <span class="hidden sm:inline">Export Excel</span>
                     </a>
                     
                     <!-- Search Input -->
-                    <div class="flex-1">
-                        <div class="relative flex-1">
-                            <input type="text"
-                                   id="searchInput"
-                                   placeholder="Cari kode asset..."
-                                   value="{{ request('search') }}"
-                                   class="w-full px-4 py-2 pr-10 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent"
-                                   onkeypress="handleKeyPress(event)">
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" onclick="performSearchFromInput()">
-                                <i class="fas fa-search text-slate-400 hover:text-red-600"></i>
-                            </div>
+                    <div class="relative min-w-[160px] flex-1">
+                        <input type="text"
+                               id="searchInput"
+                               placeholder="Cari kode asset..."
+                               value="{{ request('search') }}"
+                               class="w-full px-4 py-2 pr-10 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent"
+                               onkeypress="handleKeyPress(event)">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" onclick="performSearchFromInput()">
+                            <i class="fas fa-search text-slate-400 hover:text-red-600"></i>
                         </div>
                     </div>
                     <button onclick="performRefresh()"
-                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                            class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 whitespace-nowrap">
                         <i class="fas fa-sync-alt"></i>
-                        Clear
+                        <span class="hidden sm:inline">Clear</span>
                     </button>
                     
                     <!-- Sort Dropdown -->
                     <div class="relative">
                         <select id="sortSelect" onchange="applySorting()" 
-                            class="appearance-none bg-white border border-slate-200 rounded-lg px-4 py-2 pr-8 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent">
-                            <option value="default" {{ !request('sort_by') || request('sort_by') == 'code' ? 'selected' : '' }}>Default (Urut Kode)</option>
+                            class="appearance-none bg-white border border-slate-200 rounded-lg px-3 py-2 pr-7 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-primary focus:border-transparent">
+                            <option value="default" {{ !request('sort_by') || request('sort_by') == 'code' ? 'selected' : '' }}>Default</option>
                             <option value="latest" {{ request('sort_by') == 'latest' || request('sort_by') == 'created_at' && request('order') == 'desc' ? 'selected' : '' }}>Terbaru</option>
                             <option value="oldest" {{ request('sort_by') == 'created_at' && request('order') == 'asc' ? 'selected' : '' }}>Terlama</option>
-                            <option value="name_asc" {{ request('sort_by') == 'name' && request('order') == 'asc' ? 'selected' : '' }}>Nama (A-Z)</option>
-                            <option value="name_desc" {{ request('sort_by') == 'name' && request('order') == 'desc' ? 'selected' : '' }}>Nama (Z-A)</option>
+                            <option value="name_asc" {{ request('sort_by') == 'name' && request('order') == 'asc' ? 'selected' : '' }}>Nama A-Z</option>
+                            <option value="name_desc" {{ request('sort_by') == 'name' && request('order') == 'desc' ? 'selected' : '' }}>Nama Z-A</option>
                             @if($categories->count() > 0)
                                 <optgroup label="Filter Kategori">
                                     @foreach($categories as $category)
@@ -110,12 +108,10 @@
                     </div>
                     
                     <!-- Bulk Actions -->
-                    <div class="flex gap-2">
-                        <button onclick="showBulkDeleteModal()" id="bulkDeleteBtn" disabled
-                            class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i class="fas fa-trash mr-1"></i> Hapus Terpilih
-                        </button>
-                    </div>
+                    <button onclick="showBulkDeleteModal()" id="bulkDeleteBtn" disabled
+                        class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
+                        <i class="fas fa-trash mr-1"></i> <span class="hidden sm:inline">Hapus Terpilih</span>
+                    </button>
                 </div>
             </div>
             

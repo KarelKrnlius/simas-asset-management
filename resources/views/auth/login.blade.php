@@ -1,326 +1,108 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login - SIMAS</title>
-
-<style>  
-* {
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Segoe UI',sans-serif;
-}
-
-body {
-  height:100vh;
-  background:#f4f4f4;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
-/* CARD */
-.container {
-  width:900px;
-  height:500px;
-  display:flex;
-  background:#fff;
-  border-radius:16px;
-  overflow:hidden;
-  box-shadow:0 10px 30px rgba(0,0,0,0.1);
-}
-
-/* LEFT */
-.left {
-  flex:1;
-  background:#b71c1c;
-  color:white;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-}
-
-.left img {
-  width:140px;
-  margin-bottom:20px;
-  animation:float 3s ease-in-out infinite;
-  filter: drop-shadow(0 0 8px rgba(255,255,255,0.8))
-          drop-shadow(0 0 15px rgba(255,255,255,0.6));
-}
-
-@keyframes float {
-  0%,100% {transform:translateY(0);}
-  50% {transform:translateY(-8px);}
-}
-
-/* RIGHT */
-.right {
-  flex:1;
-  padding:40px;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center; /* 🔥 CENTER FIX */
-}
-
-/* 🔥 TITLE */
-.title-box {
-  text-align:center;
-  margin-bottom:25px;
-  animation:fadeSlide 0.6s ease;
-}
-
-.title-main {
-  font-size:34px;
-  font-weight:700;
-  color:#b71c1c;
-  letter-spacing:4px;
-  text-shadow:0 0 8px rgba(183,28,28,0.25);
-}
-
-.divider {
-  width:50px;
-  height:3px;
-  background:#b71c1c;
-  margin:10px auto;
-  border-radius:2px;
-}
-
-.title-sub {
-  font-size:13px;
-  color:#888;
-  margin-bottom:8px;
-}
-
-.login-text {
-  font-size:18px;
-  color:#222;
-  margin-bottom:15px;
-}
-
-/* 🔥 FORM BOX (BIAR RAPI TENGAH) */
-.form-box {
-  width:100%;
-  max-width:320px;
-}
-
-/* INPUT */
-.input-group {
-  margin-bottom:15px;
-  position:relative;
-}
-
-.input-group input {
-  width:100%;
-  padding:12px;
-  border-radius:8px;
-  border:1px solid #ddd;
-  transition:0.2s;
-}
-
-.input-group input:focus {
-  border-color:#b71c1c;
-  box-shadow:0 0 0 2px rgba(183,28,28,0.15);
-  outline:none;
-}
-
-/* TOGGLE */
-.toggle {
-  position:absolute;
-  right:10px;
-  top:50%;
-  transform:translateY(-50%);
-  cursor:pointer;
-  font-size:12px;
-  color:#666;
-}
-
-/* ROW */
-.row-between {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:20px;
-}
-
-.remember {
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:13px;
-  color:#555;
-}
-
-.forgot a {
-  font-size:13px;
-  color:#b71c1c;
-  text-decoration:none;
-}
-
-/* BUTTON */
-.btn {
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:8px;
-  background:#b71c1c;
-  color:white;
-  cursor:pointer;
-  transition:0.2s;
-}
-
-.btn:hover {
-  background:#8e0000;
-  transform:translateY(-2px);
-}
-
-.btn.loading {
-  background:#999;
-}
-
-/* ERROR */
-.error {
-  background:#ffe5e5;
-  color:#b71c1c;
-  padding:10px;
-  border-radius:8px;
-  margin-bottom:10px;
-  font-size:13px;
-}
-
-/* ANIMASI */
-@keyframes fadeSlide {
-  from {opacity:0; transform:translateY(15px);}
-  to {opacity:1; transform:translateY(0);}
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SIMAS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .logo-float { animation: float 3s ease-in-out infinite; filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)) drop-shadow(0 0 15px rgba(255,255,255,0.6)); }
+    </style>
 </head>
+<body class="min-h-screen bg-slate-100 flex items-center justify-center p-4">
 
-<body>
+<div class="w-full max-w-4xl bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row min-h-[480px]">
 
-<div class="container">
-
-  <!-- LEFT -->
-  <div class="left">
-    <img src="{{ asset('images/logo/logo.png') }}" alt="SIMAS Logo" style="max-width: 120px; height: auto;">
-    <h2>SIMAS</h2>
-    <p>Sistem Manajemen Aset</p>
-  </div>
-
-  <!-- RIGHT -->
-  <div class="right">
-
-    <!-- TITLE -->
-    <div class="title-box">
-      <h1 class="title-main">SIMAS</h1>
-      <div class="divider"></div>
-      <p class="title-sub">Sistem Manajemen Aset</p>
-      <h2 class="login-text">Masuk ke Sistem</h2>
+    {{-- LEFT — branding --}}
+    <div class="bg-red-700 text-white flex flex-col items-center justify-center p-8 md:p-12 md:w-2/5 flex-shrink-0">
+        <img src="{{ asset('images/logo/logo.png') }}" alt="SIMAS Logo" class="logo-float w-24 md:w-32 mb-4">
+        <h2 class="text-2xl md:text-3xl font-black tracking-tight">SIMAS</h2>
+        <p class="text-sm text-red-200 mt-1 text-center">Sistem Manajemen Aset</p>
     </div>
 
-    <!-- FORM -->
-    <div class="form-box">
+    {{-- RIGHT — form --}}
+    <div class="flex-1 flex flex-col items-center justify-center p-8 md:p-12">
 
-      @if ($errors->any())
-        <div class="error">
-          {{ $errors->first() }}
+        <div class="w-full max-w-sm">
+            {{-- Title --}}
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-black text-red-700 tracking-tight">SIMAS</h1>
+                <div class="w-12 h-1 bg-red-700 rounded mx-auto my-3"></div>
+                <p class="text-xs text-slate-400 font-semibold uppercase tracking-widest">Sistem Manajemen Aset</p>
+                <p class="text-lg font-bold text-slate-700 mt-2">Masuk ke Sistem</p>
+            </div>
+
+            {{-- Error --}}
+            @if ($errors->any())
+                <div class="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-4">
+                    {{ $errors->first() }}
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-4">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            {{-- Form --}}
+            <form id="loginForm" method="POST" action="{{ route('login') }}">
+                @csrf
+
+                <div class="mb-4">
+                    <input type="email" name="email" placeholder="Email" required
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-100 transition">
+                </div>
+
+                <div class="mb-4 relative">
+                    <input type="password" id="password" name="password" placeholder="Password" required
+                        class="w-full px-4 py-3 pr-12 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-100 transition">
+                    <button type="button" onclick="togglePassword()"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-semibold">
+                        <span id="toggleText">Show</span>
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-between mb-6 text-sm">
+                    <label class="flex items-center gap-2 text-slate-500 cursor-pointer">
+                        <input type="checkbox" name="remember" class="rounded border-slate-300 text-red-600">
+                        Remember Me
+                    </label>
+                    <a href="/forgot-password" class="text-red-600 hover:text-red-700 font-semibold">Lupa Password?</a>
+                </div>
+
+                <button type="submit" id="btnLogin"
+                    class="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-all hover:shadow-lg active:scale-95">
+                    Masuk
+                </button>
+            </form>
         </div>
-      @endif
-
-      @if (session('error'))
-        <div class="error">
-          {{ session('error') }}
-        </div>
-      @endif
-
-      <form id="loginForm" method="POST" action="{{ route('login') }}">
-        @csrf
-
-        <div class="input-group">
-          <input type="email" name="email" placeholder="Email" required>
-        </div>
-
-        <div class="input-group">
-          <input type="password" id="password" name="password" placeholder="Password" required>
-          <span class="toggle" onclick="togglePassword()">Show</span>
-        </div>
-
-        <div class="row-between">
-          <div class="remember">
-            <input type="checkbox" name="remember">
-            <label>Remember Me</label>
-          </div>
-
-          <div class="forgot">
-            <a href="/forgot-password">Forgot Password?</a>
-          </div>
-        </div>
-
-        <button type="submit" class="btn" id="btnLogin">Masuk</button>
-      </form>
-
     </div>
-
-  </div>
-
 </div>
 
 <script>
-// Prevent authenticated users from accessing login page
-(function() {
-    // Check if user is already logged in
-    @if(auth()->check())
-        // Redirect immediately to dashboard
-        window.location.replace('/dashboard');
-        return;
-    @endif
-    
-    // Add cache control headers
-    if (!window.location.search.includes('no-cache')) {
-        window.location.replace(window.location.pathname + '?no-cache=1');
-        return;
-    }
-})();
-
 function togglePassword() {
-  const pass = document.getElementById("password");
-  const toggle = document.querySelector(".toggle");
-
-  pass.type = pass.type === "password" ? "text" : "password";
-  toggle.innerText = pass.type === "password" ? "Show" : "Hide";
+    const pass = document.getElementById('password');
+    const text = document.getElementById('toggleText');
+    pass.type = pass.type === 'password' ? 'text' : 'password';
+    text.textContent = pass.type === 'password' ? 'Show' : 'Hide';
 }
 
-document.getElementById("loginForm").addEventListener("submit", function(){
-  const btn = document.getElementById("btnLogin");
-  btn.classList.add("loading");
-  btn.innerText = "Loading...";
+document.getElementById('loginForm').addEventListener('submit', function() {
+    const btn = document.getElementById('btnLogin');
+    btn.disabled = true;
+    btn.textContent = 'Memuat...';
 });
 
-// Continuous monitoring for authentication changes
-setInterval(function() {
-    @if(auth()->check())
-        window.location.replace('/dashboard');
-    @endif
-}, 100);
-
-// Prevent back button to login page
-window.addEventListener('pageshow', function(event) {
-    @if(auth()->check())
-        window.location.replace('/dashboard');
-    @endif
-});
-
-// Handle browser back button
-window.addEventListener('popstate', function(event) {
-    @if(auth()->check())
-        event.preventDefault();
-        window.location.replace('/dashboard');
-    @endif
-});
+@if(auth()->check())
+    window.location.replace('/dashboard');
+@endif
 </script>
-
 </body>
 </html>
