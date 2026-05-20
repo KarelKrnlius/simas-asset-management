@@ -60,8 +60,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // RIWAYAT PEMINJAMAN (All Roles)
     Route::get('/riwayat-peminjaman', [LoanHistoryController::class, 'index'])->name('riwayat-peminjaman');
     Route::get('/riwayat-peminjaman/{id}', [LoanHistoryController::class, 'show'])->name('riwayat-peminjaman.show');
-    Route::delete('/riwayat-peminjaman/{id}', [LoanHistoryController::class, 'destroy'])->name('riwayat-peminjaman.destroy');
-    Route::post('/riwayat-peminjaman/bulk-delete', [LoanHistoryController::class, 'bulkDelete'])->name('riwayat-peminjaman.bulkDelete');
     
     // PENGEMBALIAN
     Route::get('/pengembalian', [AssetReturnController::class, 'index'])->name('pengembalian');
